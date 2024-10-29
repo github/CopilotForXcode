@@ -22,7 +22,7 @@ As per [GitHub's Terms of Service](https://docs.github.com/en/github/site-policy
 ## Getting Started
 
 1. Download the `dmg` from
-   [the latest release](https://github.com/github/copilot-xcode/releases/latest/download/GitHubCopilotForXcode.dmg).
+   [the latest release](https://github.com/github/CopilotForXcode/releases/latest/download/GitHubCopilotForXcode.dmg).
    Updates can be downloaded and installed by the app.
 
 1. Open the `dmg` and drag the `GitHub Copilot for Xcode.app` into the `Applications` folder.
