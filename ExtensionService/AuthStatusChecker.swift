@@ -15,11 +15,11 @@ class AuthStatusChecker {
         Task {
             do {
                 let status = try await self.getCurrentAuthStatus()
-                DispatchQueue.main.async {
+                await MainActor.run {
                     notify(status.description, status == .ok)
                 }
             } catch {
-                DispatchQueue.main.async {
+                await MainActor.run {
                     notify("\(error)", false)
                 }
             }
