@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "1410"
-   wasCreatedForAppExtension = "YES"
-   version = "2.0">
+   LastUpgradeVersion = "1620"
+   version = "1.7">
    <BuildAction
       parallelizeBuildables = "YES"
       buildImplicitDependencies = "YES">
@@ -15,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "C814588B2939EFDC00135263"
-               BuildableName = "Copilot.appex"
-               BlueprintName = "EditorExtension"
+               BlueprintIdentifier = "C861E60D2994F6070056CB02"
+               BuildableName = "GitHub Copilot for Xcode Extension.app"
+               BlueprintName = "ExtensionService"
                ReferencedContainer = "container:Copilot for Xcode.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -29,10 +28,10 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "C8189B152938972F00C9DCDA"
-               BuildableName = "GitHub Copilot for Xcode.app"
-               BlueprintName = "Copilot for Xcode"
-               ReferencedContainer = "container:Copilot for Xcode.xcodeproj">
+               BlueprintIdentifier = "Service"
+               BuildableName = "Service"
+               BlueprintName = "Service"
+               ReferencedContainer = "container:Core">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -42,51 +41,56 @@
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES">
-      <Testables>
-      </Testables>
+      <TestPlans>
+         <TestPlanReference
+            reference = "container:TestPlan.xctestplan"
+            default = "YES">
+         </TestPlanReference>
+         <TestPlanReference
+            reference = "container:Pro/ProTestPlan.xctestplan">
+         </TestPlanReference>
+      </TestPlans>
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"
-      selectedDebuggerIdentifier = ""
-      selectedLauncherIdentifier = "Xcode.IDEFoundation.Launcher.PosixSpawn"
+      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
+      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
-      askForAppToLaunch = "Yes"
       useCustomWorkingDirectory = "NO"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
-      allowLocationSimulation = "YES"
-      launchAutomaticallySubstyle = "2">
-      <RemoteRunnable
-         runnableDebuggingMode = "0"
-         BundleIdentifier = "com.apple.dt.Xcode"
-         RemotePath = "/Applications/Xcode-14.1.0.app">
-      </RemoteRunnable>
-      <MacroExpansion>
+      allowLocationSimulation = "YES">
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "C8189B152938972F00C9DCDA"
-            BuildableName = "GitHub Copilot for Xcode.app"
-            BlueprintName = "Copilot for Xcode"
+            BlueprintIdentifier = "C861E60D2994F6070056CB02"
+            BuildableName = "GitHub Copilot for Xcode Extension.app"
+            BlueprintName = "ExtensionService"
             ReferencedContainer = "container:Copilot for Xcode.xcodeproj">
          </BuildableReference>
-      </MacroExpansion>
+      </BuildableProductRunnable>
+      <CommandLineArguments>
+         <CommandLineArgument
+            argument = "-_NS_4445425547 YES"
+            isEnabled = "YES">
+         </CommandLineArgument>
+      </CommandLineArguments>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
       shouldUseLaunchSchemeArgsEnv = "YES"
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
-      debugDocumentVersioning = "YES"
-      askForAppToLaunch = "Yes"
-      launchAutomaticallySubstyle = "2">
+      debugDocumentVersioning = "YES">
       <BuildableProductRunnable
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "C8189B152938972F00C9DCDA"
-            BuildableName = "GitHub Copilot for Xcode.app"
-            BlueprintName = "Copilot for Xcode"
+            BlueprintIdentifier = "C861E60D2994F6070056CB02"
+            BuildableName = "GitHub Copilot for Xcode Extension.app"
+            BlueprintName = "ExtensionService"
             ReferencedContainer = "container:Copilot for Xcode.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

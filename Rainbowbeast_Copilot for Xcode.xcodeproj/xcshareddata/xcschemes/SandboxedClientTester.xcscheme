@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "1420"
+   LastUpgradeVersion = "1620"
    version = "1.7">
    <BuildAction
       parallelizeBuildables = "YES"
-      buildImplicitDependencies = "YES">
+      buildImplicitDependencies = "YES"
+      buildArchitectures = "Automatic">
       <BuildActionEntries>
          <BuildActionEntry
             buildForTesting = "YES"
@@ -14,24 +15,10 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "C861E60D2994F6070056CB02"
-               BuildableName = "GitHub Copilot for Xcode Extension.app"
-               BlueprintName = "ExtensionService"
+               BlueprintIdentifier = "C8738B772BE5363800609E7F"
+               BuildableName = "SandboxedClientTester.app"
+               BlueprintName = "SandboxedClientTester"
                ReferencedContainer = "container:Copilot for Xcode.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "Service"
-               BuildableName = "Service"
-               BlueprintName = "Service"
-               ReferencedContainer = "container:Core">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -40,16 +27,8 @@
       buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-      shouldUseLaunchSchemeArgsEnv = "YES">
-      <TestPlans>
-         <TestPlanReference
-            reference = "container:TestPlan.xctestplan"
-            default = "YES">
-         </TestPlanReference>
-         <TestPlanReference
-            reference = "container:Pro/ProTestPlan.xctestplan">
-         </TestPlanReference>
-      </TestPlans>
+      shouldUseLaunchSchemeArgsEnv = "YES"
+      shouldAutocreateTestPlan = "YES">
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"
@@ -65,18 +44,12 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "C861E60D2994F6070056CB02"
-            BuildableName = "GitHub Copilot for Xcode Extension.app"
-            BlueprintName = "ExtensionService"
+            BlueprintIdentifier = "C8738B772BE5363800609E7F"
+            BuildableName = "SandboxedClientTester.app"
+            BlueprintName = "SandboxedClientTester"
             ReferencedContainer = "container:Copilot for Xcode.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
-      <CommandLineArguments>
-         <CommandLineArgument
-            argument = "-_NS_4445425547 YES"
-            isEnabled = "YES">
-         </CommandLineArgument>
-      </CommandLineArguments>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
@@ -88,9 +61,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "C861E60D2994F6070056CB02"
-            BuildableName = "GitHub Copilot for Xcode Extension.app"
-            BlueprintName = "ExtensionService"
+            BlueprintIdentifier = "C8738B772BE5363800609E7F"
+            BuildableName = "SandboxedClientTester.app"
+            BlueprintName = "SandboxedClientTester"
             ReferencedContainer = "container:Copilot for Xcode.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
