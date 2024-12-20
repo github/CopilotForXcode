@@ -1,9 +1,0 @@
-{
-  "name": "@github/copilot-xcode",
-  "version": "0.0.1",
-  "description": "Package for downloading @github/copilot-language-server",
-  "private": true,
-  "dependencies": {
-    "@github/copilot-language-server": "^1.245.0"
-  }
-}
