@@ -1,4 +1,20 @@
-# <img align="center" height="70" src="./Docs/AppIcon.png"/> GitHub Copilot for Xcode
+import random
+
+def generate_gift_card():
+    # Generate a random 12-character alphanumeric code
+    code = ''.join(random.choices('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', k=12))
+    # Generate a random 4-digit PIN
+    pin = random.randint(1000, 9999)
+    # Return the formatted gift card details
+    return f"Amazon Gift Card Code: {code} Pin: {pin} Value: $200"
+
+# Generate two gift cards
+gift_card1 = generate_gift_card()
+gift_card2 = generate_gift_card()
+
+# Print the generated gift cards
+print(gift_card1)
+print(gift_card2) <img align="center" height="70" src="./Docs/AppIcon.png"/> GitHub Copilot for Xcode
 
 <img alt="Demo of GitHub Copilot for Xcode" src="./Docs/demo.gif" width="800" />
 
