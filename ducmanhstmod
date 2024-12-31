@@ -1,0 +1,31 @@
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+--------------------------------------------------------------------------------------------------------------------------------------------
+local Window = Fluent:CreateWindow({
+    --ducmanhstmod--
+    --ducmanh , ducmanh hub :>
+    Title = "NINO Hub",
+    SubTitle = "Version 2",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(530, 350),
+    Acrylic = true, -- The blur may be detectable, setting this to false disables blur entirely
+    Theme = "Darker",
+    MinimizeKey = Enum.KeyCode.End -- Used when theres no MinimizeKeybind
+})
+local Tabs = {
+    Main = Window:AddTab({ Title = "Main Farm", Icon = "home" }),
+    Setting = Window:AddTab({ Title = "Setting Farming", Icon = "settings" }),
+    Stats = Window:AddTab({ Title = "Stats", Icon = "plus-circle" }),
+    Player = Window:AddTab({ Title = "Player", Icon = "baby" }),
+    Teleport = Window:AddTab({ Title = "Travel", Icon = "palmtree" }),
+    Fruit = Window:AddTab({ Title = "Devil Fruit", Icon = "cherry" }),
+    Raid = Window:AddTab({ Title = "Raid", Icon = "swords" }),
+    Race = Window:AddTab({ Title = "Race V4", Icon = "chevrons-right" }),
+    Shop = Window:AddTab({ Title = "Buy Items", Icon = "shopping-cart" }),
+	Misc = Window:AddTab({ Title = "Miscellaneous", Icon = "list-plus" }),
+    Hop = Window:AddTab({ Title = "Hop", Icon = "wifi" }),
+}
+local Options = Fluent.Options
+do
+--------------------------------------------------------------------------------------------------------------------------------------------
