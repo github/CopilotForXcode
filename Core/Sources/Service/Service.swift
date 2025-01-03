@@ -74,8 +74,6 @@ public final class Service {
                 Task { await PseudoCommandHandler().dismissSuggestion() }
             }
         )
-        let scheduledCleaner = ScheduledCleaner()
-
         scheduledCleaner.service = self
     }
 
