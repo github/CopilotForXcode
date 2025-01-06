@@ -62,9 +62,12 @@
 		C87B03AD293B2CF300C77EAE /* XcodeKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = C81458902939EFDC00135263 /* XcodeKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		C882175C294187EF00A22FD3 /* Client in Frameworks */ = {isa = PBXBuildFile; productRef = C882175B294187EF00A22FD3 /* Client */; };
 		C89E75C32A46FB32000DD64F /* AppDelegate+Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = C89E75C22A46FB32000DD64F /* AppDelegate+Menu.swift */; };
-		C8C8B60929AFA35F00034BEE /* GitHub Copilot for Xcode Extension.app in Embed XPCService */ = {isa = PBXBuildFile; fileRef = C861E60E2994F6070056CB02 /* GitHub Copilot for Xcode Extension.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		C8C8B60929AFA35F00034BEE /* GitHub Rainbowbeast_Copilot for Xcode Extension.app in Embed XPCService */ = {isa = PBXBuildFile; fileRef = C861E60E2994F6070056CB02 /* GitHub Rainbowbeast_Copilot for Xcode Extension.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		C8DCF00029CE11D500FDDDD7 /* OpenChat.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8DCEFFF29CE11D500FDDDD7 /* OpenChat.swift */; };
 		C8DD9CB12BC673F80036641C /* CloseIdleTabsCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8DD9CB02BC673F80036641C /* CloseIdleTabsCommand.swift */; };
+		F3F407622D233A1800765BB2 /* DEVELOPMENT.md in Resources */ = {isa = PBXBuildFile; fileRef = F3F407602D233A0200765BB2 /* DEVELOPMENT.md */; };
+		F3F407632D233A1800765BB2 /* DEVELOPMENT.md in Resources */ = {isa = PBXBuildFile; fileRef = F3F407602D233A0200765BB2 /* DEVELOPMENT.md */; };
+		F3F407642D233A1800765BB2 /* DEVELOPMENT.md in Resources */ = {isa = PBXBuildFile; fileRef = F3F407602D233A0200765BB2 /* DEVELOPMENT.md */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -138,7 +141,7 @@
 			files = (
 				C8738B8B2BE540DD00609E7F /* CommunicationBridge in Embed XPCService */,
 				C8216B802980378300AD38C7 /* Helper in Embed XPCService */,
-				C8C8B60929AFA35F00034BEE /* GitHub Copilot for Xcode Extension.app in Embed XPCService */,
+				C8C8B60929AFA35F00034BEE /* GitHub Rainbowbeast_Copilot for Xcode Extension.app in Embed XPCService */,
 			);
 			name = "Embed XPCService";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -206,7 +209,7 @@
 		C81458982939EFDC00135263 /* EditorExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = EditorExtension.entitlements; sourceTree = "<group>"; };
 		C81458AD293A009600135263 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		C81458AE293A009800135263 /* Config.debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.debug.xcconfig; sourceTree = "<group>"; };
-		C8189B162938972F00C9DCDA /* GitHub Copilot for Xcode Dev.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "GitHub Copilot for Xcode Dev.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		C8189B162938972F00C9DCDA /* GitHub Rainbowbeast_Copilot for Xcode Dev.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "GitHub Rainbowbeast_Copilot for Xcode Dev.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C8189B192938972F00C9DCDA /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
 		C8189B1D2938973000C9DCDA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C8189B202938973000C9DCDA /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
@@ -221,7 +224,7 @@
 		C8520300293C4D9000460097 /* Helpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Helpers.swift; sourceTree = "<group>"; };
 		C8520308293D805800460097 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		C861A6A229E5503F005C41A3 /* PromptToCodeCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromptToCodeCommand.swift; sourceTree = "<group>"; };
-		C861E60E2994F6070056CB02 /* GitHub Copilot for Xcode Extension.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "GitHub Copilot for Xcode Extension.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		C861E60E2994F6070056CB02 /* GitHub Rainbowbeast_Copilot for Xcode Extension.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "GitHub Rainbowbeast_Copilot for Xcode Extension.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C861E6102994F6070056CB02 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		C861E6142994F6080056CB02 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C861E6192994F6080056CB02 /* ExtensionService.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ExtensionService.entitlements; sourceTree = "<group>"; };
@@ -245,12 +248,13 @@
 		C87B03A6293B261900C77EAE /* RejectSuggestionCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RejectSuggestionCommand.swift; sourceTree = "<group>"; };
 		C87B03A8293B262600C77EAE /* NextSuggestionCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NextSuggestionCommand.swift; sourceTree = "<group>"; };
 		C87B03AA293B262E00C77EAE /* PreviousSuggestionCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviousSuggestionCommand.swift; sourceTree = "<group>"; };
-		C887BC832965D96000931567 /* DEVELOPMENT.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = DEVELOPMENT.md; sourceTree = "<group>"; };
 		C89E75C22A46FB32000DD64F /* AppDelegate+Menu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+Menu.swift"; sourceTree = "<group>"; };
 		C8CD828229B88006008D044D /* TestPlan.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = TestPlan.xctestplan; sourceTree = "<group>"; };
 		C8DCEFFF29CE11D500FDDDD7 /* OpenChat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenChat.swift; sourceTree = "<group>"; };
 		C8DD9CB02BC673F80036641C /* CloseIdleTabsCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloseIdleTabsCommand.swift; sourceTree = "<group>"; };
 		C8F103292A7A365000D28F4F /* launchAgent.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = launchAgent.plist; sourceTree = "<group>"; };
+		F3F4075F2D233A0200765BB2 /* Base */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = Base; path = Base.lproj/DEVELOPMENT.md; sourceTree = "<group>"; };
+		F3F407612D233A0400765BB2 /* en */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = en; path = en.lproj/DEVELOPMENT.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -345,7 +349,7 @@
 		C8189B0D2938972F00C9DCDA = {
 			isa = PBXGroup;
 			children = (
-				C887BC832965D96000931567 /* DEVELOPMENT.md */,
+				F3F407602D233A0200765BB2 /* DEVELOPMENT.md */,
 				C8520308293D805800460097 /* README.md */,
 				C8F103292A7A365000D28F4F /* launchAgent.plist */,
 				C8738B6D2BE4F3E800609E7F /* bridgeLaunchAgent.plist */,
@@ -366,14 +370,15 @@
 				C8189B172938972F00C9DCDA /* Products */,
 			);
 			sourceTree = "<group>";
+			usesTabs = 1;
 		};
 		C8189B172938972F00C9DCDA /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				C8189B162938972F00C9DCDA /* GitHub Copilot for Xcode Dev.app */,
+				C8189B162938972F00C9DCDA /* GitHub Rainbowbeast_Copilot for Xcode Dev.app */,
 				C814588C2939EFDC00135263 /* Copilot.appex */,
 				C8216B70298036EC00AD38C7 /* Helper */,
-				C861E60E2994F6070056CB02 /* GitHub Copilot for Xcode Extension.app */,
+				C861E60E2994F6070056CB02 /* GitHub Rainbowbeast_Copilot for Xcode Extension.app */,
 				C8738B632BE4D4B900609E7F /* CommunicationBridge */,
 				C8738B782BE5363800609E7F /* SandboxedClientTester.app */,
 			);
@@ -481,9 +486,9 @@
 			productReference = C814588C2939EFDC00135263 /* Copilot.appex */;
 			productType = "com.apple.product-type.xcode-extension";
 		};
-		C8189B152938972F00C9DCDA /* Copilot for Xcode */ = {
+		C8189B152938972F00C9DCDA /* Rainbowbeast_Copilot for Xcode */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = C8189B252938973000C9DCDA /* Build configuration list for PBXNativeTarget "Copilot for Xcode" */;
+			buildConfigurationList = C8189B252938973000C9DCDA /* Build configuration list for PBXNativeTarget "Rainbowbeast_Copilot for Xcode" */;
 			buildPhases = (
 				C8189B122938972F00C9DCDA /* Sources */,
 				C8189B132938972F00C9DCDA /* Frameworks */,
@@ -501,12 +506,12 @@
 				C8216B7F2980377E00AD38C7 /* PBXTargetDependency */,
 				C814589A2939EFDC00135263 /* PBXTargetDependency */,
 			);
-			name = "Copilot for Xcode";
+			name = "Rainbowbeast_Copilot for Xcode";
 			packageProductDependencies = (
 				C86612F72A06AF74009197D9 /* HostApp */,
 			);
 			productName = "Copilot for Xcode";
-			productReference = C8189B162938972F00C9DCDA /* GitHub Copilot for Xcode Dev.app */;
+			productReference = C8189B162938972F00C9DCDA /* GitHub Rainbowbeast_Copilot for Xcode Dev.app */;
 			productType = "com.apple.product-type.application";
 		};
 		C8216B6F298036EC00AD38C7 /* Helper */ = {
@@ -548,7 +553,7 @@
 				C861E61D2994F6150056CB02 /* Service */,
 			);
 			productName = ExtensionService;
-			productReference = C861E60E2994F6070056CB02 /* GitHub Copilot for Xcode Extension.app */;
+			productReference = C861E60E2994F6070056CB02 /* GitHub Rainbowbeast_Copilot for Xcode Extension.app */;
 			productType = "com.apple.product-type.application";
 		};
 		C8738B622BE4D4B900609E7F /* CommunicationBridge */ = {
@@ -599,7 +604,8 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1520;
-				LastUpgradeCheck = 1410;
+				LastUpgradeCheck = 1620;
+				ORGANIZATIONNAME = "RainbowScientist DevOps Playground";
 				TargetAttributes = {
 					C814588B2939EFDC00135263 = {
 						CreatedOnToolsVersion = 14.1;
@@ -621,7 +627,7 @@
 					};
 				};
 			};
-			buildConfigurationList = C8189B112938972F00C9DCDA /* Build configuration list for PBXProject "Copilot for Xcode" */;
+			buildConfigurationList = C8189B112938972F00C9DCDA /* Build configuration list for PBXProject "Rainbowbeast_Copilot for Xcode" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -637,7 +643,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				C8189B152938972F00C9DCDA /* Copilot for Xcode */,
+				C8189B152938972F00C9DCDA /* Rainbowbeast_Copilot for Xcode */,
 				C814588B2939EFDC00135263 /* EditorExtension */,
 				C8216B6F298036EC00AD38C7 /* Helper */,
 				C861E60D2994F6070056CB02 /* ExtensionService */,
@@ -661,6 +667,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F3F407622D233A1800765BB2 /* DEVELOPMENT.md in Resources */,
 				424ACA212CA4697200FA20F2 /* Credits.rtf in Resources */,
 				C8189B212938973000C9DCDA /* Preview Assets.xcassets in Resources */,
 				C8189B1E2938973000C9DCDA /* Assets.xcassets in Resources */,
@@ -678,6 +685,7 @@
 				C861E6152994F6080056CB02 /* Assets.xcassets in Resources */,
 				3ABBEA2D2C8BA00B00C61D61 /* copilot-language-server in Resources */,
 				C81291D72994FE6900196E12 /* Main.storyboard in Resources */,
+				F3F407632D233A1800765BB2 /* DEVELOPMENT.md in Resources */,
 				5EC511E42C90CE9800632BAB /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -687,6 +695,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C8738B822BE5363900609E7F /* Preview Assets.xcassets in Resources */,
+				F3F407642D233A1800765BB2 /* DEVELOPMENT.md in Resources */,
 				C8738B7F2BE5363900609E7F /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -813,6 +822,18 @@
 		};
 /* End PBXTargetDependency section */
 
+/* Begin PBXVariantGroup section */
+		F3F407602D233A0200765BB2 /* DEVELOPMENT.md */ = {
+			isa = PBXVariantGroup;
+			children = (
+				F3F4075F2D233A0200765BB2 /* Base */,
+				F3F407612D233A0400765BB2 /* en */,
+			);
+			name = DEVELOPMENT.md;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
 /* Begin XCBuildConfiguration section */
 		C814589D2939EFDC00135263 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -821,6 +842,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = "$(APP_BUILD)";
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = VEKTX9H2N7;
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = EditorExtension/Info.plist;
@@ -849,6 +871,7 @@
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = "$(APP_BUILD)";
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=macosx*]" = VEKTX9H2N7;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -875,7 +898,10 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = C81458AE293A009800135263 /* Config.debug.xcconfig */;
 			buildSettings = {
+				ALLOW_TARGET_PLATFORM_SPECIALIZATION = YES;
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
@@ -905,7 +931,10 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				EMBED_ASSET_PACKS_IN_PRODUCT_BUNDLE = YES;
+				ENABLE_ON_DEMAND_RESOURCES = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -925,10 +954,12 @@
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
+				NEW_SETTING = "";
 				ONLY_ACTIVE_ARCH = YES;
-				SDKROOT = macosx;
+				SDKROOT = driverkit;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
 			};
 			name = Debug;
 		};
@@ -936,7 +967,10 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = C81458AD293A009600135263 /* Config.xcconfig */;
 			buildSettings = {
+				ALLOW_TARGET_PLATFORM_SPECIALIZATION = YES;
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
@@ -966,8 +1000,11 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				EMBED_ASSET_PACKS_IN_PRODUCT_BUNDLE = YES;
 				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_ON_DEMAND_RESOURCES = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -980,48 +1017,57 @@
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
-				SDKROOT = macosx;
+				NEW_SETTING = "";
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = driverkit;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
 			};
 			name = Release;
 		};
 		C8189B262938973000C9DCDA /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "Copilot for Xcode/Copilot_for_Xcode.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = "$(APP_BUILD)";
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"Copilot for Xcode/Preview Content\"";
-				DEVELOPMENT_TEAM = VEKTX9H2N7;
+				DEVELOPMENT_TEAM = 4QZY3332MB;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Copilot-for-Xcode-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = RSDVOPS;
+				"INFOPLIST_KEY_CFBundleDisplayName[sdk=macosx*]" = RainbowScientist_DevOps;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MACOSX_DEPLOYMENT_TARGET = 13.5;
 				MARKETING_VERSION = "$(APP_VERSION)";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_IDENTIFIER_BASE)";
 				PRODUCT_MODULE_NAME = Copilot_for_Xcode;
-				PRODUCT_NAME = "$(HOST_APP_NAME)";
+				PRODUCT_NAME = "GitHub Rainbowbeast_Copilot for Xcode Dev";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
 			};
 			name = Debug;
 		};
 		C8189B272938973000C9DCDA /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "Copilot for Xcode/Copilot_for_Xcode.entitlements";
@@ -1029,6 +1075,7 @@
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = "$(APP_BUILD)";
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"Copilot for Xcode/Preview Content\"";
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=macosx*]" = VEKTX9H2N7;
@@ -1036,19 +1083,26 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Copilot-for-Xcode-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = RSDVOPS;
+				"INFOPLIST_KEY_CFBundleDisplayName[sdk=iphoneos*]" = VO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MACOSX_DEPLOYMENT_TARGET = 13.5;
 				MARKETING_VERSION = "$(APP_VERSION)";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_IDENTIFIER_BASE)";
-				PRODUCT_NAME = "$(HOST_APP_NAME)";
+				PRODUCT_NAME = "GitHub Rainbowbeast_Copilot for Xcode Dev";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
 			};
 			name = Release;
 		};
@@ -1056,6 +1110,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = VEKTX9H2N7;
 				ENABLE_HARDENED_RUNTIME = YES;
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
@@ -1070,6 +1125,7 @@
 			buildSettings = {
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Developer ID Application";
 				CODE_SIGN_STYLE = Manual;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=macosx*]" = VEKTX9H2N7;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -1090,6 +1146,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = "$(APP_BUILD)";
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = VEKTX9H2N7;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
@@ -1106,7 +1163,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				MARKETING_VERSION = "$(APP_VERSION)";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_IDENTIFIER_BASE).ExtensionService";
-				PRODUCT_NAME = "$(EXTENSION_SERVICE_NAME)";
+				PRODUCT_NAME = "GitHub Rainbowbeast_Copilot for Xcode Extension";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -1123,6 +1180,7 @@
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = "$(APP_BUILD)";
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=macosx*]" = VEKTX9H2N7;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -1140,7 +1198,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				MARKETING_VERSION = "$(APP_VERSION)";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_IDENTIFIER_BASE).ExtensionService";
-				PRODUCT_NAME = "$(EXTENSION_SERVICE_NAME)";
+				PRODUCT_NAME = "GitHub Rainbowbeast_Copilot for Xcode Extension";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -1153,6 +1211,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = VEKTX9H2N7;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -1173,6 +1232,7 @@
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Developer ID Application";
 				CODE_SIGN_STYLE = Manual;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=macosx*]" = VEKTX9H2N7;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -1198,6 +1258,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"SandboxedClientTester/Preview Content\"";
 				DEVELOPMENT_TEAM = VEKTX9H2N7;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -1232,6 +1293,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"SandboxedClientTester/Preview Content\"";
 				DEVELOPMENT_TEAM = VEKTX9H2N7;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -1267,7 +1329,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		C8189B112938972F00C9DCDA /* Build configuration list for PBXProject "Copilot for Xcode" */ = {
+		C8189B112938972F00C9DCDA /* Build configuration list for PBXProject "Rainbowbeast_Copilot for Xcode" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C8189B232938973000C9DCDA /* Debug */,
@@ -1276,7 +1338,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		C8189B252938973000C9DCDA /* Build configuration list for PBXNativeTarget "Copilot for Xcode" */ = {
+		C8189B252938973000C9DCDA /* Build configuration list for PBXNativeTarget "Rainbowbeast_Copilot for Xcode" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C8189B262938973000C9DCDA /* Debug */,
