@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Happy Birthday, Yash! 🎉</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(to bottom, #000000, #1a1a1a);
+        overflow: hidden;
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+
+      h1 {
+        font-size: 3rem;
+        margin: 1rem 0;
+        color: #ffd700;
+      }
+
+      p {
+        font-size: 1.2rem;
+        margin: 0.5rem 0;
+      }
+
+      .container {
+        width: 80%;
+        max-width: 600px;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 1.5rem;
+        border-radius: 15px;
+        box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.5);
+      }
+
+      input,
+      textarea {
+        width: 100%;
+        margin: 1rem 0;
+        padding: 10px;
+        font-size: 1rem;
+        border: 2px solid #ffd700;
+        border-radius: 10px;
+        outline: none;
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+      }
+
+      button {
+        background-color: #ffd700;
+        color: #000;
+        border: none;
+        padding: 10px 20px;
+        font-size: 1rem;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        margin: 0.5rem;
+      }
+
+      button:hover {
+        background-color: #ffbf00;
+      }
+
+      .note {
+        font-size: 1rem;
+        color: #ffcc00;
+        margin-bottom: 1rem;
+      }
+
+      .fireworks {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      .firework {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background: radial-gradient(circle, #ffd700, #ff4500);
+        border-radius: 50%;
+        animation: explode 1.5s linear infinite;
+      }
+
+      .firework:nth-child(1) {
+        animation-delay: 0s;
+        top: 10%;
+        left: 20%;
+      }
+
+      .firework:nth-child(2) {
+        animation-delay: 0.5s;
+        top: 30%;
+        left: 70%;
+      }
+
+      .firework:nth-child(3) {
+        animation-delay: 1s;
+        top: 60%;
+        left: 40%;
+      }
+
+      @keyframes explode {
+        0% {
+          transform: scale(0.5);
+          opacity: 1;
+        }
+        100% {
+          transform: scale(4);
+          opacity: 0;
+        }
+      }
+
+      .thank-you {
+        font-size: 1.2rem;
+        margin: 1rem 0;
+        animation: fadeIn 1s ease-in-out;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="fireworks">
+      <div class="firework"></div>
+      <div class="firework"></div>
+      <div class="firework"></div>
+    </div>
+
+    <h1>Happy Birthday, Yash! 🎂🎉</h1>
+    <p>Born on 15th March - Let's make it special! 🎈</p>
+    <div class="note">
+      Your wish and username will only be visible to Yash! 😊
+    </div>
+    <div class="container">
+      <input id="nickname" placeholder="Enter your nickname" />
+      <textarea
+        id="wishInput"
+        placeholder="Write your birthday wish here..."
+      ></textarea>
+      <button id="sendWish">Send Wish</button>
+      <p id="thankYouMessage" class="thank-you"></p>
+    </div>
+
+    <script>
+      const nicknameInput = document.getElementById("nickname");
+      const wishInput = document.getElementById("wishInput");
+      const sendWishButton = document.getElementById("sendWish");
+      const thankYouMessage = document.getElementById("thankYouMessage");
+
+      const thankYouReplies = [
+        "Thank you so much! You're amazing! 🥰✨",
+        "Your wish just made my day brighter! 🌟",
+        "You’re awesome, thank you for the lovely message! 🎈",
+        "I truly appreciate your kind words, thank you! 💖",
+        "Wow, that was so sweet of you! 🥳",
+        "Your effort means the world to me, thank you! 🎁",
+        "I’m so touched by your wish, you’re the best! 🥂",
+        "You’ve made my birthday extra special! 🍰🎉",
+        "Thanks for being part of my celebration! 💫",
+        "Your words mean so much, thank you! ❤️"
+      ];
+
+      sendWishButton.addEventListener("click", () => {
+        const nickname = nicknameInput.value.trim();
+        const wish = wishInput.value.trim();
+
+        if (nickname && wish) {
+          // Clear inputs
+          nicknameInput.value = "";
+          wishInput.value = "";
+
+          // Generate thank-you message and a rating
+          const randomReply =
+            thankYouReplies[Math.floor(Math.random() * thankYouReplies.length)];
+          const rating = Math.floor(Math.random() * 3) + 8; // Ratings between 8-10
+
+          thankYouMessage.innerText = `${randomReply} I rate your effort: ${rating}/10!`;
+        } else {
+          thankYouMessage.innerText = "Please enter both your nickname and wish! 😊";
+        }
+      });
+    </script>
+  </body>
+</html>
