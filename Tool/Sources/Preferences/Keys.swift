@@ -551,6 +551,10 @@ public extension UserDefaultPreferenceKeys {
         .init(defaultValue: "", key: "GitHubCopilotEnterpriseURI")
     }
 
+    var nodeExtraCaCerts: PreferenceKey<String> {
+        .init(defaultValue: "", key: "NodeExtraCaCerts")
+    }
+
     var verboseLoggingEnabled: PreferenceKey<Bool> {
         .init(defaultValue: false, key: "VerboseLoggingEnabled")
     }

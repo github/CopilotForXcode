@@ -130,6 +130,8 @@ public class GitHubCopilotBaseService {
             let home = ProcessInfo.processInfo.homePath
             let versionNumber = JSONValue(stringLiteral: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "")
             let xcodeVersion = JSONValue(stringLiteral: SystemInfo().xcodeVersion() ?? "")
+            let nodeExtraCaCerts: String = UserDefaults.shared.value(for: \.nodeExtraCaCerts)
+            let nodeExtraCaCertMap: [String: String] = nodeExtraCaCerts.isEmpty ? [:] : ["NODE_EXTRA_CA_CERTS": nodeExtraCaCerts]
 
             #if DEBUG
             // Use local language server if set and available
@@ -145,13 +147,13 @@ public class GitHubCopilotBaseService {
                 }
             }
             // Set debug port and verbose when running in debug
-            let environment: [String: String] = ["HOME": home, "GH_COPILOT_DEBUG_UI_PORT": "8080", "GH_COPILOT_VERBOSE": "true"]
+            let environment: [String: String] = ["HOME": home, "GH_COPILOT_DEBUG_UI_PORT": "8080", "GH_COPILOT_VERBOSE": "true"].merging(nodeExtraCaCertMap) { _, new in new }
             #else
-            let environment: [String: String] = if UserDefaults.shared.value(for: \.verboseLoggingEnabled) {
+            let environment: [String: String] = (if UserDefaults.shared.value(for: \.verboseLoggingEnabled) {
                 ["HOME": home, "GH_COPILOT_VERBOSE": "true"]
             } else {
                 ["HOME": home]
-            }
+            }).merging(nodeExtraCaCertMap) { _, new in new }
             #endif
 
             let executionParams = Process.ExecutionParameters(
@@ -276,7 +278,7 @@ public class GitHubCopilotBaseService {
 }
 
 public final class GitHubCopilotService: GitHubCopilotBaseService,
-                                         GitHubCopilotSuggestionServiceType, GitHubCopilotConversationServiceType, GitHubCopilotAuthServiceType
+                                          GitHubCopilotSuggestionServiceType, GitHubCopilotConversationServiceType, GitHubCopilotAuthServiceType
 {
 
     private var ongoingTasks = Set<Task<[CodeSuggestion], Error>>()
@@ -695,4 +697,3 @@ extension InitializingServer: GitHubCopilotLSP {
         try await sendRequest(endpoint.request)
     }
 }
-

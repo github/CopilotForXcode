@@ -4,6 +4,7 @@ import Toast
 
 struct EnterpriseSection: View {
     @AppStorage(\.gitHubCopilotEnterpriseURI) var gitHubCopilotEnterpriseURI
+    @AppStorage(\.nodeExtraCaCerts) var nodeExtraCaCerts
     @Environment(\.toast) var toast
 
     var body: some View {
@@ -11,15 +12,27 @@ struct EnterpriseSection: View {
             SettingsTextField(
                 title: "Auth provider URL",
                 prompt: "https://your-enterprise.ghe.com",
-                text: DebouncedBinding($gitHubCopilotEnterpriseURI, handler: urlChanged).binding
+                text: DebouncedBinding($gitHubCopilotEnterpriseURI, handler: enterpriseUrlChanged).binding
+            )
+            SettingsTextField(
+                title: "Node extra CA certs",
+                prompt: "Path to extra CA certs (requires restart)",
+                text: DebouncedBinding($nodeExtraCaCerts, handler: nodeExtraCaCertsChanged).binding
             )
         }
     }
 
-    func urlChanged(_ url: String) {
+    func enterpriseUrlChanged(_ url: String) {
         if !url.isEmpty {
             validateAuthURL(url)
         }
+        NotificationCenter.default.post(
+            name: .gitHubCopilotShouldRefreshEditorInformation,
+            object: nil
+        )
+    }
+
+    func nodeExtraCaCertsChanged(_ path: String) {
         NotificationCenter.default.post(
             name: .gitHubCopilotShouldRefreshEditorInformation,
             object: nil
