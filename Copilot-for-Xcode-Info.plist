@@ -28,5 +28,12 @@
         <string>$(SPARKLE_PUBLIC_KEY)</string>
         <key>TEAM_ID_PREFIX</key>
         <string>$(TeamIdentifierPrefix)</string>
+        <key>SecuritySettings</key>
+        <dict>
+            <key>CheckManagedProperties</key>
+            <true/>
+            <key>NetworkInterception</key>
+            <true/>
+        </dict>
     </dict>
 </plist>

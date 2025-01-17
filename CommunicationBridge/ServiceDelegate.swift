@@ -8,6 +8,11 @@ class ServiceDelegate: NSObject, NSXPCListenerDelegate {
         _: NSXPCListener,
         shouldAcceptNewConnection newConnection: NSXPCConnection
     ) -> Bool {
+        if checkForManagedProperties() {
+            Logger.communicationBridge.error("Managed properties detected. Rejecting connection.")
+            return false
+        }
+
         newConnection.exportedInterface = NSXPCInterface(
             with: CommunicationBridgeXPCServiceProtocol.self
         )
@@ -19,6 +24,12 @@ class ServiceDelegate: NSObject, NSXPCListenerDelegate {
         Logger.communicationBridge.info("Accepted new connection.")
 
         return true
+    }
+
+    func checkForManagedProperties() -> Bool {
+        // Implement the logic to check for managed properties
+        // Return true if managed properties are found, otherwise false
+        return false
     }
 }
 
@@ -162,4 +173,3 @@ actor ExtensionServiceLauncher {
         }
     }
 }
-

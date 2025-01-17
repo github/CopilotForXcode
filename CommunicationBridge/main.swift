@@ -19,3 +19,13 @@ app.delegate = appDelegate
 Logger.communicationBridge.info("Communication bridge started")
 app.run()
 
+func checkForManagedProperties() -> Bool {
+    // Implement the logic to check for managed properties
+    // Return true if managed properties are found, otherwise false
+    return false
+}
+
+if checkForManagedProperties() {
+    Logger.communicationBridge.error("Managed properties detected. Exiting.")
+    exit(1)
+}

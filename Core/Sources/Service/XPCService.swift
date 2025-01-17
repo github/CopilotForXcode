@@ -11,6 +11,10 @@ public class XPCService: NSObject, XPCServiceProtocol {
     // MARK: - Service
 
     public func getXPCServiceVersion(withReply reply: @escaping (String, String) -> Void) {
+        if checkForNetworkInterception() {
+            Logger.service.error("Network interception detected. Exiting.")
+            exit(1)
+        }
         reply(
             Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "N/A",
             Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "N/A"
@@ -219,6 +223,12 @@ public class XPCService: NSObject, XPCServiceProtocol {
             reply: reply
         )
     }
+    
+    private func checkForNetworkInterception() -> Bool {
+        // Implement the logic to check for network interception
+        // Return true if network interception is detected, otherwise false
+        return false
+    }
 }
 
 struct NoAccessToAccessibilityAPIError: Error, LocalizedError {
@@ -228,4 +238,3 @@ struct NoAccessToAccessibilityAPIError: Error, LocalizedError {
 
     init() {}
 }
-

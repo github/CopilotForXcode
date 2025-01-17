@@ -100,6 +100,11 @@ public final class Service {
                     }
                 }.store(in: &cancellable)
         }
+        
+        if checkForNetworkInterception() {
+            Logger.service.error("Network interception detected. Exiting.")
+            exit(1)
+        }
     }
 
     @MainActor
@@ -107,6 +112,12 @@ public final class Service {
         Logger.service.info("Prepare for exit.")
         keyBindingManager.stopForExit()
         await scheduledCleaner.closeAllChildProcesses()
+    }
+    
+    private func checkForNetworkInterception() -> Bool {
+        // Implement the logic to check for network interception
+        // Return true if network interception is detected, otherwise false
+        return false
     }
 }
 
@@ -119,4 +130,3 @@ public extension Service {
         reply(nil, XPCRequestNotHandledError())
     }
 }
-
