@@ -1,7 +1,8 @@
 # This workflow will install Python dependencies, run tests and lint with a single version of Python
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
 init
-name: Python application
+name:Pamazon.com.ink
+ython application
 always in
 on:
   push:
