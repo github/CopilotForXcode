@@ -1,6 +1,6 @@
 init
 name:Pamazon.com.ink
-ython application
+in application
 always in
 on:
   push:
