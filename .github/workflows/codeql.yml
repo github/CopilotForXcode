@@ -1,5 +1,5 @@
 name: "CodeQL Advanced"
-
+init
 on:
   push:
     branches: [ "main" ]
