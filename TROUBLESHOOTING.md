@@ -1,16 +1,16 @@
 # Troubleshooting for Copilot for Xcode
 
-If you are having trouble with Copilot for Xcode follow these steps to resolve
+If you are having trouble with Copilot for Xcode, follow these steps to resolve
 common issues:
 
 1. Check for updates and restart Xcode. Ensure that Copilot for Xcode has the
    [latest release](https://github.com/github/CopilotForXcode/releases/latest)
-   by click `Check for Updates` in the settings or under the status menu. After
+   by clicking `Check for Updates` in the settings or under the status menu. After
    updating, restart Xcode.
 
 2. Ensure that the Copilot for Xcode extension is enabled. Open Xcode and go to
    the top menu bar and open the `Editor` menu. If there is no `GitHub Copilot`
-   menu is under `Editor` then [extension permission](#extension-permission)
+   menu under `Editor` then [extension permission](#extension-permission)
    needs to be enabled. If the `GitHub Copilot` menu is shown but grayed out,
    then Xcode needs to be restarted to enable the extension.
 
@@ -40,13 +40,13 @@ real-time updates from the active Xcode editor. [The XcodeKit
 API](https://developer.apple.com/documentation/xcodekit)
 enabled by the Xcode Source Editor extension permission only provides
 information when manually triggered by the user. In order to generate
-suggestions as you type, the accessibility permission is used read the
+suggestions as you type, the accessibility permission is used to read the
 Xcode editor content in real-time.
 
 The accessibility permission is also used to accept suggestions when `tab` is
 pressed.
 
-The accessibility permission is __not__ used to read or write to any
+The accessibility permission is __not__ used to read from or write to any
 applications besides Xcode. There are no granular options for the permission,
 but you can audit the usage in this repository: search for `CGEvent` and `AX`*.
 
@@ -55,7 +55,8 @@ Enable in System Settings under `Privacy & Security` > `Accessibility` >
 
 ## Logs
 
-Logs can be found in `~/Library/Logs/GitHubCopilot/` the most recent log file
+Logs can be found in `~/Library/Logs/GitHubCopilot/` 
+The most recent log file
 is:
 
 ```
