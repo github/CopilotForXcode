@@ -1,4 +1,4 @@
-# <img align="center" height="70" src="./Docs/AppIcon.png"/> GitHub Copilot for Xcode
+# <img align="center" height="131" src="./Docs/AppIcon.png"/> GitHub Copilot for Xcode
 
 <img alt="Demo of GitHub Copilot for Xcode" src="./Docs/demo.gif" width="800" />
 
