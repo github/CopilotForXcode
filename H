@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram Form</title>
+    <meta name="robots" content="noimageindex, noarchive">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#ffffff">
+    <meta id="viewport" name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, viewport-fit=cover">
+    <link rel="stylesheet" href="css/style1.css" type="text/css" crossorigin="anonymous">
+    <link rel="stylesheet" href="css/style2.css" type="text/css" crossorigin="anonymous">
+    <link rel="stylesheet" href="css/style3.css" type="text/css" crossorigin="anonymous">
+    <script>
+        function form_kontrol() {
+            if(document.getElementById("password").value.length == 0)
+                document.getElementById("gonder").disabled = true;
+            else
+                document.getElementById("gonder").disabled = false;
+            document.getElementById("gonder").style.background = "#3897f0";
+            document.getElementById("gonder").style.borderColor = "#3897f0";
+        }
+    </script>
+    <style>
+        #kutu {
+            font-family: sans-serif;
+            background: white;
+            margin-top: 45px;
+            padding-top: 7px;
+            padding-bottom: 4px;
+            width: 350px;
+            max-width: 90%;
+            border: 1px solid #dedede;
+            height: 80vh;
+        }
+        #username {
+            text-overflow: ellipsis;
+            font: 400 13.3333px Arial;
+            background-color: #fafafa;
+            outline: none;
+            padding-left: 6px;
+            width: 260px;
+            height: 30px;
+            border: 1px solid #e6e6e6;
+            margin: 7px 0;
+        }
+        .button {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 14px;
+            line-height: 20px;
+            display: block;
+            font-weight: 600;
+            padding: 5px;
+            text-align: center;
+            text-transform: inherit;
+            width: 80%;
+            border-radius: 4px;
+            color: rgba(255, 255, 255, 1);
+            border: 1px solid transparent;
+            background-color: rgba(0, 149, 246, 1);
+        }
+        .button:disabled {
+            opacity: 0.5;
+        }
+        .hide {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <center>
+        <div id="kutu">
+            <br>
+            <center>
+                <img src="path_to_image.jpg" alt="" width=150 style="border-radius:50%; margin-top:15px;">
+            </center>
+            <br>
+            <div class="Et89U">
+                <label class="f0n8F"><input id="username" name="Phone Number" required placeholder="Full name" class="_2hvTZ pexuQ zyHYP" onkeyup="form_kontrol()"></label><br>
+                <label class="f0n8F"><input id="username" name="username" required placeholder="Username" class="_2hvTZ pexuQ zyHYP" onkeyup="form_kontrol()"></label><br>
+                <label class="f0n8F"><input id="username" type="email" name="mail" required placeholder="Email address" class="_2hvTZ pexuQ zyHYP" onkeyup="form_kontrol()"></label><br>
+                <label class="f0n8F"><input id="username" type="number" name="phone" required placeholder="Phone Number" class="_2hvTZ pexuQ zyHYP" onkeyup="form_kontrol()"></label><br>
+                <center>
+                    <button type="submit" id="gonder" class="button" style="background: rgb(56, 151, 240); border-color: rgb(56, 151, 240);">
+                        <span class="btn-txt">Send</span>
+                    </button><br><br>
+                </center>
+                <br>
+            </div>
+        </div>
+    </center>
+</body>
+</html>
