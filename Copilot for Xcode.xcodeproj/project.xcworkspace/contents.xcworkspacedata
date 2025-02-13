@@ -1,7 +1,81 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Workspace
-   version = "1.0">
-   <FileRef
-      location = "self:">
-   </FileRef>
-</Workspace>
+import pygame
+import random
+
+# Initialisation de Pygame
+pygame.init()
+
+# Définition des constantes
+WIDTH, HEIGHT = 800, 600
+WHITE = (255, 255, 255)
+BLUE = (0, 0, 255)
+RED = (255, 0, 0)
+SPEED = 5
+ENEMY_SPEED = 3
+
+# Création de la fenêtre du jeu
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Jeu avec Ennemi et Score")
+
+# Définition du joueur
+player_size = 50
+player_x, player_y = WIDTH // 2, HEIGHT // 2
+
+# Définition de l'ennemi
+enemy_size = 50
+enemy_x, enemy_y = random.randint(0, WIDTH - enemy_size), 0 # Il commence en haut de l'écran
+
+# Score
+score = 0
+font = pygame.font.Font(None, 36)
+
+# Boucle principale du jeu
+running = True
+while running:
+    pygame.time.delay(30) # Régule la vitesse du jeu
+
+    # Gestion des événements
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False # Ferme le jeu
+
+    # Gestion des touches
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_LEFT] and player_x > 0:
+        player_x -= SPEED
+    if keys[pygame.K_RIGHT] and player_x < WIDTH - player_size:
+        player_x += SPEED
+    if keys[pygame.K_UP] and player_y > 0:
+        player_y -= SPEED
+    if keys[pygame.K_DOWN] and player_y < HEIGHT - player_size:
+        player_y += SPEED
+
+    # Déplacement de l'ennemi
+    enemy_y += ENEMY_SPEED
+    if enemy_y > HEIGHT: # L'ennemi revient en haut lorsqu'il sort de l'écran
+        enemy_y = 0
+        enemy_x = random.randint(0, WIDTH - enemy_size)
+        score += 1 # Augmente le score
+
+    # Vérification de collision
+    if (player_x < enemy_x + enemy_size and
+        player_x + player_size > enemy_x and
+        player_y < enemy_y + enemy_size and
+        player_y + player_size > enemy_y):
+        print("Game Over! Score:", score)
+        running = False # Arrête le jeu en cas de collision
+
+    # Affichage
+    screen.fill(WHITE) # Efface l'écran
+    pygame.draw.rect(screen, BLUE, (player_x, player_y, player_size, player_size)) # Dessine le joueur
+    pygame.draw.rect(screen, RED, (enemy_x, enemy_y, enemy_size, enemy_size)) # Dessine l'ennemi
+    
+    # Affichage du score
+    score_text = font.render(f"Score: {score}", True, (0, 0, 0))
+    screen.blit(score_text, (10, 10))
+
+    pygame.display.update() # Met à jour l'affichage
+
+# Quitter le jeu
+pygame.quit()
+
+
