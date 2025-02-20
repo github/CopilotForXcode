@@ -1,0 +1,58 @@
+<!DOCTYPE html><html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arena Play - Futebol Ao Vivo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #121212;
+            text-align: center;
+            color: white;
+        }
+        header {
+            background-color: #d32f2f;
+            padding: 20px;
+            font-size: 24px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #1e1e1e;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+        .btn-download {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #ff9800;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-size: 18px;
+        }
+        footer {
+            margin-top: 20px;
+            padding: 10px;
+            background: #333;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        Arena Play - Futebol Ao Vivo
+    </header>
+    <div class="container">
+        <h2>Assista aos Jogos Ao Vivo!</h2>
+        <p>Baixe agora o nosso aplicativo e acompanhe todas as transmissões ao vivo, replays e conteúdos exclusivos.</p>
+        <a href="#" class="btn-download">Baixar APK</a>
+    </div>
+    <footer>
+        &copy; 2025 Arena Play - Todos os direitos reservados.
+    </footer>
+</body>
+</html>
