@@ -16,7 +16,7 @@ jobs:
       # required for all workflows
       security-events: write
 
-      # required to fetch internal or private CodeQL packs
+      [![CodeQL Advanced](https://github.com/github/CopilotForXcode/actions/workflows/codeql.yml/badge.svg?event=create)](https://github.com/github/CopilotForXcode/actions/workflows/codeql.yml)
       packages: read
 
       # only required for workflows in private repositories
