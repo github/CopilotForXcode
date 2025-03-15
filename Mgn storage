@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Storage App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Account Creation Form -->
+        <div id="signup-form">
+            <h2>MGN Storage</h2>
+            <h2>Create Account</h2>
+            <input type="email" id="signup-email" placeholder="Email" required>
+            <input type="password" id="signup-password" placeholder="Password" required>
+            <button onclick="signUp()">Sign Up</button>
+            <p>Already have an account? <a href="#" onclick="showLogin()">Log In</a></p>
+        </div>
+
+        <!-- Login Form -->
+        <div id="login-form" style="display: none;">
+            <h2>Log In</h2>
+            <input type="email" id="login-email" placeholder="Email" required>
+            <input type="password" id="login-password" placeholder="Password" required>
+            <button onclick="logIn()">Log In</button>
+            <p>Don't have an account? <a href="#" onclick="showSignup()">Sign Up</a></p>
+        </div>
+
+        <!-- File Upload Section -->
+        <div id="file-upload-section" style="display: none;">
+            <h2>Upload Files</h2>
+            <input type="file" id="file-input" multiple>
+            <button onclick="uploadFiles()">Upload</button>
+            <div id="loading" style="display: none;">Uploading...</div>
+            <div id="file-list"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
+<!-- CSS codes -->
+<style>
+/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.container {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: #2980b9;
+}
+
+a {
+    color: #3498db;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+#loading {
+    margin-top: 10px;
+    color: #3498db;
+}
+
+#file-list {
+    margin-top: 20px;
+    text-align: left;
+}
+
+#file-list p {
+    margin: 5px 0;
+}
+h2 {
+    color: green;
+    font-family: Arial, sans-serif; /* Set the font family */
+    font-size: 24px;                /* Set the font size */
+    color: #333333;                 /* Set the text color */
+    font-weight: bold;              /* Set the font weight */
+    text-align: center;             /* Align the text to the center */
+    margin: 20px 0;                 /* Add margin above and below the heading */
+    padding: 10px;                  /* Add padding inside the heading */
+    background-color: #f4f4f4;      /* Set the background color */
+    border-bottom: 2px solid #cccccc; /* Add a border at the bottom */
+    text-transform: uppercase;      /* Convert text to uppercase */
+    letter-spacing: 2px;            /* Add spacing between letters */
+}
+</style>
+
+<!-- Javascript codes -->
+<script>
+// Simulated backend for demonstration
+let users = [];
+let files = [];
+
+// Show Login Form
+function showLogin() {
+    document.getElementById('signup-form').style.display = 'none';
+    document.getElementById('login-form').style.display = 'block';
+}
+
+// Show Signup Form
+function showSignup() {
+    document.getElementById('login-form').style.display = 'none';
+    document.getElementById('signup-form').style.display = 'block';
+}
+
+// Sign Up
+function signUp() {
+    const email = document.getElementById('signup-email').value;
+    const password = document.getElementById('signup-password').value;
+
+    if (email && password) {
+        users.push({ email, password });
+        alert('Account created successfully!');
+        showLogin();
+    } else {
+        alert('Please fill in all fields.');
+    }
+}
+
+// Log In
+function logIn() {
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+
+    const user = users.find(u => u.email === email && u.password === password);
+    if (user) {
+        alert('Login successful!');
+        document.getElementById('login-form').style.display = 'none';
+        document.getElementById('file-upload-section').style.display = 'block';
+    } else {
+        alert('Invalid email or password.');
+    }
+}
+
+// Upload Files
+function uploadFiles() {
+    const fileInput = document.getElementById('file-input');
+    const loading = document.getElementById('loading');
+    const fileList = document.getElementById('file-list');
+
+    if (fileInput.files.length === 0) {
+        alert('Please select files to upload.');
+        return;
+    }
+
+    loading.style.display = 'block';
+
+    // Simulate file upload (replace with actual backend API call)
+    setTimeout(() => {
+        for (let file of fileInput.files) {
+            files.push(file.name);
+            fileList.innerHTML += `<p>${file.name} <a href="#" onclick="downloadFile('${file.name}')">Download</a></p>`;
+        }
+        loading.style.display = 'none';
+        alert('Files uploaded successfully!');
+    }, 2000);
+}
+
+// Download File
+function downloadFile(filename) {
+    alert(`Downloading ${filename}...`);
+    // Simulate file download (replace with actual backend API call)
+}
+</script>
