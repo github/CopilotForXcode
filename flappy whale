@@ -1,0 +1,405 @@
+// Phaser Game Configuration
+const config = {
+    type: Phaser.AUTO,
+    width: 800,
+    height: 600,
+    physics: {
+        default: 'arcade',
+        arcade: { gravity: { y: 600 }, debug: false }
+    },
+    scene: { preload, create, update }
+};
+
+let game = new Phaser.Game(config);
+
+// Global Variables
+let whale, obstacles, score = 0, scoreText, highScore = 0, highScoreText;
+let powerUps, gameOverText, restartButton;
+let backgroundMusic, powerUpActive = false, customMusic;
+let multiplayerMode = false, playerId, players = {}, socket;
+let skinIndex = 0;
+let whaleSkins = [
+  'whale',
+  'cyborg_whale',
+  'rainbow_whale',
+  'zombie_whale',
+  'pirate_whale',
+  'steampunk_whale',
+  'astronaut_whale',
+  'ghost_whale'
+];
+let leaderboardText, chatInput, chatBox;
+
+// Replace these with your actual endpoints
+const leaderboardAPI = 'https://example.com/api/leaderboard';
+const serverURL      = 'https://example.com/socket';
+
+// --------------------------------------------------
+// 1) PRELOAD ASSETS
+// --------------------------------------------------
+function preload() {
+    // Background & Whale
+    this.load.image('background', 'https://i.imgur.com/rB4K9aM.jpg');
+    // Base whale sprite for frame animation
+    this.load.spritesheet('whale', 'https://i.imgur.com/YOUR_WHALE_SPRITE.png', {
+        frameWidth: 64,
+        frameHeight: 64
+    });
+
+    // Fun/Weird Whale Skins
+    this.load.image('cyborg_whale',    'https://i.imgur.com/CYBORG_WHALE.png');
+    this.load.image('rainbow_whale',   'https://i.imgur.com/RAINBOW_WHALE.png');
+    this.load.image('zombie_whale',    'https://i.imgur.com/ZOMBIE_WHALE.png');
+    this.load.image('pirate_whale',    'https://i.imgur.com/PIRATE_WHALE.png');
+    this.load.image('steampunk_whale', 'https://i.imgur.com/STEAMPUNK_WHALE.png');
+    this.load.image('astronaut_whale', 'https://i.imgur.com/ASTRONAUT_WHALE.png');
+    this.load.image('ghost_whale',     'https://i.imgur.com/GHOST_WHALE.png');
+
+    // Bubble effect
+    this.load.image('bubble_effect',   'https://i.imgur.com/BUBBLE_EFFECT.png');
+
+    // Buttons & Obstacles
+    this.load.image('restart',    'https://i.imgur.com/RESTART_BUTTON.png');
+    this.load.image('powerUp',    'https://i.imgur.com/POWERUP_IMAGE.png');
+    this.load.image('obstacle1',  'https://i.imgur.com/YOUR_FISH_IMAGE.png');
+    this.load.image('obstacle2',  'https://i.imgur.com/YOUR_JELLYFISH_IMAGE.png');
+    this.load.image('obstacle3',  'https://i.imgur.com/YOUR_SHARK_IMAGE.png');
+
+    // Sounds
+    this.load.audio('flap',       'https://www.example.com/flap.mp3');
+    this.load.audio('hit',        'https://www.example.com/hit.mp3');
+    this.load.audio('gameover',   'https://www.example.com/gameover.mp3');
+    this.load.audio('powerUpSound','https://www.example.com/powerup.mp3');
+    this.load.audio('backgroundMusic', 'https://www.example.com/backgroundMusic.mp3');
+}
+
+// --------------------------------------------------
+// 2) CREATE SCENE
+// --------------------------------------------------
+function create() {
+    // Background
+    this.add.image(400, 300, 'background');
+
+    // Music
+    backgroundMusic = this.sound.add('backgroundMusic', { loop: true, volume: 0.5 });
+    backgroundMusic.play();
+
+    // Whale
+    whale = this.physics.add.sprite(150, 300, whaleSkins[skinIndex]).setScale(1);
+    whale.setCollideWorldBounds(true);
+    this.input.on('pointerdown', jump);
+
+    // Whale Swim Animation (for the base sprite)
+    this.anims.create({
+        key: 'swim',
+        frames: this.anims.generateFrameNumbers('whale', { start: 0, end: 3 }),
+        frameRate: 6,
+        repeat: -1
+    });
+    whale.play('swim');
+
+    // Obstacle & Power-Up Groups
+    obstacles = this.physics.add.group();
+    powerUps  = this.physics.add.group();
+
+    // Spawn Timers
+    this.time.addEvent({ delay: 1200,  callback: spawnObstacle, callbackScope: this, loop: true });
+    this.time.addEvent({ delay: 10000, callback: spawnPowerUp,  callbackScope: this, loop: true });
+
+    // UI Text
+    scoreText = this.add.text(20, 20, 'Score: 0', {
+        fontSize: '24px',
+        fill: '#fff',
+        fontFamily: 'Arial',
+        stroke: '#000',
+        strokeThickness: 3
+    });
+    highScoreText = this.add.text(20, 50, 'High Score: 0', {
+        fontSize: '24px',
+        fill: '#fff',
+        fontFamily: 'Arial',
+        stroke: '#000',
+        strokeThickness: 3
+    });
+    leaderboardText = this.add.text(20, 80, 'Top Scores:\nLoading...', {
+        fontSize: '18px',
+        fill: '#fff',
+        fontFamily: 'Arial',
+        stroke: '#000',
+        strokeThickness: 2
+    });
+
+    // Physics Collisions & Overlaps
+    this.physics.add.collider(whale, obstacles, gameOver, null, this);
+    this.physics.add.overlap(whale, powerUps, collectPowerUp, null, this);
+
+    // Game Over UI
+    gameOverText = this.add.text(300, 250, '', {
+        fontSize: '32px',
+        fill: '#ff0000',
+        fontFamily: 'Arial',
+        stroke: '#000',
+        strokeThickness: 4
+    });
+    restartButton = this.add.image(400, 350, 'restart')
+        .setInteractive()
+        .setVisible(false);
+    restartButton.on('pointerdown', () => {
+        this.scene.restart();
+        if (backgroundMusic.isPlaying) backgroundMusic.stop();
+        if (customMusic) customMusic.pause();
+        backgroundMusic.play();
+    });
+
+    // Initialize All Extra Features
+    setupMultiplayer();
+    setupSkinSelection();
+    setupChatSystem.call(this);   // 'this' needed if we refer to Phaser methods
+    setupEffects.call(this);
+    setupLeaderboard();
+}
+
+// --------------------------------------------------
+// 3) UPDATE LOOP
+// --------------------------------------------------
+function update() {
+    if (whale.y > 600) {
+        gameOver.call(this);
+    }
+}
+
+// --------------------------------------------------
+// 4) SPAWN & GAMEPLAY FUNCTIONS
+// --------------------------------------------------
+function spawnObstacle() {
+    let obstacleTypes   = ['obstacle1', 'obstacle2', 'obstacle3'];
+    let randomObstacle  = Phaser.Math.RND.pick(obstacleTypes);
+    let obstacle        = obstacles.create(800, Phaser.Math.Between(100, 500), randomObstacle);
+
+    // Increase speed with score to ramp difficulty
+    obstacle.setVelocityX(-250 - (score * 2));
+    obstacle.setScale(0.5);
+    obstacle.checkWorldBounds = true;
+    obstacle.outOfBoundsKill  = true;
+
+    // Update Score
+    score += 1;
+    scoreText.setText('Score: ' + score);
+
+    // Update High Score
+    if (score > highScore) {
+        highScore = score;
+        highScoreText.setText('High Score: ' + highScore);
+    }
+}
+
+function spawnPowerUp() {
+    let powerUp = powerUps.create(
+        800,
+        Phaser.Math.Between(100, 500),
+        'powerUp'
+    );
+    powerUp.setVelocityX(-200);
+    powerUp.setScale(0.5);
+    powerUp.checkWorldBounds = true;
+    powerUp.outOfBoundsKill  = true;
+}
+
+function collectPowerUp(whale, powerUp) {
+    powerUp.destroy();
+    this.sound.play('powerUpSound');
+
+    // Temporary jump boost & color tint
+    powerUpActive = true;
+    whale.setTint(0x00ff00);
+    whale.setVelocityY(-300);
+
+    this.time.delayedCall(5000, () => {
+        powerUpActive = false;
+        whale.clearTint();
+    });
+}
+
+// --------------------------------------------------
+// 5) JUMP & GAME OVER
+// --------------------------------------------------
+function jump() {
+    whale.setVelocityY(-250);
+    whale.setTint(0xffd700);
+    this.sound.play('flap');
+
+    // Clear the tint after a short delay
+    this.time.delayedCall(200, () => whale.clearTint());
+
+    // Bubble effect around the whale
+    addBubbleEffect(whale.x, whale.y);
+}
+
+function gameOver() {
+    this.physics.pause();
+    whale.setTint(0xff0000);
+    this.sound.play('hit');
+
+    if (backgroundMusic.isPlaying) backgroundMusic.stop();
+    if (customMusic) customMusic.pause();
+
+    this.sound.play('gameover');
+    gameOverText.setText('Game Over!');
+    restartButton.setVisible(true);
+
+    let playerName = prompt('Enter your name for the leaderboard:');
+    if (playerName) {
+        submitScore(playerName, score);
+    }
+
+    // If in multiplayer, remove our player from the server
+    if (socket) {
+        socket.send(JSON.stringify({ type: 'remove', playerId }));
+    }
+}
+
+// --------------------------------------------------
+// 6) BUBBLE EFFECTS
+// --------------------------------------------------
+function addBubbleEffect(x, y) {
+    this.bubbleEmitter.explode(5, x, y);
+}
+
+function setupEffects() {
+    // Create the bubble particle emitter
+    this.bubbleEmitter = this.add.particles('bubble_effect').createEmitter({
+        x:       { min: 0, max: 800 },
+        y:       600,
+        lifespan:4000,
+        speedY:  { min: -100, max: -200 },
+        scale:   { start: 0.5, end: 0 },
+        quantity:1,
+        blendMode: 'ADD'
+    });
+}
+
+// --------------------------------------------------
+// 7) LEADERBOARD FUNCTIONS
+// --------------------------------------------------
+function setupLeaderboard() {
+    fetch(leaderboardAPI)
+        .then(response => response.json())
+        .then(data => {
+            leaderboardText.setText(
+                'Top Scores:\n' +
+                data.map((entry, index) =>
+                    `${index + 1}. ${entry.name}: ${entry.score}`
+                ).join('\n')
+            );
+        })
+        .catch(() => leaderboardText.setText('Top Scores:\nError loading leaderboard'));
+}
+
+function submitScore(playerName, playerScore) {
+    fetch(leaderboardAPI, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: playerName, score: playerScore })
+    }).then(() => setupLeaderboard());
+}
+
+// --------------------------------------------------
+// 8) MULTIPLAYER & CHAT
+// --------------------------------------------------
+function setupMultiplayer() {
+    socket = new WebSocket(serverURL);
+
+    socket.onopen = () => {
+        // Assign a random Player ID
+        playerId = Math.random().toString(36).substr(2, 9);
+
+        // Notify the server we joined
+        socket.send(JSON.stringify({ type: 'join', playerId }));
+    };
+
+    socket.onmessage = (event) => {
+        let data = JSON.parse(event.data);
+
+        if (data.type === 'update') {
+            players[data.playerId] = data;
+        } else if (data.type === 'remove') {
+            delete players[data.playerId];
+        } else if (data.type === 'chat') {
+            // Chat message from another player
+            let message = document.createElement('p');
+            message.innerText = `${data.playerId}: ${data.message}`;
+            chatBox.appendChild(message);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    };
+
+    // Send frequent position/scores to the server
+    setInterval(() => {
+        if (whale) {
+            socket.send(JSON.stringify({
+                type: 'update',
+                playerId,
+                x: whale.x,
+                y: whale.y,
+                score: score,
+                skin: whaleSkins[skinIndex]
+            }));
+        }
+    }, 100);
+}
+
+// --------------------------------------------------
+// 9) SKIN SELECTION
+// --------------------------------------------------
+function setupSkinSelection() {
+    let skinButton = document.createElement('button');
+    skinButton.innerText = 'Change Whale Skin';
+    skinButton.style.position = 'absolute';
+    skinButton.style.top = '100px';
+    skinButton.style.left = '650px';
+    skinButton.onclick = function() {
+        skinIndex = (skinIndex + 1) % whaleSkins.length;
+        whale.setTexture(whaleSkins[skinIndex]);
+    };
+    document.body.appendChild(skinButton);
+}
+
+// --------------------------------------------------
+// 10) CHAT SYSTEM
+// --------------------------------------------------
+function setupChatSystem() {
+    // Chat Display (bottom-left)
+    chatBox = document.createElement('div');
+    chatBox.style.position = 'absolute';
+    chatBox.style.bottom = '80px';
+    chatBox.style.left   = '20px';
+    chatBox.style.width  = '250px';
+    chatBox.style.height = '150px';
+    chatBox.style.overflowY = 'scroll';
+    chatBox.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+    chatBox.style.color = 'white';
+    chatBox.style.padding = '10px';
+    document.body.appendChild(chatBox);
+
+    // Chat Input
+    chatInput = document.createElement('input');
+    chatInput.type = 'text';
+    chatInput.placeholder = 'Say something...';
+    chatInput.style.position = 'absolute';
+    chatInput.style.bottom   = '50px';
+    chatInput.style.left     = '20px';
+    chatInput.style.width    = '240px';
+    document.body.appendChild(chatInput);
+
+    // Send message on ENTER key
+    chatInput.addEventListener('keypress', (event) => {
+        if (event.key === 'Enter' && socket) {
+            socket.send(JSON.stringify({
+                type: 'chat',
+                playerId,
+                message: chatInput.value
+            }));
+            chatInput.value = '';
+        }
+    });
+}
