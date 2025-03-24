@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"/>
+  <title>Đặt xe tuyến cố định</title>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.10.0/mapbox-gl.css" rel="stylesheet"/>
+  <link href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet"/>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      color: #333;
+    }
+    #map {
+      height: 70vh;
+      width: 100%;
+    }
+    .controls {
+      padding: 15px;
+      background: #fff;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      max-width: 600px;
+      margin: 0 auto;
+      border-radius: 8px;
+    }
+    .form-group {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    input, select, textarea, button {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+      box-sizing: border-box;
+      transition: border-color 0.3s;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: #4a90e2;
+      outline: none;
+    }
+    button {
+      background-color: #4a90e2;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+      margin-top: 10px;
+    }
+    button:hover {
+      background-color: #3a7bc8;
+    }
+    #geocoder-start, #geocoder-end {
+      margin: 10px 0;
+    }
+    #captcha-container {
+      margin: 15px 0;
+      display: none;
+    }
+    .location-btn {
+      background-color: #f5f5f5;
+      color: #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 15px;
+    }
+    .location-btn:hover {
+      background-color: #e0e0e0;
+    }
+    .required:after {
+      content: " *";
+      color: red;
+    }
+    @media (max-width: 768px) {
+      .controls {
+        padding: 10px;
+      }
+      input, select, textarea, button {
+        padding: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="controls">
+    <div class="form-group">
+      <label for="name" class="required">Họ tên</label>
+      <input id="name" placeholder="Nhập họ tên đầy đủ"/>
+    </div>
+    
+    <div class="form-group">
+      <label for="phone" class="required">Số điện thoại</label>
+      <input id="phone" placeholder="Nhập số điện thoại" type="tel"/>
+    </div>
+    
+    <div class="form-group">
+      <label for="carType" class="required">Loại xe</label>
+      <select id="carType">
+        <option value="Xe ghép">Xe ghép (chia sẻ chuyến)</option>
+        <option value="Xe riêng">Xe riêng</option>
+      </select>
+    </div>
+    
+    <div class="form-group">
+      <label for="datetime" class="required">Ngày & giờ</label>
+      <input id="datetime" placeholder="Chọn ngày và giờ..."/>
+    </div>
+    
+    <div class="form-group">
+      <label for="geocoder-start" class="required">Điểm đón</label>
+      <div id="geocoder-start"></div>
+    </div>
+    
+    <div class="form-group">
+      <label for="geocoder-end" class="required">Điểm đến</label>
+      <div id="geocoder-end"></div>
+    </div>
+    
+    <button class="location-btn" onclick="goToCurrentLocation()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+        <circle cx="12" cy="10" r="3"></circle>
+      </svg>
+      Lấy vị trí hiện tại
+    </button>
+    
+    <div class="form-group">
+      <label for="refCode">Mã giới thiệu (nếu có)</label>
+      <input id="refCode" placeholder="Nhập mã giới thiệu"/>
+    </div>
+    
+    <div class="form-group">
+      <label for="note">Ghi chú</label>
+      <textarea id="note" placeholder="Số ghế, số nhà, hàng hóa... (không bắt buộc)" rows="3"></textarea>
+    </div>
+    
+    <div id="captcha-container">
+      <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></div>
+    </div>
+    
+    <button onclick="sendInfo()">Gửi thông tin đặt xe 🚖</button>
+  </div>
+  
+  <div id="map"></div>
+
+  <!-- Scripts -->
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.10.0/mapbox-gl.js"></script>
+  <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/vn.js"></script>
+  <script async defer src="https://www.google.com/recaptcha/api.js"></script>
+  
+  <script>
+    // Khởi tạo biến toàn cục
+    let pickup = null, dropoff = null;
+    let pickupAddress = '', dropoffAddress = '';
+    let pickupMarker = null, dropoffMarker = null;
+    let submitCount = 0;
+    let map, pickupGeocoder, dropoffGeocoder;
+    
+    // Hằng số cấu hình với API key mới
+    const MAPBOX_TOKEN = 'pk.eyJ1IjoiYXR0b25nMzkiLCJhIjoiY204bjVoazYxMWp2djJtcXJ1OHdzeHVyciJ9.T4c11fBbmCg8GIMU70BrpQ';
+    const BBOX_NORTH_VN = [102.14441, 19.0, 107.7, 23.5];
+    const TELEGRAM_BOT_TOKEN = '7947843146:AAHjxlQcTS9d4vdOQ-9pzS_NZdF_iFjI0MU';
+    const TELEGRAM_CHAT_ID = '7311822484';
+    
+    // Khởi tạo ứng dụng khi DOM sẵn sàng
+    document.addEventListener('DOMContentLoaded', function() {
+      initDateTimePicker();
+      initMap();
+      initGeocoders();
+    });
+    
+    function initDateTimePicker() {
+      flatpickr("#datetime", {
+        enableTime: true,
+        dateFormat: "Y-m-d H:i",
+        minDate: "today",
+        time_24hr: true,
+        locale: "vn",
+        minuteIncrement: 5,
+        defaultHour: 7,
+        defaultMinute: 0
+      });
+    }
+    
+    function initMap() {
+      mapboxgl.accessToken = MAPBOX_TOKEN;
+      
+      map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/streets-v11',
+        center: [105.8542, 21.0285], // Hà Nội
+        zoom: 10
+      });
+      
+      // Thêm điều khiển zoom và compass
+      map.addControl(new mapboxgl.NavigationControl());
+    }
+    
+    function initGeocoders() {
+      pickupGeocoder = new MapboxGeocoder({
+        accessToken: MAPBOX_TOKEN,
+        placeholder: "Nhập địa chỉ đón...",
+        mapboxgl: mapboxgl,
+        bbox: BBOX_NORTH_VN,
+        proximity: { longitude: 105.8542, latitude: 21.0285 },
+        language: 'vi'
+      });
+      
+      dropoffGeocoder = new MapboxGeocoder({
+        accessToken: MAPBOX_TOKEN,
+        placeholder: "Nhập địa chỉ đến...",
+        mapboxgl: mapboxgl,
+        bbox: BBOX_NORTH_VN,
+        proximity: { longitude: 105.8542, latitude: 21.0285 },
+        language: 'vi'
+      });
+      
+      document.getElementById('geocoder-start').appendChild(pickupGeocoder.onAdd(map));
+      document.getElementById('geocoder-end').appendChild(dropoffGeocoder.onAdd(map));
+      
+      // Xử lý sự kiện khi chọn điểm đón
+      pickupGeocoder.on('result', function(e) {
+        pickup = e.result.center;
+        pickupAddress = e.result.place_name;
+        updateMarker('pickup', pickup, 'green');
+        zoomToMarkers();
+      });
+      
+      // Xử lý sự kiện khi chọn điểm đến
+      dropoffGeocoder.on('result', function(e) {
+        dropoff = e.result.center;
+        dropoffAddress = e.result.place_name;
+        updateMarker('dropoff', dropoff, 'blue');
+        zoomToMarkers();
+      });
+    }
+    
+    function updateMarker(type, coordinates, color) {
+      if (type === 'pickup') {
+        if (pickupMarker) pickupMarker.remove();
+        pickupMarker = new mapboxgl.Marker({ color: color })
+          .setLngLat(coordinates)
+          .setPopup(new mapboxgl.Popup().setHTML(`<b>Điểm đón:</b><br>${pickupAddress}`))
+          .addTo(map);
+      } else {
+        if (dropoffMarker) dropoffMarker.remove();
+        dropoffMarker = new mapboxgl.Marker({ color: color })
+          .setLngLat(coordinates)
+          .setPopup(new mapboxgl.Popup().setHTML(`<b>Điểm đến:</b><br>${dropoffAddress}`))
+          .addTo(map);
+      }
+    }
+    
+    function zoomToMarkers() {
+      if (pickup && dropoff) {
+        const bounds = new mapboxgl.LngLatBounds();
+        bounds.extend(pickup);
+        bounds.extend(dropoff);
+        map.fitBounds(bounds, { padding: 100, maxZoom: 14 });
+      } else if (pickup) {
+        map.flyTo({ center: pickup, zoom: 14 });
+      } else if (dropoff) {
+        map.flyTo({ center: dropoff, zoom: 14 });
+      }
+    }
+    
+    function goToCurrentLocation() {
+      if (!navigator.geolocation) {
+        alert("Trình duyệt của bạn không hỗ trợ định vị.");
+        return;
+      }
+      
+      navigator.geolocation.getCurrentPosition(
+        function(position) {
+          const lng = position.coords.longitude;
+          const lat = position.coords.latitude;
+          const userLocation = [lng, lat];
+          
+          // Di chuyển bản đồ đến vị trí hiện tại
+          map.flyTo({ center: userLocation, zoom: 14 });
+          
+          // Thêm marker vị trí hiện tại
+          new mapboxgl.Marker({ color: 'red' })
+            .setLngLat(userLocation)
+            .setPopup(new mapboxgl.Popup().setHTML("<b>Vị trí hiện tại của bạn</b>"))
+            .addTo(map);
+            
+          // Lấy địa chỉ từ tọa độ
+          fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${MAPBOX_TOKEN}&language=vi`)
+            .then(response => response.json())
+            .then(data => {
+              if (data.features && data.features.length > 0) {
+                const address = data.features[0].place_name;
+                // Tự động điền vào ô điểm đón
+                pickupGeocoder.query(address);
+              }
+            });
+        },
+        function(error) {
+          let errorMessage = "Không thể lấy vị trí hiện tại.";
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage = "Bạn đã từ chối yêu cầu định vị. Vui lòng cho phép truy cập vị trí để sử dụng tính năng này.";
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage = "Thông tin vị trí không khả dụng.";
+              break;
+            case error.TIMEOUT:
+              errorMessage = "Yêu cầu lấy vị trí đã hết thời gian chờ.";
+              break;
+          }
+          alert(errorMessage);
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+    
+    function validatePhoneNumber(phone) {
+      const regex = /^(0|\+84)(3[2-9]|5[2689]|7[06-9]|8[1-9]|9[0-9])[0-9]{7}$/;
+      return regex.test(phone);
+    }
+    
+    function sendInfo() {
+      const name = document.getElementById("name").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      const carType = document.getElementById("carType").value;
+      const datetime = document.getElementById("datetime").value.trim();
+      const refCode = document.getElementById("refCode").value.trim();
+      const note = document.getElementById("note").value.trim();
+      
+      // Kiểm tra dữ liệu đầu vào
+      if (!name || !phone || !datetime || !pickup || !dropoff) {
+        alert("Vui lòng điền đầy đủ các thông tin bắt buộc (*)");
+        return;
+      }
+      
+      if (!validatePhoneNumber(phone)) {
+        alert("Số điện thoại không hợp lệ. Vui lòng nhập số điện thoại Việt Nam.");
+        return;
+      }
+      
+      // Kiểm tra captcha sau 3 lần gửi
+      submitCount++;
+      if (submitCount >= 3) {
+        const captchaContainer = document.getElementById("captcha-container");
+        captchaContainer.style.display = "block";
+        const response = grecaptcha.getResponse();
+        if (!response) {
+          alert("Vui lòng xác minh bạn không phải là robot trước khi gửi.");
+          return;
+        }
+      }
+      
+      // Tạo URL chỉ đường Google Maps
+      const googleMapsUrl = `https://www.google.com/maps/dir/${pickup[1]},${pickup[0]}/${dropoff[1]},${dropoff[0]}`;
+      
+      // Gửi thông tin đến Telegram
+      fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: TELEGRAM_CHAT_ID,
+          text: `🆕 *THÔNG TIN ĐẶT XE MỚI*\n
+👤 *Tên khách:* ${name}
+📞 *SĐT:* [${phone.substring(0, 3)}****${phone.substring(7)}]
+🚗 *Loại xe:* ${carType}
+📅 *Thời gian:* ${datetime}
+📍 *Điểm đón:* ${pickupAddress}
+🏁 *Điểm đến:* ${dropoffAddress}
+🗺️ *Chỉ đường:* [Xem trên bản đồ](${googleMapsUrl})
+📝 *Ghi chú:* ${note || "Không có"}
+🔗 *Mã giới thiệu:* ${refCode || "Không có"}`,
+          parse_mode: "Markdown",
+          disable_web_page_preview: false
+        })
+      })
+      .then(response => {
+        if (response.ok) {
+          alert("✅ Thông tin đã được gửi thành công!\nTài xế sẽ liên hệ với bạn sớm.");
+          // Reset form sau khi gửi thành công
+          document.getElementById("name").value = "";
+          document.getElementById("phone").value = "";
+          document.getElementById("datetime").value = "";
+          document.getElementById("refCode").value = "";
+          document.getElementById("note").value = "";
+          if (pickupMarker) pickupMarker.remove();
+          if (dropoffMarker) dropoffMarker.remove();
+          pickup = null;
+          dropoff = null;
+          pickupAddress = '';
+          dropoffAddress = '';
+          grecaptcha.reset();
+          document.getElementById("captcha-container").style.display = "none";
+        } else  
