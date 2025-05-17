@@ -1,148 +1,202 @@
 # <img align="center" height="70" src="./Docs/AppIcon.png"/> GitHub Copilot for Xcode
 
-[GitHub Copilot](https://github.com/features/copilot) is an AI pair programmer
-tool that helps you write code faster and smarter. Copilot for Xcode is an Xcode extension that provides inline coding suggestions as you type and a chat assistant to answer your coding questions.
+[GitHub Copilot](https://github.com/features/copilot) is an AI pair programmer that helps you write code faster and smarter. Copilot for Xcode is an Xcode extension that provides inline coding suggestions as you type and a chat assistant to answer your coding questions.
 
-## Chat
+---
 
-GitHub Copilot Chat provides suggestions to your specific coding tasks via chat.
-<img alt="Chat of GitHub Copilot for Xcode" src="./Docs/chat_dark.gif" width="800" />
+## Table of Contents
 
-## Code Completion
+- [Features](#features)
+- [Requirements](#requirements)
+- [Quick Start](#quick-start)
+- [Getting Started](#getting-started)
+- [How to Use Chat](#how-to-use-chat)
+- [How to Use Code Completion](#how-to-use-code-completion)
+- [Keyboard Shortcuts](#keyboard-shortcuts)
+- [Troubleshooting](#troubleshooting)
+- [License](#license)
+- [Privacy](#privacy)
+- [Support](#support)
+- [Acknowledgements](#acknowledgements)
 
-You can receive auto-complete type suggestions from GitHub Copilot either by starting to write the code you want to use, or by writing a natural language comment describing what you want the code to do.
-<img alt="Code Completion of GitHub Copilot for Xcode" src="./Docs/demo.gif" width="800" />
+---
+
+## Features
+
+### Chat
+GitHub Copilot Chat provides suggestions for your specific coding tasks via a conversational interface.
+
+![Animated screenshot showing Copilot Chat in Xcode](./Docs/chat_dark.gif)
+
+### Code Completion
+Receive AI-powered auto-complete suggestions from GitHub Copilot by starting to write code or by describing your intent in a natural language comment.
+
+![Animated screenshot showing code completion suggestions](./Docs/demo.gif)
+
+---
 
 ## Requirements
 
-- macOS 12+
-- Xcode 8+
-- A GitHub Copilot subscription. To learn more, visit [https://github.com/features/copilot](https://github.com/features/copilot).
+- macOS 12 or higher
+- Xcode 8 or higher
+- A [GitHub Copilot subscription](https://github.com/features/copilot)
+
+---
+
+## Quick Start
+
+1. **Install via Homebrew:**
+    ```sh
+    brew install --cask github-copilot-for-xcode
+    ```
+    *Or* download the `.dmg` from the [latest release](https://github.com/github/CopilotForXcode/releases/latest/download/GitHubCopilotForXcode.dmg) and drag **GitHub Copilot for Xcode** into your **Applications** folder.
+
+2. **Open the app** and accept any security warnings.
+
+3. **Grant permissions** (Background, Accessibility, and Xcode Source Editor Extension) when prompted.
+
+4. **Enable the extension** in System Preferences > Extensions > Xcode Source Editor.
+
+5. **Open Xcode** and verify the **GitHub Copilot** menu under the Xcode **Editor** menu.
+
+6. **Sign in to GitHub Copilot** via the app settings.
+
+---
 
 ## Getting Started
 
-1. Install via [Homebrew](https://brew.sh/):
+### 1. Installation
 
-   ```sh
-   brew install --cask github-copilot-for-xcode
-   ```
+- Install via [Homebrew](https://brew.sh/), or
+- Download the `.dmg` from [the latest release](https://github.com/github/CopilotForXcode/releases/latest/download/GitHubCopilotForXcode.dmg) and drag it into your Applications folder.
 
-   Or download the `dmg` from
-   [the latest release](https://github.com/github/CopilotForXcode/releases/latest/download/GitHubCopilotForXcode.dmg).
-   Drag `GitHub Copilot for Xcode` into the `Applications` folder:
+    ![Screenshot: Opened dmg](./Docs/dmg-open.png)
 
-   <p align="center">
-     <img alt="Screenshot of opened dmg" src="./Docs/dmg-open.png" width="512" />
-   </p>
+- Updates can be downloaded and installed by the app.
 
-   Updates can be downloaded and installed by the app.
+### 2. Running the Application
 
-1. Open the `GitHub Copilot for Xcode` application (from the `Applications` folder). Accept the security warning.
-   <p align="center">
-     <img alt="Screenshot of MacOS download permission request" src="./Docs/macos-download-open-confirm.png" width="350" />
-   </p>
+- Open **GitHub Copilot for Xcode** from Applications.
+- Accept the security warning.
+    ![Screenshot: macOS download permission request](./Docs/macos-download-open-confirm.png)
 
+- A background item will be added automatically.
+    ![Screenshot: Background item](./Docs/background-item.png)
 
-1. A background item will be added to enable the GitHub Copilot for Xcode extension app to connect to the host app. This permission is usually automatically added when first launching the app.
-   <p align="center">
-     <img alt="Screenshot of background item" src="./Docs/background-item.png" width="370" />
-   </p>
+### 3. Permissions
 
-1. Three permissions are required for GitHub Copilot for Xcode to function properly: `Background`, `Accessibility`, and `Xcode Source Editor Extension`. For more details on why these permissions are required see [TROUBLESHOOTING.md](./TROUBLESHOOTING.md).
+- **Three permissions** are required: Background, Accessibility, and Xcode Source Editor Extension.
+- The first time the app runs, you will be prompted for Accessibility permission:
+    ![Screenshot: Accessibility permission request](./Docs/accessibility-permission-request.png)
 
-   The first time the application is run the `Accessibility` permission should be requested:
+- Enable the Xcode Source Editor Extension manually:
+    - Click **Extension Permission** from the app settings.
+    - Go to System Preferences > Extensions > Xcode Source Editor, and enable **GitHub Copilot**.
+    ![Screenshot: Extension permission](./Docs/extension-permission.png)
 
-   <p align="center">
-     <img alt="Screenshot of accessibility permission request" src="./Docs/accessibility-permission-request.png" width="529" />
-   </p>
+### 4. Enabling in Xcode
 
-   The `Xcode Source Editor Extension` permission needs to be enabled manually. Click
-   `Extension Permission` from the `GitHub Copilot for Xcode` application settings to open the
-   System Preferences to the `Extensions` panel. Select `Xcode Source Editor`
-   and enable `GitHub Copilot`:
+- Open Xcode and make sure the **GitHub Copilot** menu is available and enabled under the Xcode **Editor** menu.
+    ![Screenshot: Xcode Editor GitHub Copilot menu item](./Docs/xcode-menu.png)
 
-   <p align="center">
-     <img alt="Screenshot of extension permission" src="./Docs/extension-permission.png" width="582" />
-   </p>
+- Keyboard shortcuts can be set for all menu items in Xcode preferences under **Key Bindings**.
 
-1. After granting the extension permission, open Xcode. Verify that the
-   `Github Copilot` menu is available and enabled under the Xcode `Editor`
-   menu.
-    <br>
-    <p align="center">
-      <img alt="Screenshot of Xcode Editor GitHub Copilot menu item" src="./Docs/xcode-menu.png" width="648" />
-    </p>
+### 5. Signing In
 
-    Keyboard shortcuts can be set for all menu items in the `Key Bindings`
-    section of Xcode preferences.
+- Click **Sign in** in the app settings.
+- A browser window will open and a code will be copied to your clipboard. Paste the code into the GitHub login page.
+    ![Screenshot: Sign-in popup](./Docs/device-code.png)
 
-1. To sign into GitHub Copilot, click the `Sign in` button in the settings application. This will open a browser window and copy a code to the clipboard. Paste the code into the GitHub login page and authorize the application.
-    <p align="center">
-      <img alt="Screenshot of sign-in popup" src="./Docs/device-code.png" width="372" />
-    </p>
+### 6. Updating
 
-1. To install updates, click `Check for Updates` from the menu item or in the
-   settings application.
+- To install updates, click **Check for Updates** in the menu or app settings.
+- After updating, restart Xcode for the changes to take effect.
+- New versions can also be installed via `.dmg` from the releases page.
 
-   After installing a new version, Xcode must be restarted to use the new
-   version correctly.
+### 7. Xcode Preferences
 
-   New versions can also be installed from `dmg` files downloaded from the
-   releases page. When installing a new version via `dmg`, the application must
-   be run manually the first time to accept the downloaded from the internet
-   warning.
+> **Note:** To avoid conflicts, disable **Predictive code completion**:
+> Xcode > Preferences > Text Editing > Editing
 
-1. To avoid confusion, we recommend disabling `Predictive code completion` under
-   `Xcode` > `Preferences` > `Text Editing` > `Editing`.
+### 8. Using Suggestions
 
-1. Press `tab` to accept the first line of a suggestion, hold `option` to view
-   the full suggestion, and press `option` + `tab` to accept the full suggestion.
+- Press `Tab` to accept the first line of a suggestion.
+- Hold `Option` to view the full suggestion.
+- Press `Option + Tab` to accept the full suggestion.
+    ![Screenshot: Welcome screen](./Docs/welcome.png)
 
-   <p align="center">
-     <img alt="Screenshot of welcome screen" src="./Docs/welcome.png" width="450" />
-   </p>
+---
 
-## How to use Chat
+## How to Use Chat
 
-   Open Copilot Chat in GitHub Copilot.
-  - Open via the Xcode menu `Xcode -> Editor -> GitHub Copilot -> Open Chat`.
-  <p align="center">
-    <img alt="Screenshot of Xcode Editor GitHub Copilot menu item" src="./Docs/xcode-menu_dark.png" width="648" />
-  </p>
+- Open Copilot Chat in Xcode via:
+    - **Xcode → Editor → GitHub Copilot → Open Chat**
+      ![Screenshot: Xcode Editor GitHub Copilot menu item](./Docs/xcode-menu_dark.png)
+    - Or via the **GitHub Copilot app menu → Open Chat**
+      ![Screenshot: GitHub Copilot menu item](./Docs/copilot-menu_dark.png)
 
-  - Open via GitHub Copilot app menu `Open Chat`.
+---
 
-  <p align="center">
-    <img alt="Screenshot of GitHub Copilot menu item" src="./Docs/copilot-menu_dark.png" width="244" />
-  </p>
+## How to Use Code Completion
 
-## How to use Code Completion
+- Press `Tab` to accept the first line of a suggestion.
+- Hold `Option` to view the full suggestion.
+- Press `Option + Tab` to accept the full suggestion.
 
-   Press `tab` to accept the first line of a suggestion, hold `option` to view
-   the full suggestion, and press `option` + `tab` to accept the full suggestion.
+---
+
+## Keyboard Shortcuts
+
+| Action                               | Shortcut           |
+|-------------------------------------- |--------------------|
+| Accept first line of suggestion       | `Tab`              |
+| View full suggestion                  | `Option`           |
+| Accept full suggestion                | `Option + Tab`     |
+| Open Copilot Chat                     | Customize in Xcode |
+
+Set your own shortcuts in **Xcode > Preferences > Key Bindings**.
+
+---
+
+## Troubleshooting
+
+- **Copilot menu not showing in Xcode?**
+    - Make sure the Source Editor Extension is enabled in System Preferences > Extensions.
+    - Restart Xcode after enabling the extension.
+
+- **Permission issues?**
+    - Confirm that Accessibility and Background permissions are enabled in System Preferences.
+
+- **Problems signing in?**
+    - Ensure you’re using the latest version of the app.
+    - Try re-signing in via the app settings.
+
+For more help, visit our [Feedback forum](https://github.com/orgs/community/discussions/categories/copilot).
+
+---
 
 ## License
 
-This project is licensed under the terms of the MIT open source license. Please
-refer to [LICENSE.txt](./LICENSE.txt) for the full terms.
+This project is licensed under the MIT open source license. See [LICENSE.txt](./LICENSE.txt) for details.
+
+---
 
 ## Privacy
 
-We follow responsible practices in accordance with our
-[Privacy Statement](https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement).
+We follow responsible practices in accordance with our [Privacy Statement](https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement).
 
-To get the latest security fixes, please use the latest version of the GitHub
-Copilot for Xcode.
+To get the latest security fixes, please use the latest version of GitHub Copilot for Xcode.
+
+---
 
 ## Support
 
-We’d love to get your help in making GitHub Copilot better!  If you have
-feedback or encounter any problems, please reach out on our [Feedback
-forum](https://github.com/orgs/community/discussions/categories/copilot).
+We welcome your feedback to make GitHub Copilot better! If you have feedback or encounter problems, please reach out on our [Feedback forum](https://github.com/orgs/community/discussions/categories/copilot).
+
+---
 
 ## Acknowledgements
 
-Thank you to @intitni for creating the original project that this is based on.
+Thank you to @intitni for creating the original project this is based on.
 
-Attributions can be found under About when running the app or in
-[Credits.rtf](./Copilot%20for%20Xcode/Credits.rtf).
+Attributions can be found under "About" in the app or in [Credits.rtf](./Copilot%20for%20Xcode/Credits.rtf).
