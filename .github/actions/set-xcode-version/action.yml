@@ -1,3 +1,4 @@
+Tool/Sources/GitHubCopilotService/LanguageServer/GitHubCopilotAccountStatus.swift
 name: 'Composite Xcode Path'
 description: 'Get Xcode version to be used across all actions'
 inputs:
