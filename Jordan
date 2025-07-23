@@ -1,0 +1,94 @@
+#include <Servo.h>
+
+const int trigPin = 9;
+const int echoPin = 10;
+const int motorLeft = 5;
+const int motorRight = 6;
+const int servoPin = 3;
+
+const int angleCenter = 90;
+const int angleLeft = 150;
+const int angleRight = 30;
+
+Servo servo;
+
+void setup() {
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  pinMode(motorLeft, OUTPUT);
+  pinMode(motorRight, OUTPUT);
+  Serial.begin(9600);
+
+  servo.attach(servoPin);
+  servo.write(angleCenter);
+}
+
+long getDistance() {
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  return pulseIn(echoPin, HIGH, 20000) * 0.034 / 2; // Timeout added
+}
+
+long getAverageDistance() {
+  long total = 0;
+  for (int i = 0; i < 5; i++) {
+    total += getDistance();
+    delay(10);
+  }
+  return total / 5;
+}
+
+int scanAngle(int angle) {
+  servo.write(angle);
+  delay(300); // انتظار حتى يثبت السرفو
+  return getAverageDistance();
+}
+
+void loop() {
+  long distance = getAverageDistance();
+  Serial.print("Center: "); Serial.println(distance);
+
+  if (distance == 0 || distance > 300) {
+    digitalWrite(motorLeft, LOW);
+    digitalWrite(motorRight, LOW);
+    return;
+  }
+
+  if (distance < 20) {
+    // توقف مؤقت وتراجع بسيط
+    digitalWrite(motorLeft, LOW);
+    digitalWrite(motorRight, LOW);
+    delay(200);
+
+    // مسح الاتجاهات
+    int left = scanAngle(angleLeft);
+    int right = scanAngle(angleRight);
+    servo.write(angleCenter);
+    delay(200); // العودة للمنتصف
+
+    Serial.print("Left: "); Serial.print(left);
+    Serial.print(" | Right: "); Serial.println(right);
+
+    // اتخاذ القرار
+    if (left > right) {
+      // انعطاف لليسار
+      digitalWrite(motorLeft, LOW);
+      digitalWrite(motorRight, HIGH);
+      delay(500);
+    } else {
+      // انعطاف لليمين
+      digitalWrite(motorLeft, HIGH);
+      digitalWrite(motorRight, LOW);
+      delay(500);
+    }
+  } else {
+    // السير للأمام
+    digitalWrite(motorLeft, HIGH);
+    digitalWrite(motorRight, HIGH);
+  }
+
+  delay(50);
+}
