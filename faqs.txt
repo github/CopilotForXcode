@@ -1,0 +1,196 @@
+{
+  "faqs": [
+    {
+      "question": "What is cannabis used for?",
+      "answer": "Cannabis is used for medicinal and recreational purposes, helping with pain relief, anxiety, and sleep issues."
+    },
+    {
+      "question": "How do I harvest cannabis?",
+      "answer": "Cannabis should be harvested when the trichomes are milky white and amber. Cut the plants and dry them properly."
+    },
+    {
+      "question": "What are the different types of cannabis?",
+      "answer": "The main types are Cannabis Sativa, Cannabis Indica, and Cannabis Ruderalis."
+    },
+    {
+      "question": "What is the difference between THC and CBD?",
+      "answer": "THC is the psychoactive compound in cannabis that makes you feel 'high,' while CBD is non-psychoactive and is used for medicinal purposes."
+    },
+    {
+      "question": "How does cannabis help with pain?",
+      "answer": "Cannabis helps with pain by interacting with the body's endocannabinoid system, which plays a role in regulating pain, mood, and inflammation."
+    },
+    {
+      "question": "Can cannabis help with anxiety?",
+      "answer": "Yes, cannabis, especially strains high in CBD, can help reduce anxiety and promote relaxation."
+    },
+    {
+      "question": "How long does it take for cannabis to grow?",
+      "answer": "Cannabis plants typically take about 3-5 months to grow, depending on the strain and growing conditions."
+    },
+    {
+      "question": "What is the best way to consume cannabis?",
+      "answer": "Cannabis can be consumed by smoking, vaping, edibles, tinctures, oils, or topicals."
+    },
+    {
+      "question": "What are edibles?",
+      "answer": "Edibles are food products infused with cannabis, typically with THC or CBD, that are consumed orally."
+    },
+    {
+      "question": "Can cannabis be used for insomnia?",
+      "answer": "Yes, cannabis, particularly Indica strains, can be helpful for insomnia by promoting relaxation and sleep."
+    },
+    {
+      "question": "What are terpenes?",
+      "answer": "Terpenes are aromatic compounds found in cannabis and other plants, giving them their distinct smell and potentially influencing effects."
+    },
+    {
+      "question": "What is the difference between CBD and THC?",
+      "answer": "CBD is non-psychoactive and is often used for its therapeutic benefits, while THC is the psychoactive compound responsible for the 'high.'"
+    },
+    {
+      "question": "What is a cannabis tincture?",
+      "answer": "A cannabis tincture is a liquid extract of cannabis, typically dissolved in alcohol or oil, and is taken sublingually or added to food and drink."
+    },
+    {
+      "question": "Can cannabis be used to treat depression?",
+      "answer": "Some cannabis strains, particularly those high in CBD, may help alleviate symptoms of depression by promoting relaxation and mood balance."
+    },
+    {
+      "question": "What is the entourage effect?",
+      "answer": "The entourage effect refers to the synergy between various compounds in cannabis, such as THC, CBD, and terpenes, working together to enhance effects."
+    },
+    {
+      "question": "What is a cannabis concentrate?",
+      "answer": "Cannabis concentrates are highly potent forms of cannabis, often extracted as oils, waxes, or shatters, containing concentrated levels of THC or CBD."
+    },
+    {
+      "question": "Can cannabis be used for chronic pain?",
+      "answer": "Yes, cannabis, especially strains with higher THC content, can help manage chronic pain by interacting with pain receptors in the brain."
+    },
+    {
+      "question": "How does cannabis affect the brain?",
+      "answer": "Cannabis affects the brain by interacting with cannabinoid receptors in the endocannabinoid system, influencing mood, pain, and memory."
+    },
+    {
+      "question": "What is cannabis sativa?",
+      "answer": "Cannabis Sativa is a strain known for its uplifting, energetic effects and is commonly used for daytime use."
+    },
+    {
+      "question": "What is cannabis indica?",
+      "answer": "Cannabis Indica is a strain that produces relaxing, sedative effects, typically used for nighttime use."
+    },
+    {
+      "question": "Can I grow cannabis at home?",
+      "answer": "In some regions, it is legal to grow cannabis for personal use. Be sure to check local regulations before growing."
+    },
+    {
+      "question": "What is the best cannabis strain for pain relief?",
+      "answer": "Strains like OG Kush, Bubba Kush, and Harlequin are popular for pain relief due to their high THC or CBD content."
+    },
+    {
+      "question": "What is cannabis resin?",
+      "answer": "Cannabis resin is a sticky substance produced by cannabis flowers, containing high concentrations of cannabinoids like THC and CBD."
+    },
+    {
+      "question": "How should I store cannabis?",
+      "answer": "Cannabis should be stored in an airtight container, kept in a cool, dark place to preserve its potency and flavor."
+    },
+    {
+      "question": "What is the difference between a joint and a blunt?",
+      "answer": "A joint is a cannabis cigarette rolled in paper, while a blunt is a joint rolled in a cigar wrap, often containing tobacco."
+    },
+    {
+      "question": "What are cannabis seeds?",
+      "answer": "Cannabis seeds are the reproductive part of the cannabis plant, used to grow new plants."
+    },
+    {
+      "question": "How do I feminize cannabis seeds?",
+      "answer": "Feminizing cannabis seeds involves inducing a female plant to produce pollen, which is then used to fertilize another female plant."
+    },
+    {
+      "question": "What is a cannabis clone?",
+      "answer": "A cannabis clone is a cutting taken from a mature cannabis plant that is rooted to grow a new plant identical to the parent."
+    },
+    {
+      "question": "How can I tell when my cannabis is ready to harvest?",
+      "answer": "Cannabis is typically ready to harvest when the trichomes are milky and amber, indicating peak THC content."
+    },
+    {
+      "question": "What is a CBD tincture?",
+      "answer": "A CBD tincture is an alcohol- or oil-based extract of CBD that is taken sublingually or mixed into food and beverages."
+    },
+    {
+      "question": "How do I use a vaporizer?",
+      "answer": "To use a vaporizer, load it with cannabis or concentrate, heat it to the desired temperature, and inhale the vapor produced."
+    },
+    {
+      "question": "What are cannabis edibles?",
+      "answer": "Cannabis edibles are food or drink products infused with cannabis, which take longer to take effect but provide longer-lasting relief."
+    },
+    {
+      "question": "What is the best cannabis strain for anxiety?",
+      "answer": "Strains like ACDC, Harlequin, and Cannatonic are often recommended for anxiety due to their high CBD and low THC content."
+    },
+    {
+      "question": "What is a bong?",
+      "answer": "A bong is a water pipe used to smoke cannabis, which filters the smoke through water to cool and clean it before inhalation."
+    },
+    {
+      "question": "Can cannabis improve focus?",
+      "answer": "Certain cannabis strains, especially sativas like Green Crack, are known for improving focus and concentration."
+    },
+    {
+      "question": "What are the effects of consuming too much THC?",
+      "answer": "Too much THC can lead to anxiety, paranoia, dizziness, and in some cases, hallucinations."
+    },
+    {
+      "question": "What are cannabis terpenes used for?",
+      "answer": "Terpenes in cannabis contribute to its aroma and flavor, and may also influence its effects, such as relaxation or stimulation."
+    },
+    {
+      "question": "How can I tell if cannabis is high-quality?",
+      "answer": "High-quality cannabis will have a strong aroma, visible trichomes, and a well-formed bud structure. It should be free from mold and contaminants."
+    },
+    {
+      "question": "What is the best way to make cannabis oil?",
+      "answer": "Cannabis oil can be made using a solvent like ethanol or by infusing cannabis into a carrier oil, such as coconut or olive oil."
+    },
+    {
+      "question": "How do I make cannabis tea?",
+      "answer": "To make cannabis tea, steep cannabis in hot water with a fat source like milk or butter to activate the cannabinoids."
+    },
+    {
+      "question": "What are the benefits of CBD?",
+      "answer": "CBD has many potential benefits, including reducing anxiety, pain, and inflammation, and promoting better sleep."
+    },
+    {
+      "question": "How long do cannabis effects last?",
+      "answer": "The effects of cannabis can last from 2 to 6 hours, depending on the consumption method and strain used."
+    },
+    {
+      "question": "Can cannabis help with appetite loss?",
+      "answer": "Yes, cannabis, particularly strains high in THC, can help stimulate appetite, which is useful for conditions like cancer or chemotherapy-related nausea."
+    },
+    {
+      "question": "What is a cannabis patch?",
+      "answer": "A cannabis patch is a transdermal product infused with cannabinoids that is applied to the skin for slow and steady release of the active ingredients."
+    },
+    {
+      "question": "Can I make my own cannabis concentrate?",
+      "answer": "Yes, concentrates can be made at home using extraction methods like rosin pressing or solvent-based extraction, though safety is important."
+    },
+    {
+      "question": "What is moon rock cannabis?",
+      "answer": "Moon rock cannabis is a high-potency product made by coating a nugget of cannabis flower with cannabis concentrate and rolling it in kief."
+    },
+    {
+      "question": "What are cannabis terps?",
+      "answer": "Cannabis terps (terpenes) are compounds responsible for the plant’s aroma and have therapeutic effects when combined with cannabinoids."
+    },
+    {
+      "question": "How do I use cannabis wax?",
+      "answer": "Cannabis wax is typically used with a dab rig, where you heat the wax and inhale the vapor produced."
+    }
+  ]
+}

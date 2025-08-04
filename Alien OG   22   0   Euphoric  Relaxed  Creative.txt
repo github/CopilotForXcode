@@ -1,0 +1,73 @@
+"Alien OG", 22%, 0%, Euphoric, Relaxed, Creative, Earthy, Pine, Stress, Pain, Anxiety, Hybrid, 9-10 weeks, Moderate, 500g, Caryophyllene, Limonene, Pine, Earthy
+"Banana OG", 21%, 0%, Relaxed, Sleepy, Happy, Banana, Sweet, Pain, Insomnia, Anxiety, Indica, 8-9 weeks, Easy, 600g, Myrcene, Caryophyllene, Banana, Sweet
+"Mimosa", 19%, 0%, Uplifted, Creative, Happy, Citrus, Sweet, Stress, Anxiety, Depression, Sativa, 9-10 weeks, Moderate, 450g, Limonene, Myrcene, Citrus, Sweet
+"Purple Punch", 20%, 0%, Relaxed, Sleepy, Euphoric, Grape, Berry, Insomnia, Pain, Anxiety, Indica, 8-9 weeks, Easy, 600g, Myrcene, Caryophyllene, Grape, Sweet
+"Lemonade", 18%, 0%, Energetic, Uplifted, Creative, Lemon, Citrus, Stress, Anxiety, Depression, Sativa, 9-10 weeks, Moderate, 450g, Limonene, Pinene, Lemon, Citrus
+"Grape God", 21%, 0%, Relaxed, Euphoric, Happy, Grape, Berry, Insomnia, Stress, Pain, Hybrid, 9-10 weeks, Moderate, 500g, Caryophyllene, Limonene, Grape, Sweet
+"Strawberry Cheesecake", 22%, 0%, Euphoric, Creative, Relaxed, Strawberry, Sweet, Stress, Anxiety, Pain, Hybrid, 9-10 weeks, Moderate, 500g, Caryophyllene, Limonene, Strawberry, Sweet
+"Jillybean", 20%, 0%, Euphoric, Uplifted, Creative, Orange, Sweet, Stress, Depression, Fatigue, Hybrid, 9-10 weeks, Moderate, 450g, Limonene, Myrcene, Orange, Sweet
+"Cotton Candy Kush", 21%, 0%, Relaxed, Euphoric, Happy, Sweet, Earthy, Pain, Stress, Anxiety, Hybrid, 8-9 weeks, Moderate, 500g, Caryophyllene, Limonene, Sweet, Earthy
+"Zookies", 22%, 0%, Relaxed, Creative, Euphoric, Earthy, Sweet, Stress, Anxiety, Pain, Hybrid, 9-10 weeks, Moderate, 500g, Caryophyllene, Limonene, Earthy, Sweet
+"Lemon Gelato", 23%, 0%, Euphoric, Uplifted, Happy, Lemon, Sweet, Stress, Depression, Anxiety, Hybrid, 9-10 weeks, Moderate, 500g, Limonene, Caryophyllene, Lemon, Sweet
+"Runtz", 20%, 0%, Relaxed, Euphoric, Creative, Sweet, Fruity, Stress, Anxiety, Pain, Hybrid, 9-10 weeks, Moderate, 500g, Limonene, Myrcene, Sweet, Fruity
+"Gelato 33", 22%, 0%, Relaxed, Creative, Euphoric, Sweet, Earthy, Stress, Pain, Anxiety, Hybrid, 9-10 weeks, Moderate, 500g, Limonene, Caryophyllene, Sweet, Earthy
+"Tropicana Cookies", 21%, 0%, Energetic, Uplifted, Euphoric, Orange, Sweet, Stress, Anxiety, Depression, Hybrid, 9-10 weeks, Moderate, 450g, Limonene, Pinene, Orange, Sweet
+"Tropicana Punch", 22%, 0%, Relaxed, Creative, Euphoric, Tropical, Sweet, Stress, Pain, Anxiety, Hybrid, 9-10 weeks, Moderate, 500g, Caryophyllene, Limonene, Tropical, Sweet
+"Khalifa Kush", 20%, 0%, Relaxed, Euphoric, Creative, Earthy, Pine, Pain, Stress, Anxiety, Hybrid, 9-10 weeks, Moderate, 500g, Caryophyllene, Limonene, Pine, Earthy
+"Gorilla Glue #5", 23%, 0%, Relaxed, Happy, Euphoric, Earthy, Pine, Stress, Pain, Insomnia, Hybrid, 9-10 weeks, Difficult, 450g, Caryophyllene, Myrcene, Pine, Earthy
+"Tangie", 20%, 0%, Uplifted, Energetic, Creative, Citrus, Sweet, Stress, Fatigue, Depression, Sativa, 9-10 weeks, Moderate, 450g, Limonene, Terpinolene, Citrus, Sweet
+"Sherbet Queen", 21%, 0%, Relaxed, Euphoric, Uplifted, Sweet, Earthy, Stress, Pain, Depression, Hybrid, 9-10 weeks, Moderate, 500g, Caryophyllene, Limonene, Sweet, Earthy
+"Skywalker OG", 22%, 0%, Relaxed, Euphoric, Sleepy, Earthy, Pine, Insomnia, Pain, Stress, Hybrid, 9-10 weeks, Moderate, 500g, Caryophyllene, Limonene, Pine, Earthy
+"Cali-O", 18%, 0%, Uplifted, Creative, Happy, Orange, Citrus, Stress, Anxiety, Depression, Sativa, 9-10 weeks, Moderate, 450g, Limonene, Pinene, Orange, Citrus
+"Mendo Breath", 21%, 0%, Relaxed, Euphoric, Happy, Earthy, Sweet, Pain, Stress, Insomnia, Hybrid, 9-10 weeks, Moderate, 500g, Myrcene, Caryophyllene, Sweet, Earthy
+"Candy Kush", 20%, 0%, Relaxed, Euphoric, Uplifted, Sweet, Earthy, Stress, Anxiety, Pain, Hybrid, 9-10 weeks, Moderate, 500g, Caryophyllene, Limonene, Sweet, Earthy
+"Bruce Banner", 25%, 0%, Euphoric, Uplifted, Creative, Earthy, Sweet, Stress, Anxiety, Pain, Hybrid, 9-10 weeks, Moderate, 500g, Caryophyllene, Limonene, Sweet, Earthy
+"Alaskan Thunderfuck", 23%, 0%, Euphoric, Uplifted, Creative, Earthy, Pine, Stress, Anxiety, Fatigue, Sativa, 10-12 weeks, Moderate, 450g, Caryophyllene, Limonene, Pine, Earthy
+"Raspberry Kush", 20%, 0%, Relaxed, Happy, Euphoric, Raspberry, Sweet, Stress, Anxiety, Pain, Hybrid, 9-10 weeks, Moderate, 500g, Caryophyllene, Limonene, Raspberry, Sweet
+"Zkittlez OG", 21%, 0%, Relaxed, Uplifted, Euphoric, Fruity, Sweet, Stress, Pain, Anxiety, Hybrid, 9-10 weeks, Moderate, 500g, Limonene, Myrcene, Fruity, Sweet
+"Durban Poison", 22%, 0%, Energetic, Uplifted, Creative, Earthy, Sweet, Stress, Fatigue, Depression, Sativa, 10-12 weeks, Moderate, 450g, Terpinolene, Caryophyllene, Earthy, Sweet
+"Banana Cream", 19%, 0%, Relaxed, Euphoric, Happy, Banana, Sweet, Pain, Anxiety, Insomnia, Hybrid, 8-9 weeks, Moderate, 500g, Myrcene, Caryophyllene, Banana, Sweet
+"Wedding Cake", 23%, 0%, Relaxed, Euphoric, Happy, Sweet, Earthy, Stress, Pain, Anxiety, Hybrid, 9-10 weeks, Moderate, 500g, Limonene, Caryophyllene, Sweet, Earthy
+"Papaya Punch", 22%, 0%, Relaxed, Creative, Euphoric, Tropical, Sweet, Stress, Pain, Anxiety, Hybrid, 9-10 weeks, Moderate, 500g, Caryophyllene, Limonene, Tropical, Sweet
+"Lemonade Kush", 21%, 0%, Uplifted, Energetic, Happy, Lemon, Sweet, Stress, Anxiety, Depression, Sativa, 9-10 weeks, Moderate, 450g, Limonene, Pinene, Lemon, Sweet
+"Peach Ozz", 22%, 0%, Relaxed, Euphoric, Happy, Peach, Sweet, Pain, Stress, Anxiety, Hybrid, 9-10 weeks, Moderate, 500g, Caryophyllene, Limonene, Peach, Sweet
+"Super Lemon Haze", 23%, 0%, Energetic, Creative, Uplifted, Lemon, Citrus, Stress, Fatigue, Depression, Sativa, 10-12 weeks, Moderate, 450g, Limonene, Terpinolene, Lemon, Citrus
+"Gelato 45", 22%, 0%, Relaxed, Euphoric, Happy, Sweet, Earthy, Stress, Anxiety, Pain, Hybrid, 9-10 weeks, Moderate, 500g, Limonene, Caryophyllene
+"OG Kush", 24%, 0%, Euphoric, Relaxed, Creative, Earthy, Pine, Stress, Pain, Insomnia, Hybrid, 9-10 weeks, Moderate, 500g, Caryophyllene, Limonene, Pine, Earthy
+
+"Purple Haze", 18%, 0%, Uplifted, Creative, Euphoric, Earthy, Sweet, Anxiety, Stress, Depression, Sativa, 10-12 weeks, Moderate, 450g, Myrcene, Pinene, Earthy, Sweet
+"Girl Scout Cookies", 19%, 0%, Euphoric, Relaxed, Creative, Sweet, Earthy, Pain, Stress, Anxiety, Hybrid, 9-10 weeks, Moderate, 500g, Caryophyllene, Limonene, Sweet, Earthy
+"Chemdawg", 20%, 0%, Creative, Euphoric, Relaxed, Earthy, Diesel, Stress, Pain, Insomnia, Hybrid, 9-10 weeks, Moderate, 500g, Caryophyllene, Limonene, Earthy, Diesel
+"Cherry Pie", 18%, 0%, Euphoric, Relaxed, Happy, Cherry, Sweet, Anxiety, Stress, Pain, Hybrid, 9-10 weeks, Moderate, 500g, Caryophyllene, Limonene, Cherry, Sweet
+"Snow Leopard", 21%, 0%, Uplifted, Relaxed, Creative, Earthy, Pine, Stress, Pain, Depression, Hybrid, 9-10 weeks, Moderate, 450g, Caryophyllene, Pinene, Earthy, Pine
+"Tahoe OG", 22%, 0%, Relaxed, Euphoric, Sleepy, Earthy, Pine, Pain, Stress, Insomnia, Hybrid, 9-10 weeks, Moderate, 500g, Caryophyllene, Limonene, Pine, Earthy
+"Jack Herer", 19%, 0%, Creative, Euphoric, Uplifted, Earthy, Pine, Stress, Anxiety, Depression, Sativa, 10-12 weeks, Moderate, 450g, Terpinolene, Pinene, Earthy, Pine
+"Skunk #1", 18%, 0%, Euphoric, Relaxed, Creative, Earthy, Sweet, Stress, Anxiety, Pain, Hybrid, 8-9 weeks, Moderate, 500g, Caryophyllene, Myrcene, Earthy, Sweet
+"OG Kush Breath", 23%, 0%, Relaxed, Euphoric, Sleepy, Earthy, Pine, Pain, Stress, Anxiety, Hybrid, 9-10 weeks, Moderate, 500g, Caryophyllene, Limonene, Pine, Earthy
+"Sour Diesel", 22%, 0%, Euphoric, Creative, Uplifted, Diesel, Earthy, Stress, Anxiety, Depression, Sativa, 9-10 weeks, Moderate, 450g, Caryophyllene, Limonene, Diesel, Earthy
+"Banana OG Kush", 20%, 0%, Euphoric, Relaxed, Happy, Banana, Sweet, Stress, Pain, Insomnia, Indica, 8-9 weeks, Easy, 500g, Myrcene, Caryophyllene, Banana, Sweet
+"Blue Dream", 18%, 0%, Uplifted, Creative, Euphoric, Berry, Sweet, Stress, Anxiety, Depression, Sativa, 9-10 weeks, Moderate, 450g, Caryophyllene, Limonene, Berry, Sweet
+"Super Silver Haze", 23%, 0%, Euphoric, Uplifted, Creative, Earthy, Sweet, Stress, Anxiety, Depression, Sativa, 10-12 weeks, Moderate, 450g, Terpinolene, Limonene, Earthy, Sweet
+"Chronic", 19%, 0%, Euphoric, Relaxed, Uplifted, Earthy, Pine, Pain, Stress, Anxiety, Hybrid, 9-10 weeks, Moderate, 500g, Caryophyllene, Limonene, Pine, Earthy
+"Granddaddy Purple", 22%, 0%, Relaxed, Sleepy, Euphoric, Grape, Berry, Stress, Insomnia, Pain, Indica, 8-9 weeks, Easy, 500g, Myrcene, Caryophyllene, Grape, Berry
+"Sunset Sherbet", 21%, 0%, Euphoric, Relaxed, Happy, Sweet, Earthy, Stress, Pain, Anxiety, Hybrid, 9-10 weeks, Moderate, 500g, Limonene, Caryophyllene, Sweet, Earthy
+"Shishkaberry", 20%, 0%, Euphoric, Relaxed, Creative, Berry, Sweet, Stress, Anxiety, Pain, Indica, 8-9 weeks, Easy, 500g, Myrcene, Caryophyllene, Berry, Sweet
+"Lamb's Bread", 19%, 0%, Uplifted, Creative, Happy, Earthy, Pine, Stress, Depression, Fatigue, Sativa, 10-12 weeks, Moderate, 450g, Caryophyllene, Pinene, Earthy, Pine
+"Orange Kush", 20%, 0%, Relaxed, Euphoric, Sleepy, Orange, Sweet, Stress, Pain, Anxiety, Indica, 8-9 weeks, Easy, 500g, Limonene, Myrcene, Orange, Sweet
+"Fire OG", 21%, 0%, Euphoric, Creative, Relaxed, Earthy, Pine, Pain, Stress, Anxiety, Hybrid, 9-10 weeks, Moderate, 500g, Caryophyllene, Limonene, Pine, Earthy
+"Purple Urkle", 20%, 0%, Relaxed, Sleepy, Euphoric, Grape, Berry, Pain, Stress, Insomnia, Indica, 8-9 weeks, Easy, 500g, Myrcene, Caryophyllene, Grape, Berry
+"Space Queen", 19%, 0%, Creative, Euphoric, Relaxed, Sweet, Earthy, Stress, Anxiety, Pain, Hybrid, 9-10 weeks, Moderate, 450g, Limonene, Caryophyllene, Sweet, Earthy
+"Alien Kush", 22%, 0%, Relaxed, Euphoric, Creative, Earthy, Pine, Stress, Pain, Insomnia, Hybrid, 9-10 weeks, Moderate, 500g, Caryophyllene, Limonene, Pine, Earthy
+"Chocolate Thai", 18%, 0%, Euphoric, Creative, Relaxed, Chocolate, Earthy, Stress, Depression, Anxiety, Sativa, 10-12 weeks, Difficult, 450g, Terpinolene, Caryophyllene, Chocolate, Earthy
+"Sour OG", 23%, 0%, Relaxed, Euphoric, Sleepy, Diesel, Earthy, Pain, Stress, Insomnia, Hybrid, 9-10 weeks, Moderate, 500g, Caryophyllene, Limonene, Diesel, Earthy
+"Lemon Skunk", 19%, 0%, Uplifted, Creative, Happy, Lemon, Citrus, Stress, Anxiety, Depression, Hybrid, 9-10 weeks, Moderate, 450g, Limonene, Caryophyllene, Lemon, Citrus
+"Critical Mass", 18%, 0%, Relaxed, Euphoric, Happy, Earthy, Sweet, Stress, Pain, Anxiety, Hybrid, 8-9 weeks, Easy, 500g, Caryophyllene, Myrcene, Earthy, Sweet
+"White Widow", 20%, 0%, Creative, Euphoric, Relaxed, Earthy, Pine, Stress, Pain, Anxiety, Hybrid, 9-10 weeks, Moderate, 500g, Caryophyllene, Limonene, Pine, Earthy
+"Amnesia Haze", 22%, 0%, Uplifted, Creative, Euphoric, Earthy, Pine, Stress, Anxiety, Depression, Sativa, 10-12 weeks, Moderate, 450g, Limonene, Terpinolene, Pine, Earthy
+"Purple King Kush", 21%, 0%, Relaxed, Sleepy, Euphoric, Earthy, Pine, Stress, Pain, Insomnia, Hybrid, 9-10 weeks, Moderate, 500g, Caryophyllene, Myrcene, Pine, Earthy
+"King Louis XIII", 20%, 0%, Relaxed, Euphoric, Sleepy, Earthy, Pine, Stress, Pain, Insomnia, Indica, 8-9 weeks, Easy, 500g, Caryophyllene, Limonene, Pine, Earthy
+"Orange Skunk", 18%, 0%, Euphoric, Relaxed, Happy, Orange, Sweet, Stress, Anxiety, Depression, Hybrid, 8-9 weeks, Easy, 500g, Limonene, Myrcene, Orange, Sweet
+"Wedding Pie", 22%, 0%, Relaxed, Euphoric, Creative, Sweet, Earthy, Stress, Pain, Anxiety, Hybrid, 9-10 weeks, Moderate, 500g, Limonene, Caryophyllene, Sweet, Earthy
+"Apple Fritter", 21%, 0%, Relaxed, Euphoric, Creative, Sweet, Earthy, Stress, Pain, Anxiety, Hybrid, 9-10 weeks, Moderate, 500g, Caryophyllene, Limonene, Sweet, Earthy
+"Bruce Banner #3", 24%, 0%, Euphoric, Relaxed, Creative, Earthy, Sweet, Pain, Stress, Anxiety, Hybrid, 9-10 weeks, Moderate, 500g, Caryophyllene, Limonene, Sweet, Earthy
+
