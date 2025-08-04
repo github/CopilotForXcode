@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1e1e1e;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #terminal {
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="terminal"></div>
+    <script src="terminal.js"></script>
+    <script>
+        window.term = window.initializeTerminal();
+    </script>
+</body>
+</html>

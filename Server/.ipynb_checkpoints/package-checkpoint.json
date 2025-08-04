@@ -1,0 +1,26 @@
+{
+  "name": "@github/copilot-xcode",
+  "version": "0.0.1",
+  "description": "Package for downloading @github/copilot-language-server",
+  "private": true,
+  "scripts": {
+    "build": "webpack"
+  },
+  "dependencies": {
+    "@github/copilot-language-server": "^1.351.0",
+    "@xterm/addon-fit": "^0.10.0",
+    "@xterm/xterm": "^5.5.0",
+    "monaco-editor": "0.52.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.17",
+    "copy-webpack-plugin": "^13.0.0",
+    "css-loader": "^7.1.2",
+    "style-loader": "^4.0.0",
+    "terser-webpack-plugin": "^5.3.14",
+    "ts-loader": "^9.5.2",
+    "typescript": "^5.8.3",
+    "webpack": "^5.99.9",
+    "webpack-cli": "^6.0.1"
+  }
+}
