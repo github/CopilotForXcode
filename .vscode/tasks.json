@@ -1,0 +1,61 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "build",
+			"type": "shell",
+			"command": "msbuild",
+			"args": [
+				"/property:GenerateFullPaths=true",
+				"/t:build",
+				"/consoleloggerparameters:NoSummary"
+			],
+			"group": "build",
+			"presentation": {
+				"reveal": "silent"
+			},
+			"problemMatcher": "$msCompile"
+		},
+		{
+			"type": "docker-build",
+			"label": "docker-build",
+			"platform": "node",
+			"dockerBuild": {
+				"dockerfile": "${workspaceFolder}/Server/Dockerfile",
+				"context": "${workspaceFolder}/Server",
+				"pull": true
+			},
+			"node": {
+				"package": "${workspaceFolder}/Server/package.json"
+			}
+		},
+		{
+			"type": "docker-run",
+			"label": "docker-run: release",
+			"dependsOn": [
+				"docker-build"
+			],
+			"platform": "node",
+			"node": {
+				"package": "${workspaceFolder}/Server/package.json"
+			}
+		},
+		{
+			"type": "docker-run",
+			"label": "docker-run: debug",
+			"dependsOn": [
+				"docker-build"
+			],
+			"dockerRun": {
+				"env": {
+					"DEBUG": "*",
+					"NODE_ENV": "development"
+				}
+			},
+			"node": {
+				"package": "${workspaceFolder}/Server/package.json",
+				"enableDebugging": true
+			}
+		}
+	]
+}

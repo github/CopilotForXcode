@@ -1,0 +1,10 @@
+services:
+  githubcopilotxcode:
+    image: githubcopilotxcode
+    build:
+      context: Server
+      dockerfile: ./Dockerfile
+    environment:
+      NODE_ENV: production
+    ports:
+      - 3000:3000
