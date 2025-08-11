@@ -1,17 +1,329 @@
-#include "Version.xcconfig"
-SLASH = / // Otherwise a double slash is treated as a comment, even inside a quoted string
+name: kayan_app
+description: تطبيق كيان مع ميزات AI وريلز
+publish_to: 'none'
+version: 1.0.0+1
 
-HOST_APP_NAME = GitHub Copilot for Xcode Dev
-BUNDLE_IDENTIFIER_BASE = dev.com.github.CopilotForXcode
-SPARKLE_FEED_URL = https:$(SLASH)$(SLASH)githubcopilotide.z13.web.core.windows.net/appcast.xml
-SPARKLE_PUBLIC_KEY = EGlZbKpzATrZFfzr142PrZbmQr5opzdC8urMU8+dKL0=
-APPLICATION_SUPPORT_FOLDER = dev.com.github.CopilotForXcode
-EXTENSION_BUNDLE_NAME = GitHub Copilot Dev
-EXTENSION_BUNDLE_DISPLAY_NAME = GitHub Copilot Dev
-EXTENSION_SERVICE_NAME = GitHub Copilot for Xcode Extension
-COPILOT_DOCS_URL = https:$(SLASH)$(SLASH)docs.github.com/en/copilot
-COPILOT_FORUM_URL = https:$(SLASH)$(SLASH)github.com/orgs/community/discussions/categories/copilot
+environment:
+  sdk: ">=2.17.0 <3.0.0"
 
-// see also target Configs
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+  provider: ^6.0.5
+  http: ^0.13.5
+  shared_preferences: ^2.0.17
+  flutter_localizations:
+    sdk: flutter
+import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'screens/home_screen.dart';
+import 'l10n/app_localizations.dart';
 
-#include? "Config.local.xcconfig"
+void main() {
+  runApp(KayanApp());
+}
+
+class KayanApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'كيان',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData.dark().copyWith(
+        primaryColor: Colors.black,
+        scaffoldBackgroundColor: Colors.black,
+        textTheme: TextTheme(
+          bodyMedium: TextStyle(color: Colors.white),
+        ),
+      ),
+      supportedLocales: [
+        Locale('ar', ''),
+        Locale('en', ''),
+      ],
+      localizationsDelegates: [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      home: HomeScreen(),
+    );
+  }
+}import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'screens/home_screen.dart';
+import 'l10n/app_localizations.dart';
+
+void main() {
+  runApp(KayanApp());
+}
+
+class KayanApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'كيان',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData.dark().copyWith(
+        primaryColor: Colors.black,
+        scaffoldBackgroundColor: Colors.black,
+        textTheme: TextTheme(
+          bodyMedium: TextStyle(color: Colors.white),
+        ),
+      ),
+      supportedLocales: [
+        Locale('ar', ''),
+        Locale('en', ''),
+      ],
+      localizationsDelegates: [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      home: HomeScreen(),
+    );
+  }
+}
+  intl: ^0.18.0
+  webview_flutter: ^4.2.2
+  google_fonts: ^4.0.4
+  flutter_launcher_icons: ^0.13.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/logo.png"
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/import 'package:flutter/material.dart';
+import 'chat_screen.dart';
+import 'reels_screen.dart';
+import 'profile_screen.dart';
+import 'ai_screen.dart';
+import 'settings_screen.dart';
+
+class HomeScreen extends StatefulWidget {
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int _selectedIndex = 0;
+
+  final List<Widget> _pages = [
+    ChatScreen(),
+    ReelsScreen(),
+    ProfileScreen(),
+    AiScreen(),
+    SettingsScreen(),
+  ];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: _pages[_selectedIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Colors.black,
+        selectedItemColor: Colors.white,
+        unselectedItemColor: Colors.grey,
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'دردشة'),
+          BottomNavigationBarItem(icon: Icon(Icons.video_library), label: 'ريلز'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'بروفايل'),
+          BottomNavigationBarItem(icon: Icon(Icons.bolt), label: 'كيان AI'),
+          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'إعدادات'),
+        ],
+      ),
+    );
+  }
+}import 'package:flutter/material.dart';
+
+class ChatScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('الدردشة'),
+        backgroundColor: Colors.black,
+      ),
+      body: Center(
+        child: Text(
+          'هنا ستكون الدردشة مع المستخدمين',
+          style: TextStyle(color: Colors.white, fontSize: 18),
+        ),
+      ),
+    );
+  }
+}import 'package:flutter/material.dart';
+
+class ReelsScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('ريلز'),
+        backgroundColor: Colors.black,
+      ),
+      body: Center(
+        child: Text(
+          'هنا يتم عرض الفيديوهات القصيرة',
+          style: TextStyle(color: Colors.white, fontSize: 18),
+        ),
+      ),
+    );
+  }
+}import 'package:flutter/material.dart';
+
+class ProfileScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('الملف الشخصي'),
+        backgroundColor: Colors.black,
+      ),
+      body: Center(
+        child: Text(
+          'هنا تفاصيل حسابك',
+          style: TextStyle(color: Colors.white, fontSize: 18),
+        ),
+      ),
+    );
+  }
+}import 'package:flutter/material.dart';
+
+class AiScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('كيان AI'),
+        backgroundColor: Colors.black,
+      ),
+      body: Center(
+        child: Text(
+          'هنا ستكون واجهة الذكاء الاصطناعي',
+          style: TextStyle(color: Colors.white, fontSize: 18),
+        ),
+      ),
+    );
+  }
+}import 'package:flutter/material.dart';
+
+class SettingsScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('الإعدادات'),
+        backgroundColor: Colors.black,
+      ),
+      body: ListView(
+        children: [
+          ListTile(
+            title: Text('اللغة', style: TextStyle(color: Colors.white)),
+            trailing: Icon(Icons.language, color: Colors.white),
+            onTap: () {},
+          ),
+          ListTile(
+            title: Text('إدارة التحديثات', style: TextStyle(color: Colors.white)),
+            trailing: Icon(Icons.update, color: Colors.white),
+            onTap: () {},
+          ),
+          ListTile(
+            title: Text('تسجيل الخروج', style: TextStyle(color: Colors.white)),
+            trailing: Icon(Icons.logout, color: Colors.white),
+            onTap: () {},
+          ),
+        ],
+      ),
+    );
+  }
+}import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'intl/messages_all.dart';
+
+class AppLocalizations {
+  static Future<AppLocalizations> load(Locale locale) {
+    final String name =
+        locale.countryCode?.isEmpty ?? false ? locale.languageCode : locale.toString();
+    final localeName = Intl.canonicalizedLocale(name);
+    return initializeMessages(localeName).then((_) {
+      Intl.defaultLocale = localeName;
+      return AppLocalizations();
+    });
+  }
+
+  static AppLocalizations of(BuildContext context) {
+    return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
+  }
+
+  String get hello {
+    return Intl.message(
+      'مرحبا',
+      name: 'hello',
+      desc: '',
+    );
+  }
+
+  static const LocalizationsDelegate<AppLocalizations> delegate =
+      _AppLocalizationsDelegate();
+}
+
+class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
+  const _AppLocalizationsDelegate();
+
+  @override
+  bool isSupported(Locale locale) => ['en', 'ar'].contains(locale.languageCode);
+
+  @override
+  Future<AppLocalizations> load(Locale locale) => AppLocalizations.load(locale);
+
+  @override
+  bool shouldReload(LocalizationsDelegate<AppLocalizations> old) => false;
+}{
+  "@@locale": "ar",
+  "hello": "مرحبا",
+  "chat": "الدردشة",
+  "reels": "ريلز",
+  "profile": "الملف الشخصي",
+  "ai": "كيان AI",
+  "settings": "الإعدادات",
+  "language": "اللغة",
+  "updates": "إدارة التحديثات",
+  "logout": "تسجيل الخروج"
+}{
+  "@@locale": "en",
+  "hello": "Hello",
+  "chat": "Chat",
+  "reels": "Reels",
+  "profile": "Profile",
+  "ai": "Kayan AI",
+  "settings": "Settings",
+  "language": "Language",
+  "updates": "Manage Updates",
+  "logout": "Logout"
+}flutter:
+  uses-material-design: true
+  assets:dependencies:
+  flutter:
+    sdk: flutter
+  provider: ^6.0.5
+  http: ^1.2.0
+    - assets/logo.pngImage.asset('assets/logo.png', width: 150, height: 150)flutter pub getflutter build apk --release
