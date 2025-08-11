@@ -1,5 +1,9 @@
-// swift-tools-version: 5.7
-// The swift-tools-version declares the minimum version of Swift required to build this package.
+| Screen             | Component Path                 |
+| ------------------ | ------------------------------ |
+| Home / Betting     | `/client/src/pages/Home.jsx`   |
+| Wallet / Add Cash  | `/client/src/pages/Wallet.jsx` |
+| Refer & Earn       | `/client/src/pages/Refer.jsx`  |
+| Admin Result Panel | `/admin/src/pages/Result.jsx`  |
 
 import PackageDescription
 
