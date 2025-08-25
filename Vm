@@ -1,0 +1,46 @@
+{
+  "UniPin": {
+    "unipin": {
+      "item1": "115 Diamond",
+      "item10": "Monthly",
+      "item11": "Level Up Pass",
+      "item12": "3000 UP Voucher",
+      "item2": "50 Diamond",
+      "item3": "115 Diamond",
+      "item4": "240 Diamond",
+      "item5": "610 Diamond",
+      "item6": "1240 Diamond",
+      "item7": "2530 Diamond",
+      "item8": "2000 UP Voucher",
+      "item9": "Weekly",
+      "tk1": "80",
+      "tk10": "700",
+      "tk11": "150",
+      "tk12": "2500",
+      "tk2": "40",
+      "tk3": "70",
+      "tk4": "145",
+      "tk5": "385",
+      "tk6": "750",
+      "tk7": "1500",
+      "tk8": "1760",
+      "tk9": "140"
+    }
+  },
+  "code_stock": {
+    "Count": {
+      "stock1": "0",
+      "stock10": "0",
+      "stock11": "0",
+      "stock12": "0",
+      "stock2": "0",
+      "stock3": "0",
+      "stock4": "0",
+      "stock5": "0",
+      "stock6": "0",
+      "stock7": "0",
+      "stock8": "0",
+      "stock9": "0"
+    }
+  }
+}
