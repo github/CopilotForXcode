@@ -198,8 +198,8 @@ public class SystemUtils {
     }
     
     public static func executeCommand(
-        inDirectory directory: String = NSHomeDirectory(), 
-        path: String, 
+        inDirectory directory: String = NSHomeDirectory(),
+        path: String,
         arguments: [String]
     ) throws -> String? {
         let task = Process()
@@ -216,11 +216,21 @@ public class SystemUtils {
         task.arguments = arguments
         task.standardOutput = pipe
         task.currentDirectoryURL = URL(fileURLWithPath: directory)
+
+        var accumulatedOutput = Data()
+        pipe.fileHandleForReading.readabilityHandler = { handle in
+            let data = handle.availableData
+            guard data.isEmpty else { // End of file
+                return accumulatedOutput.append(data)
+            }
+
+            handle.readabilityHandler = nil // Stop observing
+        }
         
         try task.run()
         task.waitUntilExit()
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        return String(data: data, encoding: .utf8)
+        return String(data: accumulatedOutput + data, encoding: .utf8)
     }
 
     public func appendCommonBinPaths(path: String) -> String {
