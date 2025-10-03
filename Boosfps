@@ -1,0 +1,245 @@
+-- LowGraphicsWithUI_Level2_Stacked.lua
+-- วาง LocalScript ใน StarterPlayerScripts
+
+local Config = { QualityLevel = 1 }
+local Players = game:GetService("Players")
+local Lighting = game:GetService("Lighting")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+
+-- ScreenGui
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "LowGraphicsUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = player:WaitForChild("PlayerGui")
+
+-------------------
+-- UI1 Button
+-------------------
+local UI1Button = Instance.new("TextButton")
+UI1Button.Size = UDim2.new(0, 120, 0, 40)
+UI1Button.Position = UDim2.new(0, 20, 0, 20)
+UI1Button.BackgroundColor3 = Color3.fromRGB(170,0,0)
+UI1Button.TextColor3 = Color3.fromRGB(255,255,255)
+UI1Button.Text = "ควยบาส"
+UI1Button.Font = Enum.Font.SourceSansBold
+UI1Button.TextSize = 16
+UI1Button.Parent = ScreenGui
+
+UI1Button.MouseEnter:Connect(function() UI1Button.BackgroundColor3 = Color3.fromRGB(255,0,0) end)
+UI1Button.MouseLeave:Connect(function() UI1Button.BackgroundColor3 = Color3.fromRGB(170,0,0) end)
+
+-------------------
+-- UI2 Frame
+-------------------
+local UI2Frame = Instance.new("Frame")
+UI2Frame.Size = UDim2.new(0, 250, 0, 200)
+UI2Frame.Position = UDim2.new(0, 20, 0, 70)
+UI2Frame.BackgroundColor3 = Color3.fromRGB(120,0,0)
+UI2Frame.BorderSizePixel = 0
+UI2Frame.Parent = ScreenGui
+UI2Frame.Visible = false
+UI2Frame.ClipsDescendants = true
+
+-- Drag Function for UI2
+local dragging = false
+local dragInput, mousePos, framePos
+
+UI2Frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        mousePos = input.Position
+        framePos = UI2Frame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+UI2Frame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if dragging and dragInput then
+        local delta = dragInput.Position - mousePos
+        UI2Frame.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X,
+                                       framePos.Y.Scale, framePos.Y.Offset + delta.Y)
+    end
+end)
+
+-------------------
+-- Buttons inside UI2
+-------------------
+local function createButton(parent, text, y)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 200, 0, 40)
+    btn.Position = UDim2.new(0, 25, 0, y)
+    btn.BackgroundColor3 = Color3.fromRGB(170,0,0)
+    btn.TextColor3 = Color3.fromRGB(255,255,255)
+    btn.Text = text
+    btn.Font = Enum.Font.SourceSansBold
+    btn.TextSize = 16
+    btn.Parent = parent
+    -- Hover
+    btn.MouseEnter:Connect(function() btn.BackgroundColor3 = Color3.fromRGB(255,0,0) end)
+    btn.MouseLeave:Connect(function() btn.BackgroundColor3 = Color3.fromRGB(170,0,0) end)
+    return btn
+end
+
+local LowGFXButton = createButton(UI2Frame, "Low GFX", 20)
+local FPSToggle = createButton(UI2Frame, "FPS: OFF", 70)
+local ResetGFXButton = createButton(UI2Frame, "Reset GFX", 160)
+
+-------------------
+-- FPS Label (Draggable, Outside UI2)
+-------------------
+local FpsLabel = Instance.new("TextLabel")
+FpsLabel.Size = UDim2.new(0, 120, 0, 30)
+FpsLabel.Position = UDim2.new(0, 300, 0, 20) -- เริ่มต้นข้างนอก UI2
+FpsLabel.BackgroundTransparency = 0.3
+FpsLabel.BackgroundColor3 = Color3.fromRGB(0,0,0)
+FpsLabel.TextColor3 = Color3.fromRGB(0,255,0)
+FpsLabel.Font = Enum.Font.SourceSansBold
+FpsLabel.TextSize = 16
+FpsLabel.Text = "FPS: 0"
+FpsLabel.Visible = false
+FpsLabel.Parent = ScreenGui
+
+-- Drag Function for FPS Label
+local draggingFPS = false
+local dragInputFPS, mousePosFPS, framePosFPS
+
+FpsLabel.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        draggingFPS = true
+        mousePosFPS = input.Position
+        framePosFPS = FpsLabel.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                draggingFPS = false
+            end
+        end)
+    end
+end)
+
+FpsLabel.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInputFPS = input
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if draggingFPS and dragInputFPS then
+        local delta = dragInputFPS.Position - mousePosFPS
+        FpsLabel.Position = UDim2.new(framePosFPS.X.Scale, framePosFPS.X.Offset + delta.X,
+                                      framePosFPS.Y.Scale, framePosFPS.Y.Offset + delta.Y)
+    end
+end)
+
+-------------------
+-- Variables
+-------------------
+local LowGFX_Enabled = false
+local FPS_Enabled = false
+
+-- Skill Effects Reducer
+local function disableSkillEffects(obj)
+    if obj:IsA("Smoke") or obj:IsA("Fire") then obj.Enabled = false
+    elseif obj:IsA("ParticleEmitter") then obj.Rate = obj.Rate * 0.3
+    end
+    if obj:IsA("Explosion") then obj.Visible = false; obj.BlastPressure=0; obj.BlastRadius=0 end
+    if obj:IsA("Sound") then obj.Volume=0; obj.Playing=false end
+    if obj:IsA("BasePart") then obj.CastShadow = false; obj.Material = Enum.Material.SmoothPlastic; obj.Reflectance = 0 end
+end
+
+-- Apply Low Graphics
+local function applyLowGraphics()
+    local UserSettings = pcall(function() return game:GetService("UserSettings") end) and game:GetService("UserSettings") or nil
+    local GameSettings
+    if UserSettings then pcall(function() GameSettings = UserSettings:GetService("UserGameSettings") end) end
+    if GameSettings and GameSettings.SetQualityLevel then pcall(function() GameSettings:SetQualityLevel(Config.QualityLevel) end) end
+
+    Lighting.GlobalShadows = false
+    Lighting.Brightness = 1
+    Lighting.Ambient = Color3.fromRGB(120,120,120)
+    Lighting.OutdoorAmbient = Color3.fromRGB(120,120,120)
+    Lighting.FogEnd = 1000
+
+    for _, v in ipairs(workspace:GetDescendants()) do
+        disableSkillEffects(v)
+    end
+end
+
+workspace.DescendantAdded:Connect(function(v)
+    if LowGFX_Enabled then disableSkillEffects(v) end
+end)
+
+-- FPS Counter
+local fps = 0
+local lastUpdate = tick()
+RunService.RenderStepped:Connect(function()
+    if FPS_Enabled then
+        local now = tick()
+        fps = 1/(now-lastUpdate)
+        lastUpdate=now
+        FpsLabel.Text = "FPS: "..tostring(math.floor(fps+0.5))
+    end
+end)
+
+-------------------
+-- Button Actions
+-------------------
+LowGFXButton.MouseButton1Click:Connect(function()
+    LowGFX_Enabled = true
+    applyLowGraphics()
+end)
+
+FPSToggle.MouseButton1Click:Connect(function()
+    FPS_Enabled = not FPS_Enabled
+    FpsLabel.Visible = FPS_Enabled
+    if FPS_Enabled then
+        FPSToggle.BackgroundColor3 = Color3.fromRGB(0,170,80)
+        FPSToggle.Text = "FPS: ON"
+    else
+        FPSToggle.BackgroundColor3 = Color3.fromRGB(170,0,0)
+        FPSToggle.Text = "FPS: OFF"
+    end
+end)
+
+ResetGFXButton.MouseButton1Click:Connect(function()
+    LowGFX_Enabled = false
+    Config.QualityLevel = 1
+
+    -- Lighting Reset
+    Lighting.GlobalShadows = true
+    Lighting.Brightness = 2
+    Lighting.Ambient = Color3.fromRGB(255,255,255)
+    Lighting.OutdoorAmbient = Color3.fromRGB(255,255,255)
+    Lighting.FogEnd = 100000
+
+    -- Reset Workspace objects
+    for _, v in ipairs(workspace:GetDescendants()) do
+        if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Smoke") or v:IsA("Fire") then v.Enabled = true end
+        if v:IsA("Beam") or v:IsA("Sparkles") then v.Enabled = true end
+        if v:IsA("SpecialMesh") then v.Scale = Vector3.new(1,1,1) end
+        if v:IsA("MeshPart") then v.Material = Enum.Material.Plastic; v.Transparency = 0 end
+        if v:IsA("Decal") or v:IsA("Texture") or v:IsA("SurfaceAppearance") then v.Transparency = 0 end
+        if v:IsA("Explosion") then v.Visible = true; v.BlastPressure=5000; v.BlastRadius=10 end
+        if v:IsA("Sound") then v.Volume=1; v.Playing=false end
+        if v:IsA("BasePart") then v.CastShadow = true; v.Material = Enum.Material.Plastic; v.Reflectance = 0 end
+    end
+end)
+
+-------------------
+-- UI1 Button Action (Toggle UI2)
+-------------------
+UI1Button.MouseButton1Click:Connect(function()
+    UI2Frame.Visible = not UI2Frame.Visible
+end)
+
+print("[LowGraphicsUI] โหลดเสร็จแล้ว มี Low GFX Level 2 + FPS Toggle (Draggable) + Reset GFX + UI Drag + UI1/2 Toggle")
