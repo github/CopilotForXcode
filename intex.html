@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wokera Builds — Grand Mobile</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+    :root{
+      --bg-dark:#0b0b0b;
+      --red-neon:#ff2a2a;
+      --red-dark:#1a0000;
+      --muted:#ccc;
+    }
+
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'Poppins',sans-serif;background:var(--bg-dark);color:#fff;overflow-x:hidden;scroll-behavior:smooth;}
+
+    header{
+      position:sticky;top:0;background:rgba(20,0,0,0.9);
+      display:flex;justify-content:space-between;align-items:center;padding:15px 25px;
+      z-index:100;box-shadow:0 0 10px #000;
+    }
+    .logo{font-size:22px;font-weight:600;color:var(--red-neon);text-shadow:0 0 15px #ff2a2a;}
+    nav a{color:#fff;margin-left:20px;text-decoration:none;font-weight:500;transition:0.3s;}
+    nav a:hover{color:var(--red-neon);text-shadow:0 0 10px #ff2a2a;}
+
+    /* Burger */
+    .burger{display:none;flex-direction:column;gap:4px;cursor:pointer;}
+    .burger span{width:25px;height:3px;background:var(--red-neon);border-radius:2px;display:block;}
+    @media(max-width:768px){nav{display:none;position:absolute;top:60px;right:0;background:var(--red-dark);flex-direction:column;padding:15px;border-radius:10px} nav.active{display:flex} .burger{display:flex;}}
+
+    section{padding:90px 20px;text-align:center;animation:fadeIn 1s ease;}
+    @keyframes fadeIn{0%{opacity:0;transform:translateY(20px);}100%{opacity:1;transform:translateY(0);}}
+    h1,h2{color:var(--red-neon);text-shadow:0 0 15px #ff2a2a;margin-bottom:15px;}
+    p{color:var(--muted);max-width:720px;margin:0 auto 20px;}
+
+    .btn{background:linear-gradient(90deg,#ff2a2a,#ff6666);border:none;padding:15px 35px;border-radius:12px;color:#fff;font-weight:600;cursor:pointer;transition:0.3s;box-shadow:0 0 20px #ff2a2a;}
+    .btn:hover{transform:scale(1.05);box-shadow:0 0 35px #ff2a2a;}
+
+    /* Секция сборок */
+    .services{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));max-width:1100px;margin:0 auto;padding:40px 10px;}
+    .card{background:var(--red-dark);border-radius:12px;padding:15px;box-shadow:0 6px 30px rgba(255,0,0,0.4);transition:0.3s;overflow:hidden;}
+    .card:hover{transform:translateY(-6px);box-shadow:0 15px 40px rgba(255,0,0,0.6);}
+    .card img{width:100%;border-radius:10px;margin-bottom:12px;}
+    .card h3{margin-bottom:8px;}
+    .price{font-size:20px;font-weight:700;margin-bottom:10px;color:var(--red-neon);}
+    .desc{font-size:14px;color:#ccc;margin-bottom:12px;}
+
+    footer{padding:20px;text-align:center;background:var(--red-dark);border-top:1px solid #ff2a2a;color:#aaa;}
+    footer small{display:block;margin-top:6px;color:#888;font-size:13px;}
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">Wokera Builds</div>
+    <div class="burger" onclick="toggleNav()"><span></span><span></span><span></span></div>
+    <nav id="nav">
+      <a href="#home">Главная</a>
+      <a href="#services">Сборки</a>
+      <a href="#education">Обучение</a>
+      <a href="#contact">Контакты</a>
+    </nav>
+  </header>
+
+  <section id="home">
+    <h1>🔥 Самые лучшие сборки у Wokera 🔥</h1>
+    <p>Grand RP Mobile — прокачай свой CRMP проект с эксклюзивными сборками и ганами от Wokera!</p>
+    <button class="btn" onclick="location.href='#services'">Смотреть сборки</button>
+  </section>
+
+  <section id="services" class="services">
+    <!-- карточка 1 -->
+    <div class="card">
+      <img src="https://i.imgur.com/0Z3Yp0N.jpg" alt="Сборка 1">
+      <h3>Обычная сборка</h3>
+      <div class="price">95 ₽</div>
+      <div class="desc">Готовая сборка для CRMP Grand Mobile.</div>
+      <a class="btn" href="https://t.me/woker444" target="_blank">Купить у Wokera</a>
+    </div>
+    <!-- карточка 2 -->
+    <div class="card">
+      <img src="https://i.imgur.com/3D3y2Xl.jpg" alt="Обучение ган">
+      <h3>Научить делать ганы</h3>
+      <div class="price">250 ₽</div>
+      <div class="desc">Обучение созданию ган и кастомных сборок.</div>
+      <a class="btn" href="https://t.me/woker444" target="_blank">Записаться</a>
+    </div>
+    <!-- карточка 3 -->
+    <div class="card">
+      <img src="https://i.imgur.com/Xm0R1eK.jpg" alt="Анрип сборка">
+      <h3>Анрип сборки</h3>
+      <div class="price">105 ₽</div>
+      <div class="desc">Защита и улучшение сборки.</div>
+      <a class="btn" href="https://t.me/woker444" target="_blank">Купить</a>
+    </div>
+  </section>
+
+  <section id="education">
+    <h2>📘 Обучение</h2>
+    <p>Научим создавать самые крутые ганы и сборки для CRMP / Grand Mobile. Все уроки и консультации — через Telegram @woker444</p>
+    <button class="btn" onclick="window.location.href='https://t.me/woker444'">Записаться</button>
+  </section>
+
+  <section id="contact">
+    <h2>📞 Контакты</h2>
+    <p>Все вопросы, покупки и обучение — в личные сообщения Wokera (@woker444)</p>
+    <button class="btn" onclick="window.location.href='https://t.me/woker444'">Написать Woker</button>
+  </section>
+
+  <footer>
+    <div>© 2025 Wokera Builds</div>
+    <small>CRMP / Grand Mobile | Цены: сборка 95 ₽, обучение 250 ₽, анрип 105 ₽. Другие услуги — уточняйте у Wokera.</small>
+  </footer>
+
+  <script>
+    function toggleNav(){document.getElementById('nav').classList.toggle('active');}
+    document.querySelectorAll('#nav a').forEach(a=>{a.addEventListener('click',()=>{if(window.innerWidth<=768) toggleNav();})});
+  </script>
+
+</body>
+    </html>
