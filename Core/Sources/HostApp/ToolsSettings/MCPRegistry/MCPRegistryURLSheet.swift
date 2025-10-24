@@ -42,6 +42,7 @@ struct MCPRegistryURLSheet: View {
                     Button("Cancel", role: .cancel) { dismiss() }
                     Button("Update") {
                         // Check if URL changed before updating
+                        originalMcpRegistryURL = originalMcpRegistryURL.trimmingCharacters(in: .whitespacesAndNewlines)
                         if originalMcpRegistryURL != mcpRegistryURL {
                             mcpRegistryURL = originalMcpRegistryURL
                             onURLUpdated?()

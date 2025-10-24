@@ -10,8 +10,8 @@ struct MCPManualInstallView: View {
         VStack(spacing: 0) {
             DisclosureSettingsRow(
                 isExpanded: $isExpanded,
-                accessibilityLabel: { $0 ? "Collapse manual install section" : "Expand manual install section" },
-                title: { Text("Manual Install").font(.headline) },
+                accessibilityLabel: { $0 ? "Collapse MCP configuration section" : "Expand MCP configuration section" },
+                title: { Text("MCP Configuration").font(.headline) },
                 subtitle: { Text("Add MCP Servers to power AI with tools for files, databases, and external APIs.") },
                 actions: {
                     HStack(spacing: 8) {

@@ -31,6 +31,7 @@ final class MCPServerGalleryViewModel: ObservableObject {
     @Published private(set) var lastError: Error?
 
     @AppStorage(\.mcpRegistryURL) var mcpRegistryURL
+    @AppStorage(\.mcpRegistryURLHistory) private var mcpRegistryURLHistory
 
     // Service integration
     private let registryService = MCPRegistryService.shared
@@ -253,6 +254,8 @@ final class MCPServerGalleryViewModel: ObservableObject {
                 servers.append(contentsOf: serverList?.servers ?? [])
                 registryMetadata = serverList?.metadata
             }
+
+            mcpRegistryURLHistory.addToHistory(mcpRegistryURL)
             
             return nil
         } catch {

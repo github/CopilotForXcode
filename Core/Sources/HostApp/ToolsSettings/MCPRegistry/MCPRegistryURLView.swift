@@ -80,6 +80,7 @@ struct MCPRegistryURLView: View {
                             },
                             onCommit: {
                                 // Update mcpRegistryURL when user presses Enter
+                                tempURLText = tempURLText.trimmingCharacters(in: .whitespacesAndNewlines)
                                 if tempURLText != mcpRegistryURL {
                                     mcpRegistryURL = tempURLText
                                 }
@@ -128,6 +129,7 @@ struct MCPRegistryURLView: View {
     
     private func loadMCPServers() async {
         // Update mcpRegistryURL with current tempURLText before loading
+        tempURLText = tempURLText.trimmingCharacters(in: .whitespacesAndNewlines)
         if tempURLText != mcpRegistryURL {
             mcpRegistryURL = tempURLText
         }
