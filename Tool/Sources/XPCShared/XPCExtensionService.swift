@@ -118,6 +118,13 @@ public class XPCExtensionService {
             { $0.getSuggestionAcceptedCode }
         )
     }
+    
+    public func getNESSuggestionAcceptedCode(editorContent: EditorContent) async throws -> UpdatedContent? {
+        try await suggestionRequest(
+            editorContent,
+            { $0.getNESSuggestionAcceptedCode }
+        )
+    }
 
     public func getSuggestionRejectedCode(editorContent: EditorContent) async throws
         -> UpdatedContent?
@@ -125,6 +132,15 @@ public class XPCExtensionService {
         try await suggestionRequest(
             editorContent,
             { $0.getSuggestionRejectedCode }
+        )
+    }
+    
+    public func getNESSuggestionRejectedCode(editorContent: EditorContent) async throws
+    -> UpdatedContent?
+    {
+        try await suggestionRequest(
+            editorContent,
+            { $0.getNESSuggestionRejectedCode }
         )
     }
 
@@ -150,6 +166,19 @@ public class XPCExtensionService {
         try await withXPCServiceConnected {
             service, continuation in
             service.toggleRealtimeSuggestion { error in
+                if let error {
+                    continuation.reject(error)
+                    return
+                }
+                continuation.resume(())
+            }
+        } as Void
+    }
+    
+    public func toggleRealtimeNES() async throws {
+        try await withXPCServiceConnected {
+            service, continuation in
+            service.toggleRealtimeNES { error in
                 if let error {
                     continuation.reject(error)
                     return

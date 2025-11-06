@@ -1,5 +1,6 @@
 import Foundation
 import Workspace
+import LanguageServerProtocol
 
 public final class BuiltinExtensionWorkspacePlugin: WorkspacePlugin {
     let extensionManager: BuiltinExtensionManager
@@ -17,8 +18,12 @@ public final class BuiltinExtensionWorkspacePlugin: WorkspacePlugin {
         notifySaveFile(filespace: filespace)
     }
 
-    override public func didUpdateFilespace(_ filespace: Filespace, content: String) {
-        notifyUpdateFile(filespace: filespace, content: content)
+    override public func didUpdateFilespace(
+        _ filespace: Filespace,
+        content: String,
+        contentChanges: [TextDocumentContentChangeEvent]? = nil
+    ) {
+        notifyUpdateFile(filespace: filespace, content: content, contentChanges: contentChanges)
     }
 
     override public func didCloseFilespace(_ fileURL: URL) {
@@ -44,15 +49,20 @@ public final class BuiltinExtensionWorkspacePlugin: WorkspacePlugin {
         }
     }
 
-    public func notifyUpdateFile(filespace: Filespace, content: String) {
+    public func notifyUpdateFile(
+        filespace: Filespace,
+        content: String,
+        contentChanges: [TextDocumentContentChangeEvent]? = nil
+    ) {
         Task {
             guard filespace.isTextReadable else { return }
             for ext in extensionManager.extensions {
                 ext.workspace(
                     .init(workspaceURL: workspaceURL, projectURL: projectRootURL),
                     didUpdateDocumentAt: filespace.fileURL, 
-                    content: content
-                )
+                    content: content,
+                    contentChanges: contentChanges
+                ) 
             }
         }
     }

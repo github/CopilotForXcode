@@ -42,6 +42,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     var quotaItem: NSMenuItem!
     var toggleCompletions: NSMenuItem!
     var toggleIgnoreLanguage: NSMenuItem!
+    var toggleNES: NSMenuItem!
     var openChat: NSMenuItem!
     var signOutItem: NSMenuItem!
     var xpcController: XPCController?
@@ -286,6 +287,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         self.quotaItem.isHidden = true
         self.toggleCompletions.isHidden = true
         self.toggleIgnoreLanguage.isHidden = true
+        self.toggleNES.isHidden = true
         self.signOutItem.isHidden = true
     }
 
@@ -346,6 +348,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         
         self.toggleCompletions.isHidden = false
         self.toggleIgnoreLanguage.isHidden = false
+        self.toggleNES.isHidden = false
         self.signOutItem.isHidden = false
     }
 
@@ -398,6 +401,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         self.quotaItem.isHidden = true
         self.toggleCompletions.isHidden = true
         self.toggleIgnoreLanguage.isHidden = true
+        self.toggleNES.isHidden = true
         self.signOutItem.isHidden = false
     }
 
@@ -411,6 +415,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         self.quotaItem.isHidden = true
         self.toggleCompletions.isHidden = false
         self.toggleIgnoreLanguage.isHidden = false
+        self.toggleNES.isHidden = false
         self.signOutItem.isHidden = false
     }
 

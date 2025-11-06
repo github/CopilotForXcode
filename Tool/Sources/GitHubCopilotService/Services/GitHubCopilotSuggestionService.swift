@@ -2,8 +2,9 @@ import CopilotForXcodeKit
 import Foundation
 import SuggestionBasic
 import Workspace
+import SuggestionProvider
 
-public final class GitHubCopilotSuggestionService: SuggestionServiceType {
+public final class GitHubCopilotSuggestionService: SuggestionServiceType, NESSuggestionServiceType {
     public var configuration: SuggestionServiceConfiguration {
         .init(
             acceptsRelevantCodeSnippets: true,
@@ -19,7 +20,7 @@ public final class GitHubCopilotSuggestionService: SuggestionServiceType {
     }
 
     public func getSuggestions(
-        _ request: SuggestionRequest,
+        _ request: CopilotForXcodeKit.SuggestionRequest,
         workspace: WorkspaceInfo
     ) async throws -> [CopilotForXcodeKit.CodeSuggestion] {
         guard let service = await serviceLocator.getService(from: workspace) else { return [] }
@@ -35,6 +36,21 @@ public final class GitHubCopilotSuggestionService: SuggestionServiceType {
             indentSize: request.indentSize,
             usesTabsForIndentation: request.usesTabsForIndentation
         ).map(Self.convert)
+    }
+    
+    public func getNESSuggestions(
+        _ request: CopilotForXcodeKit.SuggestionRequest,
+        workspace: WorkspaceInfo
+    ) async throws -> [CopilotForXcodeKit.CodeSuggestion] {
+        guard let service = await serviceLocator.getService(from: workspace) else { return [] }
+        
+        return try await service
+            .getCopilotInlineEdit(
+                fileURL: request.fileURL,
+                content: request.content,
+                cursorPosition: .init(line: request.cursorPosition.line, character: request.cursorPosition.character)
+            )
+            .map(Self.convert)
     }
 
     public func notifyAccepted(

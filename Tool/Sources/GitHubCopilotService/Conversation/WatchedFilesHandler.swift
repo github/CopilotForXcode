@@ -29,26 +29,40 @@ public final class WatchedFilesHandlerImpl: WatchedFilesHandler {
         let fileUris = files.prefix(10000).map { $0.url.absoluteString } // Set max number of indexing file to 10000
         
         let batchSize = BatchingFileChangeWatcher.maxEventPublishSize
-        /// only `batchSize`(100) files to complete this event for setup watching workspace in CLS side
-        let jsonResult: JSONValue = .array(fileUris.prefix(batchSize).map { .hash(["uri": .string($0)]) })
-        let jsonValue: JSONValue = .hash(["files": jsonResult])
-        
-        completion(AnyJSONRPCResponse(id: request.id, result: jsonValue))
         
         Task {
-            if fileUris.count > batchSize {
-                for startIndex in stride(from: batchSize, to: fileUris.count, by: batchSize) {
+            var sentCount = 0
+            if params.partialResultToken != nil && fileUris.count > batchSize {
+                for startIndex in stride(from: 0, to: fileUris.count, by: batchSize) {
                     let endIndex = min(startIndex + batchSize, fileUris.count)
-                    let batch = Array(fileUris[startIndex..<endIndex])
-                    try? await service?.notifyDidChangeWatchedFiles(.init(
-                        workspaceUri: params.workspaceFolder.uri,
-                        changes: batch.map { .init(uri: $0, type: .created)}
-                    ))
-                    
-                    try? await Task.sleep(nanoseconds: 100_000_000)  // 100ms
+                    let partialResult = Array(fileUris[startIndex..<endIndex])
+                    let jsonResult: JSONValue = .array(partialResult.map { .hash(["uri": .string($0)]) })
+                    let jsonValue: JSONValue = .hash(["files": jsonResult])
+
+                    if let progressParams = CopilotProgressParams.toProtocolProgressParams(
+                            token: params.partialResultToken!, value: jsonValue) {
+                        try? await service?.sendCopilotNotification(.clientProtocolProgress(progressParams))
+                    }
+
+                    sentCount = endIndex
+                    try? await Task.sleep(nanoseconds: 10_000_000)  // 10ms
                 }
             }
+            
+            if sentCount < fileUris.count {
+                let remainingFiles = Array(fileUris[sentCount..<fileUris.count])
+                let jsonResult: JSONValue = .array(remainingFiles.map { .hash(["uri": .string($0)]) })
+                let jsonValue: JSONValue = .hash(["files": jsonResult])
+
+                completion(AnyJSONRPCResponse(id: request.id, result: jsonValue))
+            } else {
+                let jsonResult: JSONValue = .array([])
+                let jsonValue: JSONValue = .hash(["files": jsonResult])
+
+                completion(AnyJSONRPCResponse(id: request.id, result: jsonValue))
+            }
         }
+
         
         startFileChangeWatcher(workspaceURL: workspaceURL, projectURL: projectURL, service: service)
     }
@@ -66,7 +80,7 @@ public final class WatchedFilesHandlerImpl: WatchedFilesHandler {
                         projectURL: projectURL,
                         service: service)
                 },
-                directoryChangePublisher: { directoryEvents in 
+                directoryChangePublisher: { directoryEvents in
                     self.onDirectoryEvent(
                         directoryEvents: directoryEvents,
                         workspaceURL: workspaceURL,
@@ -97,7 +111,7 @@ public final class WatchedFilesHandlerImpl: WatchedFilesHandler {
     }
     
     private func onDirectoryEvent(directoryEvents: [FileEvent], workspaceURL: URL, projectURL: URL) {
-        directoryEvents.forEach { event in 
+        directoryEvents.forEach { event in
             guard let directoryURL = URL(string: event.uri) else {
                 return
             }
@@ -108,5 +122,25 @@ public final class WatchedFilesHandlerImpl: WatchedFilesHandler {
                 WorkspaceDirectoryIndex.shared.addDirectory(directory, to: workspaceURL)
             }
         }
+    }
+}
+
+public struct CopilotProgressParams: Codable {
+    let token: ProgressToken
+    let value: JSONValue
+
+    init(token: ProgressToken, value: JSONValue) {
+        self.token = token
+        self.value = value
+    }
+
+    public static func toProtocolProgressParams(token: ProgressToken, value: JSONValue) -> ProgressParams? {
+        let copilotProgress = CopilotProgressParams(token: token, value: value)
+
+        if let jsonData = try? JSONEncoder().encode(copilotProgress),
+           let progressParams = try? JSONDecoder().decode(ProgressParams.self, from: jsonData) {
+            return progressParams
+        }
+        return nil
     }
 }

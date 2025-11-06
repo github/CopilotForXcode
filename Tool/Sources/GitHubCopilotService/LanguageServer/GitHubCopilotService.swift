@@ -33,11 +33,21 @@ public protocol GitHubCopilotSuggestionServiceType {
         indentSize: Int,
         usesTabsForIndentation: Bool
     ) async throws -> [CodeSuggestion]
+    func getCopilotInlineEdit(
+        fileURL: URL,
+        content: String,
+        cursorPosition: CursorPosition
+    ) async throws -> [CodeSuggestion]
     func notifyShown(_ completion: CodeSuggestion) async
     func notifyAccepted(_ completion: CodeSuggestion, acceptedLength: Int?) async
     func notifyRejected(_ completions: [CodeSuggestion]) async
     func notifyOpenTextDocument(fileURL: URL, content: String) async throws
-    func notifyChangeTextDocument(fileURL: URL, content: String, version: Int) async throws
+    func notifyChangeTextDocument(
+        fileURL: URL,
+        content: String,
+        version: Int,
+        contentChanges: [TextDocumentContentChangeEvent]?
+    ) async throws
     func notifyCloseTextDocument(fileURL: URL) async throws
     func notifySaveTextDocument(fileURL: URL) async throws
     func cancelRequest() async
@@ -583,8 +593,9 @@ public final class GitHubCopilotService:
             )
 
             do {
+                let maxTry: Int = UserDefaults.shared.value(for: \.realtimeNESToggle) ? 1 : 5
                 try Task.checkCancellation()
-                return try await sendRequest()
+                return try await sendRequest(maxTry: maxTry)
             } catch let error as CancellationError {
                 if ongoingTasks.isEmpty {
                     await recoverContent()
@@ -599,6 +610,47 @@ public final class GitHubCopilotService:
         ongoingTasks.insert(task)
 
         return try await task.value
+    }
+    
+    // MARK: - NES
+    @GitHubCopilotSuggestionActor
+    public func getCopilotInlineEdit(
+        fileURL: URL,
+        content: String,
+        cursorPosition: CursorPosition
+    ) async throws -> [CodeSuggestion] {
+        ongoingTasks.forEach { $0.cancel() }
+        ongoingTasks.removeAll()
+        await localProcessServer?.cancelOngoingTasks()
+        
+        do {
+            try? await notifyChangeTextDocument(
+                fileURL: fileURL,
+                content: content,
+                version: 1
+            )
+            
+            let completions = try await sendRequest(
+                GitHubCopilotRequest.CopilotInlineEdit(
+                    params: CopilotInlineEditsParams(
+                        textDocument: .init(uri: fileURL.absoluteString, version: 1),
+                        position: cursorPosition
+                    )
+                ))
+                .edits
+                .compactMap { edit in
+                    CodeSuggestion.init(
+                        id: edit.command?.arguments.first ?? UUID().uuidString,
+                        text: edit.text,
+                        position: cursorPosition,
+                        range: edit.range
+                    )
+                }
+            return completions
+        } catch {
+            Logger.gitHubCopilot.error("Failed to get copilot inline edit: \(error.localizedDescription)")
+            throw error
+        }
     }
 
     @GitHubCopilotSuggestionActor
@@ -905,20 +957,18 @@ public final class GitHubCopilotService:
     public func notifyChangeTextDocument(
         fileURL: URL,
         content: String,
-        version: Int
+        version: Int,
+        contentChanges: [TextDocumentContentChangeEvent]? = nil
     ) async throws {
-        let uri = "file://\(fileURL.path)"
+        let uri = fileURL.absoluteString
+        let changes: [TextDocumentContentChangeEvent] = contentChanges ?? [.init(range: nil, rangeLength: nil, text: content)]
         //        Logger.service.debug("Change \(uri), \(content.count)")
         try await server.sendNotification(
             .textDocumentDidChange(
                 DidChangeTextDocumentParams(
                     uri: uri,
                     version: version,
-                    contentChange: .init(
-                        range: nil,
-                        rangeLength: nil,
-                        text: content
-                    )
+                    contentChanges: changes
                 )
             )
         )

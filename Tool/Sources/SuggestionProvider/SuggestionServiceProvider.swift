@@ -63,6 +63,10 @@ public protocol SuggestionServiceProvider {
         _ request: SuggestionRequest,
         workspaceInfo: CopilotForXcodeKit.WorkspaceInfo
     ) async throws -> [CodeSuggestion]
+    func getNESSuggestions(
+        _ request: SuggestionRequest,
+        workspaceInfo: CopilotForXcodeKit.WorkspaceInfo,
+    ) async throws -> [CodeSuggestion]
     func notifyAccepted(
         _ suggestion: CodeSuggestion,
         workspaceInfo: CopilotForXcodeKit.WorkspaceInfo

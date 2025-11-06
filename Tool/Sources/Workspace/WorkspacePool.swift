@@ -67,7 +67,24 @@ public class WorkspacePool {
         if filespaces.count == 1 { return filespaces.first }
         Logger.workspacePool.info("Multiple workspaces found with file: \(fileURL)")
         // If multiple workspaces are found, return the first with a suggestion
-        return filespaces.first { $0.presentingSuggestion != nil }
+        return filespaces.first { $0.presentingSuggestion != nil } ?? filespaces.first { $0.presentingNESSuggestion != nil }
+    }
+    
+    public func fetchWorkspaceAndFilespace(fileURL: URL) -> (Workspace, Filespace)? {
+        var workspace: Workspace?
+        var filespace: Filespace?
+        
+        for wp in workspaces.values {
+            if let fp = wp.filespaces[fileURL] {
+                if fp.presentingSuggestion != nil || fp.presentingNESSuggestion != nil {
+                    return (wp, fp)
+                }
+                workspace = wp
+                filespace = fp
+            }
+        }
+        
+        return workspace.flatMap { ws in filespace.map { fs in (ws, fs) } }
     }
 
     @WorkspaceActor

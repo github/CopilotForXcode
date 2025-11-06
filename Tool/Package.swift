@@ -316,6 +316,7 @@ let package = Package(
                 "SystemUtils",
                 "Workspace",
                 "Persist",
+                "SuggestionProvider",
                 .product(name: "LanguageServerProtocol", package: "LanguageServerProtocol"),
                 .product(name: "CopilotForXcodeKit", package: "CopilotForXcodeKit"),
             ]

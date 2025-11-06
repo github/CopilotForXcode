@@ -4,17 +4,93 @@ import XcodeInspector
 import ConversationServiceProvider
 
 public struct WidgetLocation: Equatable {
+    // Indicates from where the widget location generation was triggered
+    enum LocationTrigger {
+        case sourceEditor, xcodeWorkspaceWindow, unknown, otherApp
+        
+        var isSourceEditor: Bool { self == .sourceEditor }
+        var isOtherApp: Bool { self == .otherApp }
+        var isFromXcode: Bool { self == .sourceEditor || self == .xcodeWorkspaceWindow}
+    }
+    
+    struct NESPanelLocation: Equatable {
+        struct DiffViewConstraints: Equatable {
+            var maxX: CGFloat
+            var y: CGFloat
+            var maxWidth: CGFloat
+            var maxHeight: CGFloat
+        }
+
+        var scrollViewFrame: CGRect
+        var screenFrame: CGRect
+        var lineFirstCharacterFrame: CGRect
+        
+        var lineHeight: Double {
+            lineFirstCharacterFrame.height
+        }
+        var menuFrame: CGRect {
+            .init(
+                x: scrollViewFrame.minX + Style.nesSuggestionMenuLeadingPadding,
+                y: screenFrame.height - lineFirstCharacterFrame.maxY,
+                width: lineFirstCharacterFrame.width,
+                height: lineHeight
+            )
+        }
+        
+        var availableHeight: CGFloat? {
+            guard scrollViewFrame.contains(lineFirstCharacterFrame) else {
+                return nil
+            }
+            return scrollViewFrame.maxY - lineFirstCharacterFrame.minY
+        }
+        
+        var availableWidth: CGFloat {
+            return scrollViewFrame.width / 2
+        }
+        
+        func calcDiffViewFrame(contentSize: CGSize) -> CGRect? {
+            guard scrollViewFrame.contains(lineFirstCharacterFrame) else {
+                return nil
+            }
+            
+            let availableWidth = max(0, scrollViewFrame.width / 2)
+            let availableHeight = max(0, scrollViewFrame.maxY - lineFirstCharacterFrame.minY)
+            let preferredWidth = max(contentSize.width, 1)
+            let preferredHeight = max(contentSize.height, lineHeight)
+            
+            let width = availableWidth > 0 ? min(preferredWidth, availableWidth) : preferredWidth
+            let height = availableHeight > 0 ? min(preferredHeight, availableHeight) : preferredHeight
+            
+            return .init(
+                x: scrollViewFrame.maxX - width - Style.nesSuggestionMenuLeadingPadding,
+                y: screenFrame.height - lineFirstCharacterFrame.minY - height,
+                width: width,
+                height: height
+            )
+        }
+    }
+    
     struct PanelLocation: Equatable {
         var frame: CGRect
         var alignPanelTop: Bool
         var firstLineIndent: Double?
         var lineHeight: Double?
     }
-
+    
     var widgetFrame: CGRect
     var tabFrame: CGRect
     var defaultPanelLocation: PanelLocation
     var suggestionPanelLocation: PanelLocation?
+    var nesSuggestionPanelLocation: NESPanelLocation?
+    var locationTrigger: LocationTrigger = .unknown
+    
+    mutating func setNESSuggestionPanelLocation(_ location: NESPanelLocation?) {
+        self.nesSuggestionPanelLocation = location
+    }
+    
+    mutating func setLocationTrigger(_ trigger: LocationTrigger) {
+        self.locationTrigger = trigger
+    }
 }
 
 enum UpdateLocationStrategy {
@@ -30,10 +106,10 @@ enum UpdateLocationStrategy {
         ) -> WidgetLocation {
             guard let selectedRange: AXValue = try? editor
                 .copyValue(key: kAXSelectedTextRangeAttribute),
-                let rect: AXValue = try? editor.copyParameterizedValue(
+                  let rect: AXValue = try? editor.copyParameterizedValue(
                     key: kAXBoundsForRangeParameterizedAttribute,
                     parameters: selectedRange
-                )
+                  )
             else {
                 return FixedToBottom().framesForWindows(
                     editorFrame: editorFrame,
@@ -63,7 +139,7 @@ enum UpdateLocationStrategy {
             )
         }
     }
-
+    
     struct FixedToBottom {
         func framesForWindows(
             editorFrame: CGRect,
@@ -86,7 +162,7 @@ enum UpdateLocationStrategy {
             )
         }
     }
-
+    
     struct HorizontalMovable {
         func framesForWindows(
             y: CGFloat,
@@ -109,34 +185,34 @@ enum UpdateLocationStrategy {
                 mainScreen.frame.height - editorFrame.minY - Style.widgetHeight - Style
                     .widgetPadding
             )
-
+            
             var proposedAnchorFrameOnTheRightSide = CGRect(
                 x: editorFrame.maxX - Style.widgetPadding,
                 y: y,
                 width: 0,
                 height: 0
             )
-
+            
             let widgetFrameOnTheRightSide = CGRect(
                 x: editorFrame.maxX - Style.widgetPadding - Style.widgetWidth,
                 y: y,
                 width: Style.widgetWidth,
                 height: Style.widgetHeight
             )
-
+            
             if !hideCircularWidget {
                 proposedAnchorFrameOnTheRightSide = widgetFrameOnTheRightSide
             }
-
+            
             let proposedPanelX = proposedAnchorFrameOnTheRightSide.maxX
-                + Style.widgetPadding * 2
-                - editorFrameExpendedSize.width
+            + Style.widgetPadding * 2
+            - editorFrameExpendedSize.width
             let putPanelToTheRight = {
                 if editorFrame.size.width >= preferredInsideEditorMinWidth { return false }
                 return activeScreen.frame.maxX > proposedPanelX + Style.panelWidth
             }()
             let alignPanelTopToAnchor = fixedAlignment ?? (y > activeScreen.frame.midY)
-
+            
             let chatPanelFrame = getChatPanelFrame(mainScreen)
             
             if putPanelToTheRight {
@@ -144,12 +220,12 @@ enum UpdateLocationStrategy {
                 let tabFrame = CGRect(
                     x: anchorFrame.origin.x,
                     y: alignPanelTopToAnchor
-                        ? anchorFrame.minY - Style.widgetHeight - Style.widgetPadding
-                        : anchorFrame.maxY + Style.widgetPadding,
+                    ? anchorFrame.minY - Style.widgetHeight - Style.widgetPadding
+                    : anchorFrame.maxY + Style.widgetPadding,
                     width: Style.widgetWidth,
                     height: Style.widgetHeight
                 )
-
+                
                 return .init(
                     widgetFrame: widgetFrameOnTheRightSide,
                     tabFrame: tabFrame,
@@ -166,22 +242,22 @@ enum UpdateLocationStrategy {
                     width: 0,
                     height: 0
                 )
-
+                
                 let widgetFrameOnTheLeftSide = CGRect(
                     x: editorFrame.minX + Style.widgetPadding,
                     y: proposedAnchorFrameOnTheRightSide.origin.y,
                     width: Style.widgetWidth,
                     height: Style.widgetHeight
                 )
-
+                
                 if !hideCircularWidget {
                     proposedAnchorFrameOnTheLeftSide = widgetFrameOnTheLeftSide
                 }
-
+                
                 let proposedPanelX = proposedAnchorFrameOnTheLeftSide.minX
-                    - Style.widgetPadding * 2
-                    - Style.panelWidth
-                    + editorFrameExpendedSize.width
+                - Style.widgetPadding * 2
+                - Style.panelWidth
+                + editorFrameExpendedSize.width
                 let putAnchorToTheLeft = {
                     if editorFrame.size.width >= preferredInsideEditorMinWidth {
                         if editorFrame.maxX <= activeScreen.frame.maxX {
@@ -190,14 +266,14 @@ enum UpdateLocationStrategy {
                     }
                     return proposedPanelX > activeScreen.frame.minX
                 }()
-
+                
                 if putAnchorToTheLeft {
                     let anchorFrame = proposedAnchorFrameOnTheLeftSide
                     let tabFrame = CGRect(
                         x: anchorFrame.origin.x,
                         y: alignPanelTopToAnchor
-                            ? anchorFrame.minY - Style.widgetHeight - Style.widgetPadding
-                            : anchorFrame.maxY + Style.widgetPadding,
+                        ? anchorFrame.minY - Style.widgetHeight - Style.widgetPadding
+                        : anchorFrame.maxY + Style.widgetPadding,
                         width: Style.widgetWidth,
                         height: Style.widgetHeight
                     )
@@ -231,7 +307,7 @@ enum UpdateLocationStrategy {
             }
         }
     }
-
+    
     struct NearbyTextCursor {
         func framesForSuggestionWindow(
             editorFrame: CGRect,
@@ -242,35 +318,37 @@ enum UpdateLocationStrategy {
         ) -> WidgetLocation.PanelLocation? {
             guard let selectionFrame = UpdateLocationStrategy
                 .getSelectionFirstLineFrame(editor: editor) else { return nil }
-
+            
             // hide it when the line of code is outside of the editor visible rect
             if selectionFrame.maxY < editorFrame.minY || selectionFrame.minY > editorFrame.maxY {
                 return nil
             }
-
+            
+            let lineHeight: Double = selectionFrame.height
+            let selectionMinY = selectionFrame.minY
             // Always place suggestion window at cursor position.
             return .init(
                 frame: .init(
                     x: editorFrame.minX,
-                    y: mainScreen.frame.height - selectionFrame.minY - Style.inlineSuggestionMaxHeight + Style.inlineSuggestionPadding,
+                    y: mainScreen.frame.height - selectionMinY - Style.inlineSuggestionMaxHeight + Style.inlineSuggestionPadding,
                     width: editorFrame.width,
                     height: Style.inlineSuggestionMaxHeight
                 ),
                 alignPanelTop: true,
                 firstLineIndent: selectionFrame.maxX - editorFrame.minX - Style.inlineSuggestionPadding,
-                lineHeight: selectionFrame.height
+                lineHeight: lineHeight
             )
         }
     }
-
+    
     /// Get the frame of the selection.
     static func getSelectionFrame(editor: AXUIElement) -> CGRect? {
         guard let selectedRange: AXValue = try? editor
             .copyValue(key: kAXSelectedTextRangeAttribute),
-            let rect: AXValue = try? editor.copyParameterizedValue(
+              let rect: AXValue = try? editor.copyParameterizedValue(
                 key: kAXBoundsForRangeParameterizedAttribute,
                 parameters: selectedRange
-            )
+              )
         else {
             return nil
         }
@@ -279,36 +357,36 @@ enum UpdateLocationStrategy {
         guard found else { return nil }
         return selectionFrame
     }
-
+    
     /// Get the frame of the first line of the selection.
     static func getSelectionFirstLineFrame(editor: AXUIElement) -> CGRect? {
         // Find selection range rect
         guard let selectedRange: AXValue = try? editor
             .copyValue(key: kAXSelectedTextRangeAttribute),
-            let rect: AXValue = try? editor.copyParameterizedValue(
+              let rect: AXValue = try? editor.copyParameterizedValue(
                 key: kAXBoundsForRangeParameterizedAttribute,
                 parameters: selectedRange
-            )
+              )
         else {
             return nil
         }
         var selectionFrame: CGRect = .zero
         let found = AXValueGetValue(rect, .cgRect, &selectionFrame)
         guard found else { return nil }
-
+        
         var firstLineRange: CFRange = .init()
         let foundFirstLine = AXValueGetValue(selectedRange, .cfRange, &firstLineRange)
         firstLineRange.length = 0
-
-        #warning(
-            "FIXME: When selection is too low and out of the screen, the selection range becomes something else."
+        
+#warning(
+        "FIXME: When selection is too low and out of the screen, the selection range becomes something else."
         )
-
+        
         if foundFirstLine,
            let firstLineSelectionRange = AXValueCreate(.cfRange, &firstLineRange),
            let firstLineRect: AXValue = try? editor.copyParameterizedValue(
-               key: kAXBoundsForRangeParameterizedAttribute,
-               parameters: firstLineSelectionRange
+            key: kAXBoundsForRangeParameterizedAttribute,
+            parameters: firstLineSelectionRange
            )
         {
             var firstLineFrame: CGRect = .zero
@@ -317,7 +395,7 @@ enum UpdateLocationStrategy {
                 selectionFrame = firstLineFrame
             }
         }
-
+        
         return selectionFrame
     }
     
@@ -365,10 +443,10 @@ public struct CodeReviewLocationStrategy {
         currentLines: [String]
     ) -> Int {
         let difference = currentLines.difference(from: originalLines)
-
+        
         let targetIndex = originalLineNumber
         var adjustment = 0
-
+        
         for change in difference {
             switch change {
             case .insert(let offset, _, _):
@@ -383,19 +461,19 @@ public struct CodeReviewLocationStrategy {
                 }
             }
         }
-
+        
         return targetIndex + adjustment
     }
-
+    
     static func getCurrentLineFrame(
-        editor: AXUIElement, 
+        editor: AXUIElement,
         currentContent: String,
-        comment: ReviewComment, 
+        comment: ReviewComment,
         originalContent: String
     ) -> (lineNumber: Int?, lineFrame: CGRect?) {
         let originalLines = originalContent.components(separatedBy: .newlines)
         let currentLines = currentContent.components(separatedBy: .newlines)
-
+        
         let originalLineNumber = comment.range.end.line
         let currentLineNumber = calculateCurrentLineNumber(
             for: originalLineNumber,
@@ -408,5 +486,40 @@ public struct CodeReviewLocationStrategy {
         }
         
         return (currentLineNumber, rect)
+    }
+}
+
+public struct NESPanelLocationStrategy {
+    static func getNESPanelLocation(
+        maybeEditor: AXUIElement,
+        state: WidgetFeature.State
+    ) -> WidgetLocation.NESPanelLocation? {
+        guard let sourceEditor = maybeEditor.findSourceEditorElement(shouldRetry: false),
+              let editorContent: String = try? sourceEditor.copyValue(key: kAXValueAttribute),
+              let nesContent = state.panelState.nesContent,
+              let screen = NSScreen.screens.first(where: { $0.frame.origin == .zero })
+        else {
+            return nil
+        }
+        
+        let startLine = nesContent.range.start.line
+        guard let lineFirstCharacterFrame = LocationStrategyHelper.getLineFrame(
+            startLine,
+            in: sourceEditor,
+            with: editorContent.components(separatedBy: .newlines),
+            length: 1
+        ) else {
+            return nil
+        }
+        
+        guard let scrollViewFrame = sourceEditor.parent?.rect else {
+            return nil
+        }
+        
+        return .init(
+            scrollViewFrame: scrollViewFrame,
+            screenFrame: screen.frame,
+            lineFirstCharacterFrame: lineFirstCharacterFrame
+        )
     }
 }

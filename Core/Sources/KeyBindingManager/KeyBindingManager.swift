@@ -5,16 +5,24 @@ public final class KeyBindingManager {
     public init(
         workspacePool: WorkspacePool,
         acceptSuggestion: @escaping () -> Void,
+        acceptNESSuggestion: @escaping () -> Void,
         expandSuggestion: @escaping () -> Void,
         collapseSuggestion: @escaping () -> Void,
-        dismissSuggestion: @escaping () -> Void
+        dismissSuggestion: @escaping () -> Void,
+        rejectNESSuggestion: @escaping () -> Void,
+        goToNextEditSuggestion: @escaping () -> Void,
+        isNESPanelOutOfFrame: @escaping () -> Bool
     ) {
         tabToAcceptSuggestion = .init(
             workspacePool: workspacePool,
             acceptSuggestion: acceptSuggestion,
-            dismissSuggestion: dismissSuggestion, 
+            acceptNESSuggestion: acceptNESSuggestion,
+            dismissSuggestion: dismissSuggestion,
             expandSuggestion: expandSuggestion,
-            collapseSuggestion: collapseSuggestion
+            collapseSuggestion: collapseSuggestion,
+            rejectNESSuggestion: rejectNESSuggestion,
+            goToNextEditSuggestion: goToNextEditSuggestion,
+            isNESPanelOutOfFrame: isNESPanelOutOfFrame
         )
     }
 

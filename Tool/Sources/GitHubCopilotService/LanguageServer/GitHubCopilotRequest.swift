@@ -281,6 +281,20 @@ enum GitHubCopilotRequest {
             ]), ClientRequest.NullHandler)
         }
     }
+    
+    // MARK: - NES
+    
+    struct CopilotInlineEdit: GitHubCopilotRequestType {
+        typealias Response = CopilotInlineEditsResponse
+        
+        var params: CopilotInlineEditsParams
+        
+        var request: ClientRequest {
+            let data = (try? JSONEncoder().encode(params)) ?? Data()
+            let dict = (try? JSONDecoder().decode(JSONValue.self, from: data)) ?? .hash([:])
+            return .custom("textDocument/copilotInlineEdit", dict, ClientRequest.NullHandler)
+        }
+    }
 
     struct NotifyShown: GitHubCopilotRequestType {
         struct Response: Codable {}

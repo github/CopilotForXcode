@@ -242,6 +242,7 @@ public struct WatchedFilesParams: Codable {
     public var workspaceFolder: WorkspaceFolder
     public var excludeGitignoredFiles: Bool
     public var excludeIDEIgnoredFiles: Bool
+    public var partialResultToken: ProgressToken?
 }
 
 public typealias WatchedFilesRequest = JSONRPCRequest<WatchedFilesParams>

@@ -8,6 +8,7 @@ import SuggestionBasic
 import UserDefaultsObserver
 import Workspace
 import XcodeInspector
+import SuggestionWidget
 
 final class TabToAcceptSuggestion {
     let hook: CGEventHookType = CGEventHook(eventsOfInterest: [.keyDown]) { message in
@@ -16,9 +17,13 @@ final class TabToAcceptSuggestion {
 
     let workspacePool: WorkspacePool
     let acceptSuggestion: () -> Void
+    let acceptNESSuggestion: () -> Void
     let expandSuggestion: () -> Void
     let collapseSuggestion: () -> Void
     let dismissSuggestion: () -> Void
+    let rejectNESSuggestion: () -> Void
+    let goToNextEditSuggestion: () -> Void
+    let isNESPanelOutOfFrame: () -> Bool
     private var modifierEventMonitor: Any?
     private let userDefaultsObserver = UserDefaultsObserver(
         object: UserDefaults.shared, forKeyPaths: [
@@ -47,16 +52,24 @@ final class TabToAcceptSuggestion {
     init(
         workspacePool: WorkspacePool,
         acceptSuggestion: @escaping () -> Void,
+        acceptNESSuggestion: @escaping () -> Void,
         dismissSuggestion: @escaping () -> Void,
         expandSuggestion: @escaping () -> Void,
-        collapseSuggestion: @escaping () -> Void
+        collapseSuggestion: @escaping () -> Void,
+        rejectNESSuggestion: @escaping () -> Void,
+        goToNextEditSuggestion: @escaping () -> Void,
+        isNESPanelOutOfFrame: @escaping () -> Bool
     ) {
         _ = ThreadSafeAccessToXcodeInspector.shared
         self.workspacePool = workspacePool
         self.acceptSuggestion = acceptSuggestion
+        self.acceptNESSuggestion = acceptNESSuggestion
         self.dismissSuggestion = dismissSuggestion
+        self.rejectNESSuggestion = rejectNESSuggestion
         self.expandSuggestion = expandSuggestion
         self.collapseSuggestion = collapseSuggestion
+        self.goToNextEditSuggestion = goToNextEditSuggestion
+        self.isNESPanelOutOfFrame = isNESPanelOutOfFrame
 
         hook.add(
             .init(
@@ -121,18 +134,48 @@ final class TabToAcceptSuggestion {
     }
 
     func handleEvent(_ event: CGEvent) -> CGEventManipulation.Result {
-        let (accept, reason) = Self.shouldAcceptSuggestion(
-            event: event,
-            workspacePool: workspacePool,
-            xcodeInspector: ThreadSafeAccessToXcodeInspector.shared
-        )
-        if let reason = reason {
-            Logger.service.debug("TabToAcceptSuggestion: \(accept ? "" : "not") accepting due to: \(reason)")
+        let keycode = Int(event.getIntegerValueField(.keyboardEventKeycode))
+        let tab = 48
+        let escape = 53
+        
+        if keycode == tab {
+            let (accept, reason, codeSuggestionType) = Self.shouldAcceptSuggestion(
+                event: event,
+                workspacePool: workspacePool,
+                xcodeInspector: ThreadSafeAccessToXcodeInspector.shared
+            )
+            if let reason = reason {
+                Logger.service.debug("TabToAcceptSuggestion: \(accept ? "" : "not") accepting due to: \(reason)")
+            }
+            if accept, let codeSuggestionType {
+                switch codeSuggestionType {
+                case .codeCompletion:
+                    acceptSuggestion()
+                case .nes:
+                    if isNESPanelOutOfFrame() {
+                        goToNextEditSuggestion()
+                    } else {
+                        acceptNESSuggestion()
+                    }
+                }
+                return .discarded
+            }
+            return .unchanged
+        } else if keycode == escape {
+            let (shouldReject, reason) = Self.shouldRejectNESSuggestion(
+                event: event,
+                workspacePool: workspacePool,
+                xcodeInspector: ThreadSafeAccessToXcodeInspector.shared
+            )
+            if let reason = reason {
+                Logger.service.debug("ShouldRejectNESSuggestion: \(shouldReject ? "" : "not") rejecting due to: \(reason)")
+            }
+            if shouldReject {
+                rejectNESSuggestion()
+                return .discarded
+            }
         }
-        if accept {
-            acceptSuggestion()
-            return .discarded
-        }
+        
         return .unchanged
     }
 
@@ -146,36 +189,93 @@ final class TabToAcceptSuggestion {
 }
 
 extension TabToAcceptSuggestion {
+    
+    enum SuggestionAction {
+        case acceptSuggestion, rejectNESSuggestion
+    }
+    
     /// Returns whether a given keyboard event should be intercepted and trigger
     /// accepting a suggestion.
     static func shouldAcceptSuggestion(
         event: CGEvent,
         workspacePool: WorkspacePool,
         xcodeInspector: ThreadSafeAccessToXcodeInspectorProtocol
+    ) -> (accept: Bool, reason: String?, codeSuggestionType: CodeSuggestionType?) {
+        let (isValidEvent, eventReason) = Self.validateEvent(event)
+        guard isValidEvent else { return (false, eventReason, nil) }
+        
+        let (isValidFilespace, filespaceReason, codeSuggestionType) = Self.validateFilespace(
+            event,
+            workspacePool: workspacePool,
+            xcodeInspector: xcodeInspector,
+            suggestionAction: .acceptSuggestion
+        )
+        guard isValidFilespace else { return (false, filespaceReason, nil) }
+        
+        return (true, nil, codeSuggestionType)
+    }
+    
+    static func shouldRejectNESSuggestion(
+        event: CGEvent,
+        workspacePool: WorkspacePool,
+        xcodeInspector: ThreadSafeAccessToXcodeInspectorProtocol
     ) -> (accept: Bool, reason: String?) {
-        let keycode = Int(event.getIntegerValueField(.keyboardEventKeycode))
-        let tab = 48
-        guard keycode == tab else { return (false, nil) }
+        let (isValidEvent, eventReason) = Self.validateEvent(event)
+        guard isValidEvent else { return (false, eventReason) }
+        
+        let (isValidFilespace, filespaceReason, _) = Self.validateFilespace(
+            event,
+            workspacePool: workspacePool,
+            xcodeInspector: xcodeInspector,
+            suggestionAction: .rejectNESSuggestion
+        )
+        guard isValidFilespace else { return (false, filespaceReason) }
+        
+        return (true, nil)
+    }
+    
+    static private func validateEvent(_ event: CGEvent) -> (Bool, String?) {
         if event.flags.contains(.maskHelp) { return (false, nil) }
         if event.flags.contains(.maskShift) { return (false, nil) }
         if event.flags.contains(.maskControl) { return (false, nil) }
         if event.flags.contains(.maskCommand) { return (false, nil) }
+        
+        return (true, nil)
+    }
+    
+    static private func validateFilespace(
+        _ event: CGEvent,
+        workspacePool: WorkspacePool,
+        xcodeInspector: ThreadSafeAccessToXcodeInspectorProtocol,
+        suggestionAction: SuggestionAction
+    ) -> (Bool, String?, CodeSuggestionType?) {
         guard xcodeInspector.hasActiveXcode else {
-            return (false, "No active Xcode")
+            return (false, "No active Xcode", nil)
         }
         guard xcodeInspector.hasFocusedEditor else {
-            return (false, "No focused editor")
+            return (false, "No focused editor", nil)
         }
         guard let fileURL = xcodeInspector.activeDocumentURL else {
-            return (false, "No active document")
+            return (false, "No active document", nil)
         }
         guard let filespace = workspacePool.fetchFilespaceIfExisted(fileURL: fileURL) else {
-            return (false, "No filespace")
+            return (false, "No filespace", nil)
         }
-        if filespace.presentingSuggestion == nil {
-            return (false, "No suggestion")
+        
+        var codeSuggestionType: CodeSuggestionType? = {
+            if let _ = filespace.presentingSuggestion { return .codeCompletion }
+            if let _ = filespace.presentingNESSuggestion { return .nes }
+            return nil
+        }()
+        guard let codeSuggestionType = codeSuggestionType else {
+            return (false, "No suggestion", nil)
         }
-        return (true, nil)
+        
+        if suggestionAction == .rejectNESSuggestion, codeSuggestionType != .nes {
+            return (false, "Invalid NES suggestion", nil)
+        }
+        
+        return (true, nil, codeSuggestionType)
     }
 }
 

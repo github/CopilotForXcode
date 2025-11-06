@@ -4,6 +4,7 @@ import UserDefaultsObserver
 import XcodeInspector
 import Logger
 import UniformTypeIdentifiers
+import LanguageServerProtocol
 
 enum Environment {
     static var now = { Date() }
@@ -45,7 +46,7 @@ open class WorkspacePlugin {
 
     open func didOpenFilespace(_: Filespace) {}
     open func didSaveFilespace(_: Filespace) {}
-    open func didUpdateFilespace(_: Filespace, content: String) {}
+    open func didUpdateFilespace(_: Filespace, content: String, contentChanges: [TextDocumentContentChangeEvent]?) {}
     open func didCloseFilespace(_: URL) {}
 }
 
@@ -149,9 +150,12 @@ public final class Workspace {
             throw WorkspaceFileError.invalidFileFormat(fileURL: fileURL)
         }
         
+        let content = try String(contentsOf: fileURL)
+        
         let existedFilespace = filespaces[fileURL]
         let filespace = existedFilespace ?? .init(
             fileURL: fileURL,
+            content: content,
             onSave: { [weak self] filespace in
                 guard let self else { return }
                 self.didSaveFilespace(filespace)
@@ -183,13 +187,29 @@ public final class Workspace {
         guard let filespace = filespaces[fileURL] else { return }
         filespace.bumpVersion()
         filespace.refreshUpdateTime()
+        
+        let oldContent = filespace.fileContent
+        
+        // Calculate incremental changes if NES is enabled and we have old content
+        let changes: [TextDocumentContentChangeEvent]? = {
+            guard let oldContent = oldContent else { return nil }
+            return calculateIncrementalChanges(oldContent: oldContent, newContent: content)
+        }()
+        
         for plugin in plugins.values {
-            plugin.didUpdateFilespace(filespace, content: content)
+            if let changes, let oldContent {
+                plugin.didUpdateFilespace(filespace, content: oldContent, contentChanges: changes)
+            } else {
+                // fallback to full content sync
+                plugin.didUpdateFilespace(filespace, content: content, contentChanges: nil)
+            }
         }
+        
+        filespace.setFileContent(content)
     }
 
     @WorkspaceActor
-    func didOpenFilespace(_ filespace: Filespace) {
+    public func didOpenFilespace(_ filespace: Filespace) {
         refreshUpdateTime()
         openedFileRecoverableStorage.openFile(fileURL: filespace.fileURL)
         for plugin in plugins.values {
@@ -214,3 +234,137 @@ public final class Workspace {
     }
 }
 
+extension Workspace {
+    /// Calculates incremental changes between two document states.
+    /// Each change is computed on the state resulting from the previous change,
+    /// as required by the LSP specification.
+    ///
+    /// This implementation finds the common prefix and suffix, then creates
+    /// a single change event for the differing middle section. This ensures
+    /// correctness while being efficient for typical editing scenarios.
+    ///
+    /// - Parameters:
+    ///   - oldContent: The original document content
+    ///   - newContent: The new document content
+    /// - Returns: Array of TextDocumentContentChangeEvent in order
+    func calculateIncrementalChanges(
+        oldContent: String,
+        newContent: String
+    ) -> [TextDocumentContentChangeEvent]? {
+        // Handle identical content
+        if oldContent == newContent {
+            return nil
+        }
+        
+        // Handle empty old content (new file)
+        if oldContent.isEmpty {
+            let endPosition = calculateEndPosition(content: oldContent)
+            return [TextDocumentContentChangeEvent(
+                range: LSPRange(
+                    start: Position(line: 0, character: 0),
+                    end: Position(line: 0, character: 0)
+                ),
+                rangeLength: 0,
+                text: newContent
+            )]
+        }
+        
+        // Handle empty new content (cleared file)
+        if newContent.isEmpty {
+            let endPosition = calculateEndPosition(content: oldContent)
+            return [TextDocumentContentChangeEvent(
+                range: LSPRange(
+                    start: Position(line: 0, character: 0),
+                    end: endPosition
+                ),
+                rangeLength: oldContent.utf16.count,
+                text: ""
+            )]
+        }
+        
+        // Find common prefix
+        let oldUTF16 = Array(oldContent.utf16)
+        let newUTF16 = Array(newContent.utf16)
+        let maxCalculationLength = 10000
+        guard oldUTF16.count <= maxCalculationLength,
+              newUTF16.count <= maxCalculationLength else {
+            // Fallback to full replacement for very large contents
+            return nil
+        }
+        
+        var prefixLength = 0
+        let minLength = min(oldUTF16.count, newUTF16.count)
+        while prefixLength < minLength && oldUTF16[prefixLength] == newUTF16[prefixLength] {
+            prefixLength += 1
+        }
+        
+        // Find common suffix (after prefix)
+        var suffixLength = 0
+        while suffixLength < minLength - prefixLength &&
+                oldUTF16[oldUTF16.count - 1 - suffixLength] == newUTF16[newUTF16.count - 1 - suffixLength] {
+            suffixLength += 1
+        }
+        
+        // Calculate positions
+        let startPosition = utf16OffsetToPosition(
+            content: oldContent,
+            offset: prefixLength
+        )
+        
+        let endOffset = oldUTF16.count - suffixLength
+        let endPosition = utf16OffsetToPosition(
+            content: oldContent,
+            offset: endOffset
+        )
+        
+        // Extract replacement text from new content
+        let newStartOffset = prefixLength
+        let newEndOffset = newUTF16.count - suffixLength
+        
+        let replacementText: String
+        if newStartOffset <= newEndOffset {
+            let startIndex = newContent.utf16.index(newContent.utf16.startIndex, offsetBy: newStartOffset)
+            let endIndex = newContent.utf16.index(newContent.utf16.startIndex, offsetBy: newEndOffset)
+            replacementText = String(newContent[startIndex..<endIndex])
+        } else {
+            replacementText = ""
+        }
+        
+        let rangeLength = endOffset - prefixLength
+        
+        return [TextDocumentContentChangeEvent(
+            range: LSPRange(
+                start: startPosition,
+                end: endPosition
+            ),
+            rangeLength: rangeLength,
+            text: replacementText
+        )]
+    }
+    
+    /// Converts UTF-16 offset to LSP Position (line, character)
+    private func utf16OffsetToPosition(content: String, offset: Int) -> Position {
+        var line = 0
+        var character = 0
+        
+        let utf16View = content.utf16
+        let safeOffset = min(offset, utf16View.count)
+        let endIndex = utf16View.index(utf16View.startIndex, offsetBy: safeOffset)
+        
+        for char in utf16View[..<endIndex] {
+            if char == 0x000A { // Line feed (\n)
+                line += 1
+                character = 0
+            } else {
+                character += 1
+            }
+        }
+        
+        return Position(line: line, character: character)
+    }
+    
+    /// Calculates the end position of content
+    private func calculateEndPosition(content: String) -> Position {
+        return utf16OffsetToPosition(content: content, offset: content.utf16.count)
+    }
+}

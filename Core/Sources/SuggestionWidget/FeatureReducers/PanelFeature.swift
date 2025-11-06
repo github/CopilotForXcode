@@ -11,6 +11,13 @@ public struct PanelFeature {
             set {
                 sharedPanelState.content = newValue
                 suggestionPanelState.content = newValue.suggestion
+             }
+        }
+        
+        public var nesContent: NESCodeSuggestionProvider? {
+            get { nesSuggestionPanelState.nesContent }
+            set {
+                nesSuggestionPanelState.nesContent = newValue
             }
         }
 
@@ -21,6 +28,10 @@ public struct PanelFeature {
         // MARK: SuggestionPanel
 
         var suggestionPanelState = SuggestionPanelFeature.State()
+        
+        // MARK: NESSuggestionPanel
+        
+        public var nesSuggestionPanelState = NESSuggestionPanelFeature.State()
 
         var warningMessage: String?
         var warningURL: String?
@@ -28,19 +39,27 @@ public struct PanelFeature {
 
     public enum Action: Equatable {
         case presentSuggestion
+        case presentNESSuggestion
         case presentSuggestionProvider(CodeSuggestionProvider, displayContent: Bool)
+        case presentNESSuggestionProvider(NESCodeSuggestionProvider, displayContent: Bool)
         case presentError(String)
         case presentPromptToCode(PromptToCodeGroup.PromptToCodeInitialState)
         case displayPanelContent
+        case displayNESPanelContent
         case expandSuggestion
         case discardSuggestion
+        case discardNESSuggestion
         case removeDisplayedContent
         case switchToAnotherEditorAndUpdateContent
         case hidePanel
         case showPanel
+        case hideNESPanel
+        case showNESPanel
+        case onRealtimeNESToggleChanged(Bool)
 
         case sharedPanel(SharedPanelFeature.Action)
         case suggestionPanel(SuggestionPanelFeature.Action)
+        case nesSuggestionPanel(NESSuggestionPanelFeature.Action)
 
         case presentWarning(message: String, url: String?)
         case dismissWarning
@@ -59,6 +78,10 @@ public struct PanelFeature {
         Scope(state: \.sharedPanelState, action: \.sharedPanel) {
             SharedPanelFeature()
         }
+        
+        Scope(state: \.nesSuggestionPanelState, action: \.nesSuggestionPanel) {
+            NESSuggestionPanelFeature()
+        }
 
         Reduce { state, action in
             switch action {
@@ -69,12 +92,29 @@ public struct PanelFeature {
                     else { return }
                     await send(.presentSuggestionProvider(provider, displayContent: true))
                 }
+                
+            case .presentNESSuggestion:
+                return .run { send in
+                    guard let fileURL = await xcodeInspector.safe.activeDocumentURL,
+                          let provider = await fetchNESSuggestionProvider(fileURL: fileURL)
+                    else { return }
+                    await send(.presentNESSuggestionProvider(provider, displayContent: true))
+                }
 
             case let .presentSuggestionProvider(provider, displayContent):
                 state.content.suggestion = provider
                 if displayContent {
                     return .run { send in
                         await send(.displayPanelContent)
+                    }.animation(.easeInOut(duration: 0.2))
+                }
+                return .none
+                
+            case let .presentNESSuggestionProvider(provider, displayContent):
+                state.nesContent = provider
+                if displayContent {
+                    return .run { send in
+                        await send(.displayNESPanelContent)
                     }.animation(.easeInOut(duration: 0.2))
                 }
                 return .none
@@ -98,12 +138,22 @@ public struct PanelFeature {
                 if state.suggestionPanelState.content != nil {
                     state.suggestionPanelState.isPanelDisplayed = true
                 }
-
+                return .none
+                
+            case .displayNESPanelContent:
+                if state.nesSuggestionPanelState.nesContent != nil {
+                    state.nesSuggestionPanelState.isPanelDisplayed = true
+                }
                 return .none
 
             case .discardSuggestion:
                 state.content.suggestion = nil
                 return .none
+            
+            case .discardNESSuggestion:
+                state.nesContent = nil
+                return .none
+                
             case .expandSuggestion:
                 state.content.isExpanded = true
                 return .none
@@ -124,9 +174,25 @@ public struct PanelFeature {
             case .showPanel:
                 state.suggestionPanelState.isPanelDisplayed = true
                 return .none
+            case .hideNESPanel:
+                state.nesSuggestionPanelState.isPanelDisplayed = false
+                return .none
+            case .showNESPanel:
+                state.nesSuggestionPanelState.isPanelDisplayed = true
+                return .none
+            case let .onRealtimeNESToggleChanged(isOn):
+                if !isOn {
+                    return .run { send in
+                        await send(.hideNESPanel)
+                        await send(.discardNESSuggestion)
+                    }
+                }
+                return .none
+                
             case .removeDisplayedContent:
                 state.content.error = nil
                 state.content.suggestion = nil
+                state.nesContent = nil
                 return .none
 
             case .sharedPanel(.promptToCodeGroup(.activateOrCreatePromptToCode)),
@@ -147,6 +213,9 @@ public struct PanelFeature {
                 return .none
 
             case .suggestionPanel:
+                return .none
+                
+            case .nesSuggestionPanel:
                 return .none
 
             case .presentWarning(let message, let url):
@@ -170,6 +239,13 @@ public struct PanelFeature {
         guard let provider = await suggestionWidgetControllerDependency
             .suggestionWidgetDataSource?
             .suggestionForFile(at: fileURL) else { return nil }
+        return provider
+    }
+    
+    func fetchNESSuggestionProvider(fileURL: URL) async -> NESCodeSuggestionProvider? {
+        guard let provider = await suggestionWidgetControllerDependency
+            .suggestionWidgetDataSource?
+            .nesSuggestionForFile(at: fileURL) else { return nil }
         return provider
     }
 }

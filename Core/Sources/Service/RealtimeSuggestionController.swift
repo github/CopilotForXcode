@@ -72,17 +72,10 @@ public actor RealtimeSuggestionController {
                         await self.triggerPrefetchDebounced()
                         await self.notifyEditingFileChange(editor: sourceEditor.element)
                     }
-
-                    if #available(macOS 13.0, *) {
-                        for await _ in valueChange._throttle(for: .milliseconds(200)) {
-                            if Task.isCancelled { return }
-                            await handler()
-                        }
-                    } else {
-                        for await _ in valueChange {
-                            if Task.isCancelled { return }
-                            await handler()
-                        }
+                    
+                    for await _ in valueChange {
+                        if Task.isCancelled { return }
+                        await handler()
                     }
                 }
                 group.addTask {
@@ -139,6 +132,10 @@ public actor RealtimeSuggestionController {
                     }
                 }
             }
+            
+            // The `valueChange` event may be missed when the source editor changes focus and
+            // a file is opened with immediate edits (e.g., `insertEditIntoFile` tool in Agent mode).
+            await self.onFocusElementChanged(editor: sourceEditor.element)
         }
     }
 
@@ -154,9 +151,6 @@ public actor RealtimeSuggestionController {
             // check if user loggin
             let authStatus = await Status.shared.getAuthStatus()
             guard authStatus.status == .loggedIn else { return }
-
-            guard UserDefaults.shared.value(for: \.realtimeSuggestionToggle)
-            else { return }
 
             if UserDefaults.shared.value(for: \.disableSuggestionFeatureGlobally),
                let fileURL = await XcodeInspector.shared.safe.activeDocumentURL,
@@ -201,6 +195,20 @@ public actor RealtimeSuggestionController {
               .fetchOrCreateWorkspaceAndFilespace(fileURL: fileURL)
         else { return }
         await workspace.didUpdateFilespace(fileURL: fileURL, content: editor.value)
+    }
+    
+    func onFocusElementChanged(editor: AXUIElement) async {
+        guard let fileURL = await XcodeInspector.shared.safe.activeDocumentURL else {
+            return
+        }
+        
+        if let (workspace, filespace) = await Service.shared.workspacePool
+            .fetchWorkspaceAndFilespace(fileURL: fileURL) {
+            await workspace.didUpdateFilespace(fileURL: fileURL, content: editor.value)
+        } else if let (workspace, filespace) = try? await Service.shared.workspacePool
+            .fetchOrCreateWorkspaceAndFilespace(fileURL: fileURL) {
+            await workspace.didOpenFilespace(filespace)
+        }
     }
 }
 

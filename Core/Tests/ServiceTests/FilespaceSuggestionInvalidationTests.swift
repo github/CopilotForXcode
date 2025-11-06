@@ -21,6 +21,7 @@ class FilespaceSuggestionInvalidationTests: XCTestCase {
         let pool = WorkspacePool()
         let filespace = Filespace(
                 fileURL: URL(fileURLWithPath: "file/path/to.swift"),
+                content: "",
                 onSave: { _ in },
                 onClose: { _ in }
             )

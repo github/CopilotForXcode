@@ -18,6 +18,8 @@
 		5EC511E42C90CE9800632BAB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C8189B1D2938973000C9DCDA /* Assets.xcassets */; };
 		5EC511E52C90CFD600632BAB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C861E6142994F6080056CB02 /* Assets.xcassets */; };
 		5EC511E62C90CFD700632BAB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C861E6142994F6080056CB02 /* Assets.xcassets */; };
+		7E6CEC912EAB6774005F2076 /* RejectNESSuggestionCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E6CEC902EAB6774005F2076 /* RejectNESSuggestionCommand.swift */; };
+		7E856FF72E9F6D24005751CB /* AcceptNESSuggestionCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E856FF62E9F6D1D005751CB /* AcceptNESSuggestionCommand.swift */; };
 		C8009BFF2941C551007AA7E8 /* ToggleRealtimeSuggestionsCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8009BFE2941C551007AA7E8 /* ToggleRealtimeSuggestionsCommand.swift */; };
 		C8009C032941C576007AA7E8 /* SyncTextSettingsCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8009C022941C576007AA7E8 /* SyncTextSettingsCommand.swift */; };
 		C800DBB1294C624D00B04CAC /* PrefetchSuggestionsCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = C800DBB0294C624D00B04CAC /* PrefetchSuggestionsCommand.swift */; };
@@ -193,6 +195,8 @@
 		3E5DB74F2D6B88EE00418952 /* ReleaseNotes.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = ReleaseNotes.md; sourceTree = "<group>"; };
 		424ACA202CA4697200FA20F2 /* Credits.rtf */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; path = Credits.rtf; sourceTree = "<group>"; };
 		427C63272C6E868B000E557C /* OpenSettingsCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenSettingsCommand.swift; sourceTree = "<group>"; };
+		7E6CEC902EAB6774005F2076 /* RejectNESSuggestionCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RejectNESSuggestionCommand.swift; sourceTree = "<group>"; };
+		7E856FF62E9F6D1D005751CB /* AcceptNESSuggestionCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AcceptNESSuggestionCommand.swift; sourceTree = "<group>"; };
 		C8009BFE2941C551007AA7E8 /* ToggleRealtimeSuggestionsCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToggleRealtimeSuggestionsCommand.swift; sourceTree = "<group>"; };
 		C8009C022941C576007AA7E8 /* SyncTextSettingsCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncTextSettingsCommand.swift; sourceTree = "<group>"; };
 		C800DBB0294C624D00B04CAC /* PrefetchSuggestionsCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrefetchSuggestionsCommand.swift; sourceTree = "<group>"; };
@@ -330,8 +334,10 @@
 				C8520300293C4D9000460097 /* Helpers.swift */,
 				C81458952939EFDC00135263 /* GetSuggestionsCommand.swift */,
 				C87B03A4293B261200C77EAE /* AcceptSuggestionCommand.swift */,
+				7E856FF62E9F6D1D005751CB /* AcceptNESSuggestionCommand.swift */,
 				C80FFB952A95F58200704A25 /* AcceptPromptToCodeCommand.swift */,
 				C87B03A6293B261900C77EAE /* RejectSuggestionCommand.swift */,
+				7E6CEC902EAB6774005F2076 /* RejectNESSuggestionCommand.swift */,
 				C87B03A8293B262600C77EAE /* NextSuggestionCommand.swift */,
 				C87B03AA293B262E00C77EAE /* PreviousSuggestionCommand.swift */,
 				C8009BFE2941C551007AA7E8 /* ToggleRealtimeSuggestionsCommand.swift */,
@@ -734,12 +740,14 @@
 				C8758E7029F04BFF00D29C1C /* CustomCommand.swift in Sources */,
 				C8758E7229F04CF100D29C1C /* SeparatorCommand.swift in Sources */,
 				C861A6A329E5503F005C41A3 /* PromptToCodeCommand.swift in Sources */,
+				7E6CEC912EAB6774005F2076 /* RejectNESSuggestionCommand.swift in Sources */,
 				C8520301293C4D9000460097 /* Helpers.swift in Sources */,
 				C8009BFF2941C551007AA7E8 /* ToggleRealtimeSuggestionsCommand.swift in Sources */,
 				C80FFB962A95F58200704A25 /* AcceptPromptToCodeCommand.swift in Sources */,
 				427C63282C6E868B000E557C /* OpenSettingsCommand.swift in Sources */,
 				C87B03A5293B261200C77EAE /* AcceptSuggestionCommand.swift in Sources */,
 				C87B03A9293B262600C77EAE /* NextSuggestionCommand.swift in Sources */,
+				7E856FF72E9F6D24005751CB /* AcceptNESSuggestionCommand.swift in Sources */,
 				C87B03AB293B262E00C77EAE /* PreviousSuggestionCommand.swift in Sources */,
 				C87B03A7293B261900C77EAE /* RejectSuggestionCommand.swift in Sources */,
 				C8009C032941C576007AA7E8 /* SyncTextSettingsCommand.swift in Sources */,

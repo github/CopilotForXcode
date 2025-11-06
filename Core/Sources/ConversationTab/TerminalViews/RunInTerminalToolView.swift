@@ -121,10 +121,12 @@ struct RunInTerminalToolView: View {
                             .scaledFrame(width: 16, height: 16)
 
                         Text(command!)
+                            .lineLimit(nil)
                             .textSelection(.enabled)
                             .scaledFont(size: chatFontSize, design: .monospaced)
                             .scaledPadding(8)
                             .frame(maxWidth: .infinity, alignment: .leading)
+                            .fixedSize(horizontal: false, vertical: true)
                             .foregroundStyle(codeForegroundColor)
                             .background(codeBackgroundColor)
                             .clipShape(RoundedRectangle(cornerRadius: 6))
@@ -141,7 +143,7 @@ struct RunInTerminalToolView: View {
                         terminalSession: terminalSession,
                         onTerminalInput: terminalSession.handleTerminalInput
                     )
-                    .frame(minHeight: 200, maxHeight: 400)
+                    .scaledFrame(minHeight: 200, maxHeight: 400)
                 } else if tool.status == .waitForConfirmation {
                     ThemedMarkdownText(text: explanation ?? "", chat: chat)
                         .frame(maxWidth: .infinity, alignment: .leading)

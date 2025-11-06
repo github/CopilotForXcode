@@ -47,7 +47,7 @@ extension WidgetDataSource: SuggestionWidgetDataSource {
                     onAcceptSuggestionTapped: {
                         Task {
                             let handler = PseudoCommandHandler()
-                            await handler.acceptSuggestion()
+                            await handler.acceptSuggestion(.codeCompletion)
                             NSWorkspace.activatePreviousActiveXcode()
                         }
                     },
@@ -61,6 +61,39 @@ extension WidgetDataSource: SuggestionWidgetDataSource {
                 )
             }
         }
+        return nil
+    }
+    
+    func nesSuggestionForFile(at url: URL) async -> NESCodeSuggestionProvider? {
+        for workspace in await Service.shared.workspacePool.workspaces.values {
+            if let filespace = workspace.filespaces[url],
+                let nesSuggestion = filespace.presentingNESSuggestion
+            {
+                return .init(
+                    fileURL: url,
+                    code: nesSuggestion.text,
+                    range: nesSuggestion.range,
+                    language: filespace.language.rawValue,
+                    onRejectSuggestionTapped: {
+                        Task {
+                            let handler = PseudoCommandHandler()
+                            await handler.rejectNESSuggestions()
+                        }
+                    },
+                    onAcceptNESSuggestionTapped: {
+                        Task {
+                            let handler = PseudoCommandHandler()
+                            await handler.acceptSuggestion(.nes)
+                            NSWorkspace.activatePreviousActiveXcode()
+                        }
+                    },
+                    onDismissNESSuggestionTapped: {
+                        // Refer to Code Completion suggestion, the `dismiss` action is not support
+                    }
+                )
+            }
+        }
+        
         return nil
     }
 }

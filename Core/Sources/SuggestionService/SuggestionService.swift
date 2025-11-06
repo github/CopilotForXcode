@@ -64,6 +64,28 @@ public extension SuggestionService {
 
         return try await getSuggestion(request, workspaceInfo)
     }
+    
+    func getNESSuggestions(
+        _ request: SuggestionRequest,
+        workspaceInfo: CopilotForXcodeKit.WorkspaceInfo,
+    ) async throws -> [SuggestionBasic.CodeSuggestion] {
+        var getNESSuggestion = suggestionProvider.getNESSuggestions(_:workspaceInfo:)
+        let configuration = await configuration
+        
+        for middleware in middlewares.reversed() {
+            getNESSuggestion = { [getNESSuggestion] request, workspaceInfo in
+                try await middleware.getNESSuggestion(
+                    request,
+                    configuration: configuration,
+                    next: { [getNESSuggestion] request in
+                        try await getNESSuggestion(request, workspaceInfo)
+                    }
+                )
+            }
+        }
+        
+        return try await getNESSuggestion(request, workspaceInfo)
+    }
 
     func notifyAccepted(
         _ suggestion: SuggestionBasic.CodeSuggestion,

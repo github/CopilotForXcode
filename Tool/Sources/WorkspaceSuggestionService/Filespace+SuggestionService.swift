@@ -125,6 +125,63 @@ public extension Filespace {
         resetSnapshot()
         return false
     }
-
+    
+    /// Validate the nes suggestion is still valid.
+    /// - Parameters:
+    ///   - lines: lines of the file
+    ///   - cursorPosition: cursor position
+    ///   - Returns: `true` if the nes suggestion is still valid
+    @WorkspaceActor
+    func validateNESSuggestions(lines: [String], cursorPosition: CursorPosition) -> Bool {
+        guard let presentingNESSuggestion else { return false }
+        
+        let updatedSnapshot = FilespaceSuggestionSnapshot(lines: lines, cursorPosition: cursorPosition)
+        
+        // document state is unchanged
+        if updatedSnapshot == self.suggestionSourceSnapshot {
+            return true
+        }
+        
+        // other parts of the document have changed
+        if !self.suggestionSourceSnapshot.equalOrOnlyCurrentLineDiffers(comparedTo: updatedSnapshot) {
+            resetNESSuggestion()
+            resetSnapshot()
+            return false
+        }
+        
+        // the cursor position is invalid
+        if cursorPosition.line >= lines.count {
+            resetNESSuggestion()
+            resetSnapshot()
+            return false
+        }
+        
+        let edit = LineEdit(
+            snapshot: self.suggestionSourceSnapshot,
+            suggestion: presentingNESSuggestion,
+            lines: lines,
+            cursor: cursorPosition
+        )
+        let suggestionLines = presentingNESSuggestion.text.split(whereSeparator: \.isNewline)
+        let suggestionFirstLine = suggestionLines.first ?? ""
+        
+        // there is user-entered text to the right of the cursor
+        if edit.userEntered.count > cursorPosition.character {
+            resetNESSuggestion()
+            resetSnapshot()
+            return false
+        }
+        
+        // TODO: Handle apply the same nes suggestion
+        // typing into the completion
+        // if edit.line.count < suggestionFirstLine.count && suggestionFirstLine.hasPrefix(edit.userEntered) {
+        //    updateSuggestionsWithSameSelection(edit.updateSuggestions(suggestions))
+        //    return true
+        // }
+        
+        resetNESSuggestion()
+        resetSnapshot()
+        return false
+    }
 }
 

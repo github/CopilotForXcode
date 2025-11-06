@@ -213,6 +213,17 @@ struct CopilotForXcodeApp: App {
                 hostAppStore.send(.setActiveTab(.byok))
             }
         }
+        
+        DistributedNotificationCenter.default().addObserver(
+            forName: .openAdvancedSettingsWindowRequest,
+            object: nil,
+            queue: .main
+        ) { _ in
+            DispatchQueue.main.async {
+                activateAndOpenSettings()
+                hostAppStore.send(.setActiveTab(.advanced))
+            }
+        }
     }
 
     var body: some Scene {

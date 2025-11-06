@@ -4,6 +4,7 @@ import Perception
 import SharedUIComponents
 import SwiftUI
 import XcodeInspector
+import SuggestionBasic
 
 @Perceptible
 public final class CodeSuggestionProvider: Equatable {
@@ -56,5 +57,97 @@ public final class CodeSuggestionProvider: Equatable {
     func dismissSuggestion() { onDismissSuggestionTapped() }
 
     
+}
+
+@Perceptible
+public final class NESCodeSuggestionProvider: Equatable {
+    public static func == (lhs: NESCodeSuggestionProvider, rhs: NESCodeSuggestionProvider) -> Bool {
+        lhs.code == rhs.code && lhs.language == rhs.language
+    }
+    
+    public let fileURL: URL
+    public let code: String
+    public let range: CursorRange
+    public let language: String
+    
+    @PerceptionIgnored public var onRejectSuggestionTapped: () -> Void
+    @PerceptionIgnored public var onAcceptNESSuggestionTapped: () -> Void
+    @PerceptionIgnored public var onDismissNESSuggestionTapped: () -> Void
+    
+    public init(
+        fileURL: URL,
+        code: String = "",
+        range: CursorRange,
+        language: String = "",
+        onRejectSuggestionTapped: @escaping () -> Void = {},
+        onAcceptNESSuggestionTapped: @escaping () -> Void = {},
+        onDismissNESSuggestionTapped: @escaping () -> Void = {}
+    ) {
+        self.fileURL = fileURL
+        self.code = code
+        self.range = range
+        self.language = language
+        self.onRejectSuggestionTapped = onRejectSuggestionTapped
+        self.onAcceptNESSuggestionTapped = onAcceptNESSuggestionTapped
+        self.onDismissNESSuggestionTapped = onDismissNESSuggestionTapped
+    }
+    
+    func rejectNESSuggestion() { onRejectSuggestionTapped() }
+    func acceptNESSuggestion() { onAcceptNESSuggestionTapped() }
+    func dismissNESSuggestion() { onDismissNESSuggestionTapped() }
+    
+    func getOriginalCodeSnippet() -> String? {
+        guard let editor = XcodeInspector.shared.focusedEditor,
+              editor.realtimeDocumentURL == fileURL
+        else { return nil }
+        
+        let lines = editor.getContent().content.components(separatedBy: .newlines)
+        guard range.start.line >= 0,
+              range.end.line >= range.start.line,
+              range.end.line < lines.count
+        else { return nil }
+        
+        // Single line case
+        if range.start.line == range.end.line {
+            let line = lines[range.start.line]
+            let startIndex = calcStartIndex(of: line, by: range)
+            let endIndex = calcEndIndex(of: line, by: range)
+            return String(line[startIndex..<endIndex])
+        }
+        
+        // Multi-line case
+        var result: [String] = []
+        
+        // Determine the actual last line to process
+        // If end.character is 0, exclude the end line entirely
+        let lastLineIndex = range.end.character == 0 ? range.end.line - 1 : range.end.line
+        
+        for lineIndex in range.start.line...lastLineIndex {
+            let line = lines[lineIndex]
+            
+            if lineIndex == range.start.line {
+                // First line: from start.character to end
+                let startIndex = calcStartIndex(of: line, by: range)
+                result.append(String(line[startIndex...]))
+            } else if lineIndex == range.end.line {
+                // Last line: from beginning to end.character (only if end.character > 0)
+                let endIndex = calcEndIndex(of: line, by: range)
+                result.append(String(line[..<endIndex]))
+            } else {
+                // Middle lines: full line
+                result.append(line)
+            }
+        }
+        
+        return result.joined(separator: "\n")
+    }
+    
+    private func calcStartIndex(of line: String, by range: CursorRange) -> String.Index {
+        return line.index(line.startIndex, offsetBy: range.start.character, limitedBy: line.endIndex) ?? line.endIndex
+    }
+    
+    private func calcEndIndex(of line: String, by range: CursorRange) -> String.Index {
+        return line.index(line.startIndex, offsetBy: range.end.character, limitedBy: line.endIndex) ?? line.endIndex
+    }
 }
 

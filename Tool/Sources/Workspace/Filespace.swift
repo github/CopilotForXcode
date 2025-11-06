@@ -27,6 +27,7 @@ public final class FilespacePropertyValues {
 }
 
 public struct FilespaceCodeMetadata: Equatable {
+    /// Stands for `Uniform Type Identifier`
     public var uti: String?
     public var tabSize: Int?
     public var indentSize: Int?
@@ -66,6 +67,7 @@ public final class Filespace {
     // MARK: Metadata
 
     public let fileURL: URL
+    public private(set) var fileContent: String? = nil
     public private(set) lazy var language: CodeLanguage = languageIdentifierFromFileURL(fileURL)
     public var codeMetadata: FilespaceCodeMetadata = .init()
     public var isTextReadable: Bool {
@@ -76,12 +78,21 @@ public final class Filespace {
 
     public private(set) var suggestionIndex: Int = 0
     public internal(set) var suggestions: [CodeSuggestion] = [] {
-        didSet { refreshUpdateTime() }
+        didSet{ refreshUpdateTime() }
+    }
+    // Use Array for potential extensibility
+    public internal(set) var nesSuggestions: [CodeSuggestion] = [] {
+        didSet { refreshNESUpdateTime() }
     }
 
     public var presentingSuggestion: CodeSuggestion? {
         guard suggestions.endIndex > suggestionIndex, suggestionIndex >= 0 else { return nil }
         return suggestions[suggestionIndex]
+    }
+    
+    public var presentingNESSuggestion: CodeSuggestion? {
+        // Currently, only one nes suggestion will exist there
+        return nesSuggestions.first
     }
 
     public private(set) var errorMessage: String = "" {
@@ -93,8 +104,13 @@ public final class Filespace {
     public var isExpired: Bool {
         Environment.now().timeIntervalSince(lastUpdateTime) > 60 * 3
     }
+    
+    public var isNESExpired: Bool {
+        Environment.now().timeIntervalSince(lastNESUpdateTime) > 60 * 3
+    }
 
     public private(set) var lastUpdateTime: Date = Environment.now()
+    public private(set) var lastNESUpdateTime: Date = Environment.now()
     private var additionalProperties = FilespacePropertyValues()
     let fileSaveWatcher: FileSaveWatcher
     let onClose: (URL) -> Void
@@ -110,15 +126,19 @@ public final class Filespace {
 
     init(
         fileURL: URL,
+        content: String,
         onSave: @escaping (Filespace) -> Void,
         onClose: @escaping (URL) -> Void
     ) {
         self.fileURL = fileURL
+        self.fileContent = content
         self.onClose = onClose
         fileSaveWatcher = .init(fileURL: fileURL)
         fileSaveWatcher.changeHandler = { [weak self] in
             guard let self else { return }
+            // TODO: should distinguish code completion and NES?
             onSave(self)
+            self.fileContent = try? String(contentsOf: self.fileURL)
         }
     }
 
@@ -135,6 +155,11 @@ public final class Filespace {
         suggestions = []
         suggestionIndex = 0
     }
+    
+    @WorkspaceActor
+    public func resetNESSuggestion() {
+        nesSuggestions = []
+    }
 
     @WorkspaceActor
     public func updateSuggestionsWithSameSelection(_ suggestions: [CodeSuggestion]) {
@@ -145,11 +170,25 @@ public final class Filespace {
     public func refreshUpdateTime() {
         lastUpdateTime = Environment.now()
     }
+    
+    public func refreshNESUpdateTime() {
+        lastNESUpdateTime = Date.now
+    }
 
     @WorkspaceActor
     public func setSuggestions(_ suggestions: [CodeSuggestion]) {
         self.suggestions = suggestions
         suggestionIndex = 0
+        if !self.suggestions.isEmpty {
+            self.resetNESSuggestion()
+        }
+    }
+    
+    @WorkspaceActor
+    public func setNESSuggestions(_ nesSuggestions: [CodeSuggestion]) {
+        // Only when there is no code completion suggestion, NES suggestion can be set
+        guard self.suggestions.isEmpty else { return }
+        self.nesSuggestions = nesSuggestions
     }
 
     @WorkspaceActor
@@ -181,6 +220,24 @@ public final class Filespace {
     @WorkspaceActor 
     public func dismissError() {
         errorMessage = ""
+    }
+    
+    @WorkspaceActor
+    public func updateCodeMetadata(
+        uti: String,
+        tabSize: Int,
+        indentSize: Int,
+        usesTabsForIndentation: Bool
+    ) {
+        self.codeMetadata.uti = uti
+        self.codeMetadata.tabSize = tabSize
+        self.codeMetadata.indentSize = indentSize
+        self.codeMetadata.usesTabsForIndentation = usesTabsForIndentation
+    }
+    
+    @WorkspaceActor
+    public func setFileContent(_ content: String) {
+        fileContent = content
     }
 }
 

@@ -139,7 +139,7 @@ class CopilotLocalProcessServer {
             return
         }
 
-        if request.method == "getCompletionsCycling" {
+        if request.method == "getCompletionsCycling" || request.method == "textDocument/copilotInlineEdit" {
             Task { @MainActor [weak self] in
                 self?.ongoingCompletionRequestIDs.append(request.id)
             }
@@ -269,6 +269,12 @@ extension CopilotLocalProcessServer: ServerConnection {
             } catch {
                 throw ServerError.unableToSendNotification(error)
             }
+        case .clientProtocolProgress(let params):
+            do {
+                try await server.sendNotification(params, method: method)
+            } catch {
+                throw ServerError.unableToSendNotification(error)
+            }
         }
     }
 
@@ -346,14 +352,18 @@ public struct CopilotDidChangeWatchedFilesParams: Codable, Hashable {
 public enum CopilotClientNotification {
     public enum Method: String {
         case workspaceDidChangeWatchedFiles = "workspace/didChangeWatchedFiles"
+        case protocolProgress = "$/progress"
     }
     
     case copilotDidChangeWatchedFiles(CopilotDidChangeWatchedFilesParams)
+    case clientProtocolProgress(ProgressParams)
     
     public var method: Method {
         switch self {
         case .copilotDidChangeWatchedFiles:
             return .workspaceDidChangeWatchedFiles
+        case .clientProtocolProgress:
+            return .protocolProgress
         }
     }
 }

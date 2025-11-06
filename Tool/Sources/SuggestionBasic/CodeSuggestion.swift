@@ -1,6 +1,10 @@
 import Foundation
 import CodableWrappers
 
+public enum CodeSuggestionType: String {
+    case codeCompletion, nes
+}
+
 public struct CodeSuggestion: Codable, Equatable {
     public init(
         id: String,

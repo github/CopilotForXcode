@@ -12,7 +12,9 @@ class SourceEditorExtension: NSObject, XCSourceEditorExtension {
     var builtin: [[XCSourceEditorCommandDefinitionKey: Any]] {
         [
             AcceptSuggestionCommand(),
+            AcceptNESSuggestionCommand(),
             RejectSuggestionCommand(),
+            RejectNESSuggestionCommand(),
             GetSuggestionsCommand(),
             NextSuggestionCommand(),
             PreviousSuggestionCommand(),

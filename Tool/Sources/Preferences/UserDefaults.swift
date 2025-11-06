@@ -13,6 +13,7 @@ public extension UserDefaults {
     static func setupDefaultSettings() {
         shared.setupDefaultValue(for: \.quitXPCServiceOnXcodeAndAppQuit)
         shared.setupDefaultValue(for: \.realtimeSuggestionToggle)
+        shared.setupDefaultValue(for: \.realtimeNESToggle)
         shared.setupDefaultValue(for: \.realtimeSuggestionDebounce)
         shared.setupDefaultValue(for: \.suggestionPresentationMode)
         shared.setupDefaultValue(for: \.autoAttachChatToXcode)

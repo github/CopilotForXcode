@@ -19,6 +19,23 @@ public struct PostProcessingSuggestionServiceMiddleware: SuggestionServiceMiddle
             return suggestion
         }
     }
+    
+    public func getNESSuggestion(
+        _ request: SuggestionRequest,
+        configuration: SuggestionServiceConfiguration,
+        next: Next
+    ) async throws -> [CodeSuggestion] {
+        let suggestions = try await next(request)
+        
+        return suggestions.compactMap {
+            var suggestion = $0
+            if suggestion.text.allSatisfy({ $0.isWhitespace || $0.isNewline }) { return nil }
+            Self.removeTrailingWhitespacesAndNewlines(&suggestion)
+            // TODO: If need to check?
+            // if !Self.checkIfSuggestionHasNoEffect(suggestion, request: request) { return nil }
+            return suggestion
+        }
+    }
 
     static func removeTrailingWhitespacesAndNewlines(_ suggestion: inout CodeSuggestion) {
         var text = suggestion.text[...]

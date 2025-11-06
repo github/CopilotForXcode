@@ -29,8 +29,8 @@ public final class BuiltinExtensionSuggestionServiceProvider<
         self.extensionManager = extensionManager
     }
 
-    var service: CopilotForXcodeKit.SuggestionServiceType? {
-        extensionManager.extensions.first { $0 is T }?.suggestionService
+    var service: (SuggestionServiceType & NESSuggestionServiceType)? {
+        extensionManager.extensions.first { $0 is T }?.suggestionService as? (SuggestionServiceType & NESSuggestionServiceType)
     }
     
     struct BuiltinExtensionSuggestionServiceNotFoundError: Error, LocalizedError {
@@ -47,25 +47,22 @@ public final class BuiltinExtensionSuggestionServiceProvider<
             Logger.service.error("Builtin suggestion service not found.")
             throw BuiltinExtensionSuggestionServiceNotFoundError()
         }
+        
         return try await service.getSuggestions(
-            .init(
-                fileURL: request.fileURL,
-                relativePath: request.relativePath,
-                language: .init(
-                    rawValue: languageIdentifierFromFileURL(request.fileURL).rawValue
-                ) ?? .plaintext,
-                content: request.content, 
-                originalContent: request.originalContent,
-                cursorPosition: .init(
-                    line: request.cursorPosition.line,
-                    character: request.cursorPosition.character
-                ),
-                tabSize: request.tabSize,
-                indentSize: request.indentSize,
-                usesTabsForIndentation: request.usesTabsForIndentation,
-                relevantCodeSnippets: request.relevantCodeSnippets.map { $0.converted }
-            ),
-            workspace: workspaceInfo
+            request.toCopilotForXcodeKitSuggestionRequest(), workspace: workspaceInfo
+        ).map { $0.converted }
+    }
+    
+    public func getNESSuggestions(
+        _ request: SuggestionProvider.SuggestionRequest,
+        workspaceInfo: CopilotForXcodeKit.WorkspaceInfo
+    ) async throws -> [SuggestionBasic.CodeSuggestion] {
+        guard let service else {
+            Logger.service.error("Builtin suggestion service not found.")
+            throw BuiltinExtensionSuggestionServiceNotFoundError()
+        }
+        return try await service.getNESSuggestions(
+            request.toCopilotForXcodeKitSuggestionRequest(), workspace: workspaceInfo
         ).map { $0.converted }
     }
 
@@ -119,6 +116,26 @@ extension SuggestionProvider.SuggestionRequest {
             indentSize: indentSize,
             usesTabsForIndentation: usesTabsForIndentation,
             relevantCodeSnippets: relevantCodeSnippets.map(\.converted)
+        )
+    }
+    
+    func toCopilotForXcodeKitSuggestionRequest() -> CopilotForXcodeKit.SuggestionRequest {
+        .init(
+            fileURL: self.fileURL,
+            relativePath: self.relativePath,
+            language: .init(
+                rawValue: languageIdentifierFromFileURL(self.fileURL).rawValue
+            ) ?? .plaintext,
+            content: self.content,
+            originalContent: self.originalContent,
+            cursorPosition: .init(
+                line: self.cursorPosition.line,
+                character: self.cursorPosition.character
+            ),
+            tabSize: self.tabSize,
+            indentSize: self.indentSize,
+            usesTabsForIndentation: self.usesTabsForIndentation,
+            relevantCodeSnippets: self.relevantCodeSnippets.map { $0.converted }
         )
     }
 }

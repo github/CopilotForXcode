@@ -56,18 +56,6 @@ public extension AXUIElement {
         (try? copyValue(key: kAXLabelValueAttribute)) ?? ""
     }
 
-    var isSourceEditor: Bool {
-        description == "Source Editor"
-    }
-    
-    var isEditorArea: Bool {
-        description == "editor area"
-    }
-    
-    var isXcodeWorkspaceWindow: Bool {
-        description == "Xcode.WorkspaceWindow" || identifier == "Xcode.WorkspaceWindow"
-    }
-
     var selectedTextRange: ClosedRange<Int>? {
         guard let value: AXValue = try? copyValue(key: kAXSelectedTextRangeAttribute)
         else { return nil }

@@ -10,6 +10,12 @@ public protocol SuggestionServiceMiddleware {
         configuration: SuggestionServiceConfiguration,
         next: Next
     ) async throws -> [CodeSuggestion]
+    
+    func getNESSuggestion(
+        _ request: SuggestionRequest,
+        configuration: SuggestionServiceConfiguration,
+        next: Next
+    ) async throws -> [CodeSuggestion]
 }
 
 public enum SuggestionServiceMiddlewareContainer {
@@ -49,12 +55,53 @@ public struct DisabledLanguageSuggestionServiceMiddleware: SuggestionServiceMidd
 
         return try await next(request)
     }
+    
+    public func getNESSuggestion(
+        _ request: SuggestionRequest,
+        configuration: SuggestionServiceConfiguration,
+        next: Next
+    ) async throws -> [CodeSuggestion] {
+        let language = languageIdentifierFromFileURL(request.fileURL)
+        if UserDefaults.shared.value(for: \.suggestionFeatureDisabledLanguageList)
+            .contains(where: { $0 == language.rawValue })
+        {
+            #if DEBUG
+            Logger.service.info("Suggestion service is disabled for \(language).")
+            #endif
+            return []
+        }
+        
+        return try await next(request)
+    }
 }
 
 public struct DebugSuggestionServiceMiddleware: SuggestionServiceMiddleware {
     public init() {}
 
     public func getSuggestion(
+        _ request: SuggestionRequest,
+        configuration: SuggestionServiceConfiguration,
+        next: Next
+    ) async throws -> [CodeSuggestion] {
+        Logger.service.info("""
+        Get suggestion for \(request.fileURL) at \(request.cursorPosition)
+        """)
+        do {
+            let suggestions = try await next(request)
+            Logger.service.info("""
+            Receive \(suggestions.count) suggestions for \(request.fileURL) \
+            at \(request.cursorPosition)
+            """)
+            return suggestions
+        } catch {
+            Logger.service.info("""
+            Error: \(error.localizedDescription)
+            """)
+            throw error
+        }
+    }
+    
+    public func getNESSuggestion(
         _ request: SuggestionRequest,
         configuration: SuggestionServiceConfiguration,
         next: Next

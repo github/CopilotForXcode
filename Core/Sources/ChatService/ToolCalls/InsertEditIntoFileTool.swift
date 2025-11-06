@@ -194,8 +194,6 @@ public class InsertEditIntoFileTool: ICopilotTool {
                 )
                 
                 Task {
-                    // Force to notify the CLS about the new change within the document before edit_file completion.
-                    try? await contextProvider.notifyChangeTextDocument(fileURL: fileURL, content: newContent, version: 0)
                     if let completion = completion { completion(newContent, nil) }
                 }
             } catch {

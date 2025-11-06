@@ -96,7 +96,8 @@ public final class GitHubCopilotExtension: BuiltinExtension {
     public func workspace(
         _ workspace: WorkspaceInfo,
         didUpdateDocumentAt documentURL: URL,
-        content: String?
+        content: String?,
+        contentChanges: [TextDocumentContentChangeEvent]? = nil
     ) {
         guard isLanguageServerInUse else { return }
         // check if file size is larger than 15MB, if so, return immediately
@@ -113,7 +114,8 @@ public final class GitHubCopilotExtension: BuiltinExtension {
                 try await service.notifyChangeTextDocument(
                     fileURL: documentURL,
                     content: content,
-                    version: 0
+                    version: 0,
+                    contentChanges: contentChanges
                 )
             } catch let error as ServerError {
                 switch error {

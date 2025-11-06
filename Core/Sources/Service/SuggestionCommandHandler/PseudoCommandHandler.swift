@@ -57,17 +57,62 @@ struct PseudoCommandHandler {
             .fetchOrCreateWorkspaceAndFilespace(fileURL: filespace.fileURL) else { return }
 
         if Task.isCancelled { return }
+        
+        let codeCompletionEnabled = UserDefaults.shared.value(for: \.realtimeSuggestionToggle)
+        let nesEnabled = UserDefaults.shared.value(for: \.realtimeNESToggle)
+        guard codeCompletionEnabled || nesEnabled else {
+            filespace.reset()
+            filespace.resetNESSuggestion()
+            return
+        }
 
         // Can't use handler if content is not available.
         guard let editor = await getEditorContent(sourceEditor: sourceEditor)
         else { return }
 
-        let fileURL = filespace.fileURL
         let presenter = PresentInWindowSuggestionPresenter()
 
         presenter.markAsProcessing(true)
         defer { presenter.markAsProcessing(false) }
 
+        do {
+            if codeCompletionEnabled {
+                try await _generateRealtimeCodeCompletionSuggestions(
+                    editor: editor,
+                    sourceEditor: sourceEditor,
+                    filespace: filespace,
+                    workspace: workspace,
+                    presenter: presenter
+                )
+            } else {
+                filespace.reset()
+            }
+            
+            if nesEnabled,
+               (codeCompletionEnabled == false || filespace.presentingSuggestion == nil) {
+                try await _generateRealtimeNESSuggestions(
+                    editor: editor,
+                    sourceEditor: sourceEditor,
+                    filespace: filespace,
+                    workspace: workspace,
+                    presenter: presenter
+                )
+            } else {
+                filespace.resetNESSuggestion()
+            }
+        } catch {
+            return
+        }
+    }
+    
+    @WorkspaceActor
+    func _generateRealtimeCodeCompletionSuggestions(
+        editor: EditorContent,
+        sourceEditor: SourceEditor?,
+        filespace: Filespace,
+        workspace: Workspace,
+        presenter: PresentInWindowSuggestionPresenter
+    ) async throws {
         if filespace.presentingSuggestion != nil {
             // Check if the current suggestion is still valid.
             if filespace.validateSuggestions(
@@ -79,34 +124,73 @@ struct PseudoCommandHandler {
                 presenter.discardSuggestion(fileURL: filespace.fileURL)
             }
         }
-
-        do {
-            try await workspace.generateSuggestions(
-                forFileAt: fileURL,
-                editor: editor
+        
+        let fileURL = filespace.fileURL
+        
+        try await workspace.generateSuggestions(
+            forFileAt: fileURL,
+            editor: editor
+        )
+        let editorContent = sourceEditor?.getContent()
+        if let editorContent {
+            _ = filespace.validateSuggestions(
+                lines: editorContent.lines,
+                cursorPosition: editorContent.cursorPosition
             )
-            if let sourceEditor {
-                let editorContent = sourceEditor.getContent()
-                _ = filespace.validateSuggestions(
-                    lines: editorContent.lines,
-                    cursorPosition: editorContent.cursorPosition
+        }
+        
+        if !filespace.errorMessage.isEmpty {
+            presenter
+                .presentWarningMessage(
+                    filespace.errorMessage,
+                    url: "https://github.com/github-copilot/signup/copilot_individual"
                 )
-            }
-            if !filespace.errorMessage.isEmpty {
-                presenter
-                    .presentWarningMessage(
-                        filespace.errorMessage,
-                        url: "https://github.com/github-copilot/signup/copilot_individual"
-                    )
-            }
-            if filespace.presentingSuggestion != nil {
-                presenter.presentSuggestion(fileURL: fileURL)
-                workspace.notifySuggestionShown(fileFileAt: fileURL)
+        }
+        if filespace.presentingSuggestion != nil {
+            presenter.presentSuggestion(fileURL: fileURL)
+            workspace.notifySuggestionShown(fileFileAt: fileURL)
+        } else {
+            presenter.discardSuggestion(fileURL: fileURL)
+        }
+    }
+    
+    @WorkspaceActor
+    func _generateRealtimeNESSuggestions(
+        editor: EditorContent,
+        sourceEditor: SourceEditor?,
+        filespace: Filespace,
+        workspace: Workspace,
+        presenter: PresentInWindowSuggestionPresenter
+    ) async throws {
+        if filespace.presentingNESSuggestion != nil {
+            // Check if the current NES suggestion is still valid.
+            if filespace.validateNESSuggestions(
+                lines: editor.lines,
+                cursorPosition: editor.cursorPosition
+            ) {
+                return
             } else {
-                presenter.discardSuggestion(fileURL: fileURL)
+                presenter.discardNESSuggestion(fileURL: filespace.fileURL)
             }
-        } catch {
-            return
+        }
+        
+        let fileURL = filespace.fileURL
+        
+        try await workspace.generateNESSuggestions(forFileAt: fileURL, editor: editor)
+        
+        let editorContent = sourceEditor?.getContent()
+        if let editorContent {
+            _ = filespace.validateNESSuggestions(
+                lines: editorContent.lines,
+                cursorPosition: editorContent.cursorPosition
+            )
+        }
+        // TODO: handle errorMessage if any
+        if filespace.presentingNESSuggestion != nil {
+            presenter.presentNESSuggestion(fileURL: fileURL)
+            workspace.notifySuggestionShown(fileFileAt: fileURL)
+        } else {
+            presenter.discardNESSuggestion(fileURL: fileURL)
         }
     }
 
@@ -131,6 +215,21 @@ struct PseudoCommandHandler {
     func rejectSuggestions() async {
         let handler = WindowBaseCommandHandler()
         _ = try? await handler.rejectSuggestion(editor: .init(
+            content: "",
+            lines: [],
+            uti: "",
+            cursorPosition: .outOfScope,
+            cursorOffset: -1,
+            selections: [],
+            tabSize: 0,
+            indentSize: 0,
+            usesTabsForIndentation: false
+        ))
+    }
+    
+    func rejectNESSuggestions() async {
+        let handler = WindowBaseCommandHandler()
+        _ = try? await handler.rejectNESSuggestion(editor: .init(
             content: "",
             lines: [],
             uti: "",
@@ -248,14 +347,20 @@ struct PseudoCommandHandler {
         }
     }
 
-    func acceptSuggestion() async {
+    func acceptSuggestion(_ suggestionType: CodeSuggestionType) async {
         do {
             if UserDefaults.shared.value(for: \.alwaysAcceptSuggestionWithAccessibilityAPI) {
                 throw CancellationError()
             }
             do {
-                try await XcodeInspector.shared.safe.latestActiveXcode?
-                    .triggerCopilotCommand(name: "Accept Suggestion")
+                switch suggestionType {
+                case .codeCompletion:
+                    try await XcodeInspector.shared.safe.latestActiveXcode?
+                        .triggerCopilotCommand(name: "Accept Suggestion")
+                case .nes:
+                    try await XcodeInspector.shared.safe.latestActiveXcode?
+                        .triggerCopilotCommand(name: "Accept Next Edit Suggestion")
+                }
             } catch {
                 let lastBundleNotFoundTime = Self.lastBundleNotFoundTime
                 let lastBundleDisabledTime = Self.lastBundleDisabledTime
@@ -318,7 +423,7 @@ struct PseudoCommandHandler {
             }
             let handler = WindowBaseCommandHandler()
             do {
-                guard let result = try await handler.acceptSuggestion(editor: .init(
+                let editor: EditorContent = .init(
                     content: content,
                     lines: lines,
                     uti: "",
@@ -328,12 +433,44 @@ struct PseudoCommandHandler {
                     tabSize: 0,
                     indentSize: 0,
                     usesTabsForIndentation: false
-                )) else { return }
+                )
+                
+                let result = try await {
+                    switch suggestionType {
+                    case .codeCompletion:
+                        return try await handler.acceptSuggestion(editor: editor)
+                    case .nes:
+                        return try await handler.acceptNESSuggestion(editor: editor)
+                    }
+                }()
+                
+                guard let result else { return }
 
                 try injectUpdatedCodeWithAccessibilityAPI(result, focusElement: focusElement)
             } catch {
                 PresentInWindowSuggestionPresenter().presentError(error)
             }
+        }
+    }
+    
+    func goToNextEditSuggestion() async {
+        do {
+            guard let sourceEditor = await XcodeInspector.shared.safe.focusedEditor,
+                  let fileURL = sourceEditor.realtimeDocumentURL
+            else { return }
+            let (workspace, _) = try await Service.shared.workspacePool
+                .fetchOrCreateWorkspaceAndFilespace(fileURL: fileURL)
+            
+            guard let suggestion = await workspace.getNESSuggestion(forFileAt: fileURL)
+            else { return }
+            
+            AXHelper.scrollSourceEditorToLine(
+                suggestion.range.start.line,
+                content: sourceEditor.getContent().content,
+                focusedElement: sourceEditor.element
+            )
+        } catch {
+            // Handle if needed
         }
     }
 

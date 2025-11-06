@@ -164,3 +164,59 @@ public struct UpdateMCPToolsStatusParams: Codable, Hashable {
 }
 
 public typealias CopilotMCPToolsRequest = JSONRPCRequest<GetAllToolsParams>
+
+public struct DynamicOAuthParams: Codable, Hashable {
+    public let title: String
+    public let header: String?
+    public let detail: String
+    public let inputs: [DynamicOAuthInput]
+
+    public init(
+        title: String,
+        header: String?,
+        detail: String,
+        inputs: [DynamicOAuthInput]
+    ) {
+        self.title = title
+        self.header = header
+        self.detail = detail
+        self.inputs = inputs
+    }
+}
+
+public struct DynamicOAuthInput: Codable, Hashable {
+    public let title: String
+    public let value: String
+    public let description: String
+    public let placeholder: String
+    public let required: Bool
+    
+    public init(
+        title: String,
+        value: String,
+        description: String,
+        placeholder: String,
+        required: Bool
+    ) {
+        self.title = title
+        self.value = value
+        self.description = description
+        self.placeholder = placeholder
+        self.required = required
+    }
+}
+
+public typealias DynamicOAuthRequest = JSONRPCRequest<DynamicOAuthParams>
+
+public struct DynamicOAuthResponse: Codable, Hashable {
+    public let clientId: String
+    public let clientSecret: String
+    
+    public init(
+        clientId: String,
+        clientSecret: String
+    ) {
+        self.clientId = clientId
+        self.clientSecret = clientSecret
+    }
+}

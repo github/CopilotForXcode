@@ -88,6 +88,12 @@ extension AppDelegate {
             action: nil,
             keyEquivalent: ""
         )
+        
+        toggleNES = NSMenuItem(
+            title: "Enable/Disable Next Edit Suggestions (NES)",
+            action: #selector(toggleNESEnabled),
+            keyEquivalent: ""
+        )
 
         // Auth menu item with custom view
         accountItem = NSMenuItem()
@@ -163,6 +169,7 @@ extension AppDelegate {
         statusBarMenu.addItem(openChat)
         statusBarMenu.addItem(toggleCompletions)
         statusBarMenu.addItem(toggleIgnoreLanguage)
+        statusBarMenu.addItem(toggleNES)
         statusBarMenu.addItem(.separator())
         statusBarMenu.addItem(openCopilotForXcodeItem)
         statusBarMenu.addItem(openDocs)
@@ -203,6 +210,10 @@ extension AppDelegate: NSMenuDelegate {
                     toggleIgnoreLanguage.title = "No Active Document"
                     toggleIgnoreLanguage.action = nil
                 }
+            }
+            
+            if toggleNES != nil {
+                toggleNES.title = "\(UserDefaults.shared.value(for: \.realtimeNESToggle) ? "Disable" : "Enable") Next Edit Suggestions (NES)"
             }
 
             Task {
@@ -318,6 +329,19 @@ private extension AppDelegate {
             } catch {
                 Logger.service.error("Failed to toggle completions enabled via XPC: \(error)")
                 UserDefaults.shared.set(!initialSetting, for: \.realtimeSuggestionToggle)
+            }
+        }
+    }
+    
+    @objc func toggleNESEnabled() {
+        Task {
+            let initialSetting = UserDefaults.shared.value(for: \.realtimeNESToggle)
+            do {
+                let service = getXPCExtensionService()
+                try await service.toggleRealtimeNES()
+            } catch {
+                Logger.service.error("Failed to toggle NES enabled via XPC: \(error)")
+                UserDefaults.shared.set(!initialSetting, for: \.realtimeNESToggle)
             }
         }
     }

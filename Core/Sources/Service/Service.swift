@@ -62,7 +62,10 @@ public final class Service {
         keyBindingManager = .init(
             workspacePool: workspacePool,
             acceptSuggestion: {
-                Task { await PseudoCommandHandler().acceptSuggestion() }
+                Task { await PseudoCommandHandler().acceptSuggestion(.codeCompletion) }
+            },
+            acceptNESSuggestion: {
+                Task { await PseudoCommandHandler().acceptSuggestion(.nes) }
             },
             expandSuggestion: {
                 if !ExpandableSuggestionService.shared.isSuggestionExpanded {
@@ -76,6 +79,15 @@ public final class Service {
             },
             dismissSuggestion: {
                 Task { await PseudoCommandHandler().dismissSuggestion() }
+            },
+            rejectNESSuggestion: {
+                Task { await PseudoCommandHandler().rejectNESSuggestions() }
+            },
+            goToNextEditSuggestion: {
+                Task { await PseudoCommandHandler().goToNextEditSuggestion() }
+            },
+            isNESPanelOutOfFrame: { [weak guiController] in
+                guiController?.store.state.suggestionWidgetState.panelState.nesSuggestionPanelState.isPanelOutOfFrame ?? false
             }
         )
         let scheduledCleaner = ScheduledCleaner()

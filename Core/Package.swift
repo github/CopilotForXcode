@@ -264,6 +264,7 @@ let package = Package(
         .target(
             name: "KeyBindingManager",
             dependencies: [
+                "SuggestionWidget",
                 .product(name: "Workspace", package: "Tool"),
                 .product(name: "Preferences", package: "Tool"),
                 .product(name: "Logger", package: "Tool"),

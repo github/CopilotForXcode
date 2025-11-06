@@ -11,6 +11,8 @@ public extension Notification.Name {
         .Name("com.github.CopilotForXcode.OpenToolsSettingsWindowRequest")
     static let openBYOKSettingsWindowRequest = Notification
         .Name("com.github.CopilotForXcode.OpenBYOKSettingsWindowRequest")
+    static let openAdvancedSettingsWindowRequest = Notification
+        .Name("com.github.CopilotForXcode.OpenAdvancedSettingsWindowRequest")
 }
 
 public enum GitHubCopilotForXcodeSettingsLaunchError: Error, LocalizedError {
@@ -93,6 +95,26 @@ public func launchHostAppBYOKSettings() throws {
     } else {
         // If app is not running, launch it with the settings flag
         try launchHostAppWithArgs(args: ["--byok"])
+    }
+}
+
+public func launchHostAppAdvancedSettings() throws {
+    // Try the AppleScript approach first, but only if app is already running
+    if let hostApp = getRunningHostApp() {
+        let activated = hostApp.activate(options: [.activateIgnoringOtherApps])
+        Logger.ui.info("\(hostAppName()) activated: \(activated)")
+        
+        _ = tryLaunchWithAppleScript()
+        
+        DistributedNotificationCenter.default().postNotificationName(
+            .openAdvancedSettingsWindowRequest,
+            object: nil
+        )
+        Logger.ui.info("\(hostAppName()) Advanced settings notification sent after activation")
+        return
+    } else {
+        // If app is not running, launch it with the settings flag
+        try launchHostAppWithArgs(args: ["--advanced"])
     }
 }
 

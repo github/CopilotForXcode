@@ -120,6 +120,15 @@ public class XPCService: NSObject, XPCServiceProtocol {
             try await handler.rejectSuggestion(editor: editor)
         }
     }
+    
+    public func getNESSuggestionRejectedCode(
+        editorContent: Data,
+        withReply reply: @escaping (Data?, Error?) -> Void
+    ) {
+        replyWithUpdatedContent(editorContent: editorContent, withReply: reply) { handler, editor in
+            try await handler.rejectNESSuggestion(editor: editor)
+        }
+    }
 
     public func getSuggestionAcceptedCode(
         editorContent: Data,
@@ -127,6 +136,15 @@ public class XPCService: NSObject, XPCServiceProtocol {
     ) {
         replyWithUpdatedContent(editorContent: editorContent, withReply: reply) { handler, editor in
             try await handler.acceptSuggestion(editor: editor)
+        }
+    }
+    
+    public func getNESSuggestionAcceptedCode(
+        editorContent: Data,
+        withReply reply: @escaping (Data?, Error?) -> Void
+    ) {
+        replyWithUpdatedContent(editorContent: editorContent, withReply: reply) { handler, editor in
+            try await handler.acceptNESSuggestion(editor: editor)
         }
     }
 
@@ -225,6 +243,29 @@ public class XPCService: NSObject, XPCServiceProtocol {
                         .info,
                         nil
                     )))))
+            }
+            reply(nil)
+        }
+    }
+    
+    public func toggleRealtimeNES(withReply reply: @escaping (Error?) -> Void) {
+        guard AXIsProcessTrusted() else {
+            reply(NoAccessToAccessibilityAPIError())
+            return
+        }
+        Task { @ServiceActor in
+            await Service.shared.realtimeSuggestionController.cancelInFlightTasks()
+            let on = !UserDefaults.shared.value(for: \.realtimeNESToggle)
+            UserDefaults.shared.set(on, for: \.realtimeNESToggle)
+            Task { @MainActor in
+                Service.shared.guiController.store
+                    .send(.suggestionWidget(.toastPanel(.toast(.toast(
+                        "Next Edit Suggestions (NES) is turned \(on ? "on" : "off")",
+                        .info,
+                        nil
+                    )))))
+                Service.shared.guiController.store
+                    .send(.suggestionWidget(.panel(.onRealtimeNESToggleChanged(on))))
             }
             reply(nil)
         }

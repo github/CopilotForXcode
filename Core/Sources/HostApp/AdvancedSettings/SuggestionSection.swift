@@ -4,6 +4,7 @@ struct SuggestionSection: View {
     @AppStorage(\.realtimeSuggestionToggle) var realtimeSuggestionToggle
     @AppStorage(\.suggestionFeatureEnabledProjectList) var suggestionFeatureEnabledProjectList
     @AppStorage(\.acceptSuggestionWithTab) var acceptSuggestionWithTab
+    @AppStorage(\.realtimeNESToggle) var realtimeNESToggle
     @State var isSuggestionFeatureDisabledLanguageListViewOpen = false
     @State private var shouldPresentTurnoffSheet = false
 
@@ -23,8 +24,13 @@ struct SuggestionSection: View {
     var body: some View {
         SettingsSection(title: "Suggestion Settings") {
             SettingsToggle(
-                title: "Request suggestions while typing",
+                title: "Enable completions while typing",
                 isOn: realtimeSuggestionBinding
+            )
+            Divider()
+            SettingsToggle(
+                title: "Enable Next Edit Suggestions (NES)",
+                isOn: $realtimeNESToggle
             )
             Divider()
             SettingsToggle(

@@ -3,7 +3,15 @@ import AppKit
 struct LocationStrategyHelper {
     
     /// `lineNumber` is 0-based
-    static func getLineFrame(_ lineNumber: Int, in editor: AXUIElement, with lines: [String]) -> CGRect? {
+    ///
+    /// - Parameters:
+    ///    - length: If specified, use this length instead of the actual line length. Useful when you want to get the exact line height and y that ignores the unwrappded lines.
+    static func getLineFrame(
+        _ lineNumber: Int,
+        in editor: AXUIElement,
+        with lines: [String],
+        length: Int? = nil
+    ) -> CGRect? {
         guard editor.isSourceEditor,
               lineNumber < lines.count && lineNumber >= 0
         else {
@@ -16,7 +24,15 @@ struct LocationStrategyHelper {
             characterPosition += lines[i].count + 1
         }
         
-        var range = CFRange(location: characterPosition, length: lines[lineNumber].count)
+        let rangeLength: Int = {
+            if let length {
+                return min(length, lines[lineNumber].count)
+            } else {
+                return lines[lineNumber].count
+            }
+        }()
+        
+        var range = CFRange(location: characterPosition, length: rangeLength)
         guard let rangeValue = AXValueCreate(AXValueType.cfRange, &range) else {
             return nil
         }

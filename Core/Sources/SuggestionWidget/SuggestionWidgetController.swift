@@ -8,6 +8,7 @@ import Preferences
 import SwiftUI
 import UserDefaultsObserver
 import XcodeInspector
+import SuggestionBasic
 
 @MainActor
 public final class SuggestionWidgetController: NSObject {
@@ -48,6 +49,11 @@ public extension SuggestionWidgetController {
         store.send(.panel(.presentSuggestion))
     }
     
+
+    func suggestNESCode() {
+        store.send(.panel(.presentNESSuggestion))
+    }
+    
     func expandSuggestion() {
           store.withState { state in
               if state.panelState.content.suggestion != nil {
@@ -60,6 +66,14 @@ public extension SuggestionWidgetController {
         store.withState { state in
             if state.panelState.content.suggestion != nil {
                 store.send(.panel(.discardSuggestion))
+            }
+        }
+    }
+    
+    func discardNESSuggestion() {
+        store.withState { state in
+            if state.panelState.nesContent != nil {
+                store.send(.panel(.discardNESSuggestion))
             }
         }
     }

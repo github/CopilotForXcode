@@ -166,6 +166,10 @@ public extension UserDefaultPreferenceKeys {
     var realtimeSuggestionToggle: PreferenceKey<Bool> {
         .init(defaultValue: true, key: "RealtimeSuggestionToggle")
     }
+    
+    var realtimeNESToggle: PreferenceKey<Bool> {
+        .init(defaultValue: true, key: "RealtimeNESToggle")
+    }
 
     var suggestionDisplayCompactMode: PreferenceKey<Bool> {
         .init(defaultValue: true, key: "SuggestionDisplayCompactMode")

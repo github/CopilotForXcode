@@ -96,6 +96,9 @@ actor WidgetWindowsController: NSObject {
         
         // Observe state change of fix error
         setupFixErrorPanelObservers()
+        
+        // Observer state change for NES
+        setupNESSuggestionPanelObservers()
     }
     
     private func setupCodeReviewPanelObservers() {
@@ -318,9 +321,9 @@ extension WidgetWindowsController {
         windows.codeReviewPanelWindow.orderFrontRegardless()
     }
 
-    func generateWidgetLocation() -> WidgetLocation? {
+    func generateWidgetLocation(_ state: WidgetFeature.State) -> WidgetLocation {
         // Default location when no active application/window
-        let defaultLocation = generateDefaultLocation()
+        var defaultLocation = generateDefaultLocation()
         
         if let application = xcodeInspector.latestActiveXcode?.appElement {
             if let focusElement = xcodeInspector.focusedEditor?.element,
@@ -333,6 +336,9 @@ extension WidgetWindowsController {
                     .value(for: \.suggestionWidgetPositionMode)
                 let suggestionMode = UserDefaults.shared
                     .value(for: \.suggestionPresentationMode)
+                
+                let nesPanelLocation: WidgetLocation.NESPanelLocation? = NESPanelLocationStrategy.getNESPanelLocation(maybeEditor: parent, state: state)
+                let locationTrigger: WidgetLocation.LocationTrigger = .sourceEditor
 
                 switch positionMode {
                 case .fixedToBottom:
@@ -341,6 +347,8 @@ extension WidgetWindowsController {
                         mainScreen: screen,
                         activeScreen: firstScreen
                     )
+                    result.setNESSuggestionPanelLocation(nesPanelLocation)
+                    result.setLocationTrigger(locationTrigger)
                     switch suggestionMode {
                     case .nearbyTextCursor:
                         result.suggestionPanelLocation = UpdateLocationStrategy
@@ -362,6 +370,8 @@ extension WidgetWindowsController {
                         activeScreen: firstScreen,
                         editor: focusElement
                     )
+                    result.setNESSuggestionPanelLocation(nesPanelLocation)
+                    result.setLocationTrigger(locationTrigger)
                     switch suggestionMode {
                     case .nearbyTextCursor:
                         result.suggestionPanelLocation = UpdateLocationStrategy
@@ -379,19 +389,20 @@ extension WidgetWindowsController {
                 }
             } else if var window = application.focusedWindow,
                       var frame = application.focusedWindow?.rect,
-                      !["menu bar", "menu bar item"].contains(window.description),
+                      !window.isXcodeMenuBar,
                       frame.size.height > 300,
                       let screen = NSScreen.screens.first(where: { $0.frame.origin == .zero }),
                       let firstScreen = NSScreen.main
             {
-                if ["open_quickly"].contains(window.identifier)
-                    || ["alert"].contains(window.label)
+                if window.isXcodeOpenQuickly
+                    || window.isXcodeAlert
                 {
                     // fallback to use workspace window
                     guard let workspaceWindow = application.windows
-                        .first(where: { $0.identifier == "Xcode.WorkspaceWindow" }),
+                        .first(where: { $0.isXcodeWorkspaceWindow }),
                         let rect = workspaceWindow.rect
                     else {
+                        defaultLocation.setLocationTrigger(.otherApp)
                         return defaultLocation
                     }
 
@@ -400,7 +411,7 @@ extension WidgetWindowsController {
                 }
 
                 var expendedSize = CGSize.zero
-                if ["Xcode.WorkspaceWindow"].contains(window.identifier) {
+                if window.isXcodeWorkspaceWindow {
                     // extra padding to bottom so buttons won't be covered
                     frame.size.height -= 40
                 } else {
@@ -411,13 +422,16 @@ extension WidgetWindowsController {
                     expendedSize.height += Style.widgetPadding
                 }
 
-                return UpdateLocationStrategy.FixedToBottom().framesForWindows(
+                var result = UpdateLocationStrategy.FixedToBottom().framesForWindows(
                     editorFrame: frame,
                     mainScreen: screen,
                     activeScreen: firstScreen,
                     preferredInsideEditorMinWidth: 9_999_999_999, // never
                     editorFrameExpendedSize: expendedSize
                 )
+                result.setLocationTrigger(.xcodeWorkspaceWindow)
+                
+                return result
             }
         }
         return defaultLocation
@@ -434,12 +448,14 @@ extension WidgetWindowsController {
                 frame: chatPanelFrame,
                 alignPanelTop: false
             ),
-            suggestionPanelLocation: nil
+            suggestionPanelLocation: nil,
+            nesSuggestionPanelLocation: nil
         )
     }
 
     func updatePanelState(_ location: WidgetLocation) async {
         await send(.updatePanelStateToMatch(location))
+        await send(.updateNESSuggestionPanelStateToMatch(location))
     }
 
     func updateWindowOpacity(immediately: Bool) {
@@ -477,6 +493,10 @@ extension WidgetWindowsController {
                     windows.sharedPanelWindow.alphaValue = noFocus ? 0 : 1
                     send(.panel(noFocus ? .hidePanel : .showPanel))
                     windows.suggestionPanelWindow.alphaValue = noFocus ? 0 : 1
+                    send(.panel(noFocus ? .hideNESPanel : .showNESPanel))
+                    windows.nesMenuWindow.alphaValue = noFocus ? 0 : 1
+                    windows.nesDiffWindow.alphaValue = noFocus ? 0 : 1
+                    windows.nesNotificationWindow.alphaValue = noFocus ? 0 : 1
                     windows.widgetWindow.alphaValue = noFocus ? 0 : 1
                     windows.toastWindow.alphaValue = noFocus ? 0 : 1
 
@@ -500,6 +520,10 @@ extension WidgetWindowsController {
 
                     send(.panel(noFocus ? .hidePanel : .showPanel))
                     windows.sharedPanelWindow.alphaValue = noFocus ? 0 : 1
+                    send(.panel(noFocus ? .hideNESPanel : .showNESPanel))
+                    windows.nesMenuWindow.alphaValue = noFocus ? 0 : 1
+                    windows.nesDiffWindow.alphaValue = noFocus ? 0 : 1
+                    windows.nesNotificationWindow.alphaValue = noFocus ? 0 : 1
                     windows.suggestionPanelWindow.alphaValue = noFocus ? 0 : 1
                     windows.widgetWindow.alphaValue = if noFocus {
                         0
@@ -518,6 +542,9 @@ extension WidgetWindowsController {
                 } else {
                     windows.sharedPanelWindow.alphaValue = 0
                     windows.suggestionPanelWindow.alphaValue = 0
+                    windows.nesMenuWindow.alphaValue = 0
+                    windows.nesDiffWindow.alphaValue = 0
+                    windows.nesNotificationWindow.alphaValue = 0
                     windows.widgetWindow.alphaValue = 0
                     windows.toastWindow.alphaValue = 0
                     if !isChatPanelDetached {
@@ -595,7 +622,7 @@ extension WidgetWindowsController {
         func update() async {
             let state = store.withState { $0 }
             let isChatPanelDetached = state.chatPanelState.isDetached
-            guard let widgetLocation = await generateWidgetLocation() else { return }
+            let widgetLocation = await generateWidgetLocation(state)
             await updatePanelState(widgetLocation)
 
             windows.widgetWindow.setFrame(
@@ -620,6 +647,21 @@ extension WidgetWindowsController {
                     display: false,
                     animate: animated
                 )
+            }
+            
+            if let nesPanelLocation = widgetLocation.nesSuggestionPanelLocation {
+                windows.nesMenuWindow.setFrame(
+                    nesPanelLocation.menuFrame,
+                    display: false,
+                    animate: animated
+                )
+                await updateNESDiffWindowFrame(
+                    nesPanelLocation,
+                    animated: animated,
+                    trigger: widgetLocation.locationTrigger
+                )
+                
+                await updateNESNotificationWindowFrame(nesPanelLocation, animated: animated)
             }
             
             let isAttachedToXcodeEnabled = UserDefaults.shared.value(for: \.autoAttachChatToXcode)
@@ -1009,6 +1051,92 @@ public final class WidgetWindows {
         it.setIsVisible(true)
         return it
     }()
+    
+    @MainActor
+    lazy var nesMenuWindow = {
+        let it = CanBecomeKeyWindow(
+            contentRect: .init(x: 0, y: 0, width: Style.panelWidth, height: Style.panelHeight),
+            styleMask: .borderless,
+            backing: .buffered,
+            defer: false
+        )
+        it.isOpaque = false
+        it.backgroundColor = .clear
+        it.level = widgetLevel(2)
+        it.collectionBehavior = [.fullScreenAuxiliary, .transient, .canJoinAllSpaces]
+        it.hasShadow = false
+        it.contentView = NSHostingView(
+            rootView: NESMenuView(
+                store: store.scope(
+                    state: \.panelState,
+                    action: \.panel
+                ).scope(
+                    state: \.nesSuggestionPanelState,
+                    action: \.nesSuggestionPanel
+                )
+            )
+        )
+        it.canBecomeKeyChecker = { false }
+        it.setIsVisible(true)
+        return it
+    }()
+    
+    @MainActor
+    lazy var nesDiffWindow = {
+        let it = CanBecomeKeyWindow(
+            contentRect: .zero,
+            styleMask: .borderless,
+            backing: .buffered,
+            defer: false
+        )
+        it.isOpaque = false
+        it.backgroundColor = .clear
+        it.level = widgetLevel(2)
+        it.collectionBehavior = [.fullScreenAuxiliary, .transient, .canJoinAllSpaces]
+        it.contentView = NSHostingView(
+            rootView: NESDiffView(
+                store: store.scope(
+                    state: \.panelState,
+                    action: \.panel
+                ).scope(
+                    state: \.nesSuggestionPanelState,
+                    action: \.nesSuggestionPanel
+                )
+            )
+        )
+        it.canBecomeKeyChecker = { false }
+        it.setIsVisible(true)
+        it.hasShadow = true
+        return it
+    }()
+    
+    @MainActor
+    lazy var nesNotificationWindow = {
+        let it = CanBecomeKeyWindow(
+            contentRect: .init(x: 0, y: 0, width: Style.panelWidth, height: Style.panelHeight),
+            styleMask: .borderless,
+            backing: .buffered,
+            defer: false
+        )
+        it.isOpaque = false
+        it.backgroundColor = .clear
+        it.level = widgetLevel(2)
+        it.collectionBehavior = [.fullScreenAuxiliary, .transient, .canJoinAllSpaces]
+        it.contentView = NSHostingView(
+            rootView: NESNotificationView(
+                store: store.scope(
+                    state: \.panelState,
+                    action: \.panel
+                ).scope(
+                    state: \.nesSuggestionPanelState,
+                    action: \.nesSuggestionPanel
+                )
+            )
+        )
+        it.canBecomeKeyChecker = { false }
+        it.setIsVisible(true)
+        return it
+    }()
 
     @MainActor
     lazy var codeReviewPanelWindow = {
@@ -1134,7 +1262,10 @@ public final class WidgetWindows {
         toastWindow.orderFrontRegardless()
         sharedPanelWindow.orderFrontRegardless()
         suggestionPanelWindow.orderFrontRegardless()
+        nesMenuWindow.orderFrontRegardless()
         fixErrorPanelWindow.orderFrontRegardless()
+        nesDiffWindow.orderFrontRegardless()
+        nesNotificationWindow.orderFrontRegardless()
         if chatPanelWindow.level.rawValue > NSWindow.Level.normal.rawValue {
             chatPanelWindow.orderFrontRegardless()
         }

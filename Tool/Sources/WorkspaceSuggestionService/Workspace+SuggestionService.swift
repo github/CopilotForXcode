@@ -47,6 +47,53 @@ public extension Workspace {
         forFileAt fileURL: URL,
         editor: EditorContent
     ) async throws -> [CodeSuggestion] {
+    refreshUpdateTime()
+    
+    guard editor.cursorPosition != .outOfScope else {
+        throw EditorCursorOutOfScopeError()
+    }
+    
+    let filespace = try createFilespaceIfNeeded(fileURL: fileURL)
+    
+    if !editor.uti.isEmpty {
+        filespace.updateCodeMetadata(
+            uti: editor.uti,
+            tabSize: editor.tabSize,
+            indentSize: editor.indentSize,
+            usesTabsForIndentation: editor.usesTabsForIndentation
+        )
+    }
+    
+    filespace.codeMetadata.guessLineEnding(from: editor.lines.first)
+    
+    let snapshot = FilespaceSuggestionSnapshot(content: editor)
+    
+    filespace.suggestionSourceSnapshot = snapshot
+    
+    guard let suggestionService else { throw SuggestionFeatureDisabledError() }
+    let content = editor.lines.joined(separator: "")
+    let completions = try await suggestionService.getSuggestions(
+        .from(fileURL: fileURL, content: content, editor: editor, projectRootURL: projectRootURL),
+        workspaceInfo: .init(workspaceURL: workspaceURL, projectURL: projectRootURL)
+    )
+    
+    let clsStatus = await Status.shared.getCLSStatus()
+    if clsStatus.isErrorStatus && clsStatus.message.contains("Completions limit reached") {
+        filespace.setError(clsStatus.message)
+    } else {
+        filespace.setError("")
+        filespace.setSuggestions(completions)
+    }
+    
+    return completions
+}
+    
+    @WorkspaceActor
+    @discardableResult
+    func generateNESSuggestions(
+        forFileAt fileURL: URL,
+        editor: EditorContent
+    ) async throws -> [CodeSuggestion] {
         refreshUpdateTime()
         
         guard editor.cursorPosition != .outOfScope else {
@@ -56,10 +103,12 @@ public extension Workspace {
         let filespace = try createFilespaceIfNeeded(fileURL: fileURL)
 
         if !editor.uti.isEmpty {
-            filespace.codeMetadata.uti = editor.uti
-            filespace.codeMetadata.tabSize = editor.tabSize
-            filespace.codeMetadata.indentSize = editor.indentSize
-            filespace.codeMetadata.usesTabsForIndentation = editor.usesTabsForIndentation
+            filespace.updateCodeMetadata(
+                uti: editor.uti,
+                tabSize: editor.tabSize,
+                indentSize: editor.indentSize,
+                usesTabsForIndentation: editor.usesTabsForIndentation
+            )
         }
 
         filespace.codeMetadata.guessLineEnding(from: editor.lines.first)
@@ -70,31 +119,14 @@ public extension Workspace {
 
         guard let suggestionService else { throw SuggestionFeatureDisabledError() }
         let content = editor.lines.joined(separator: "")
-        let completions = try await suggestionService.getSuggestions(
-            .init(
-                fileURL: fileURL,
-                relativePath: fileURL.path.replacingOccurrences(of: projectRootURL.path, with: ""),
-                content: content,
-                originalContent: content,
-                lines: editor.lines,
-                cursorPosition: editor.cursorPosition,
-                cursorOffset: editor.cursorOffset,
-                tabSize: editor.tabSize,
-                indentSize: editor.indentSize,
-                usesTabsForIndentation: editor.usesTabsForIndentation,
-                relevantCodeSnippets: []
-            ),
+        let completions = try await suggestionService.getNESSuggestions(
+            .from(fileURL: fileURL, content: content, editor: editor, projectRootURL: projectRootURL),
             workspaceInfo: .init(workspaceURL: workspaceURL, projectURL: projectRootURL)
         )
-
-        let clsStatus = await Status.shared.getCLSStatus()
-        if clsStatus.isErrorStatus && clsStatus.message.contains("Completions limit reached") {
-            filespace.setError(clsStatus.message)
-        } else {
-            filespace.setError("")
-            filespace.setSuggestions(completions)
-        }
-
+        
+        // TODO: How to get the `limit reached` error? Same as Code Completion?
+        filespace.setNESSuggestions(completions)
+        
         return completions
     }
 
@@ -130,10 +162,12 @@ public extension Workspace {
         refreshUpdateTime()
 
         if let editor, !editor.uti.isEmpty {
-            filespaces[fileURL]?.codeMetadata.uti = editor.uti
-            filespaces[fileURL]?.codeMetadata.tabSize = editor.tabSize
-            filespaces[fileURL]?.codeMetadata.indentSize = editor.indentSize
-            filespaces[fileURL]?.codeMetadata.usesTabsForIndentation = editor.usesTabsForIndentation
+            filespaces[fileURL]?.updateCodeMetadata(
+                uti: editor.uti,
+                tabSize: editor.tabSize,
+                indentSize: editor.indentSize,
+                usesTabsForIndentation: editor.usesTabsForIndentation
+            )
         }
 
         Task {
@@ -147,6 +181,31 @@ public extension Workspace {
         }
         filespaces[fileURL]?.reset()
     }
+    
+    @WorkspaceActor
+    func rejectNESSuggestion(forFileAt fileURL: URL, editor: EditorContent?) {
+        refreshUpdateTime()
+        
+        if let editor, !editor.uti.isEmpty {
+            filespaces[fileURL]?.updateCodeMetadata(
+                uti: editor.uti,
+                tabSize: editor.tabSize,
+                indentSize: editor.indentSize,
+                usesTabsForIndentation: editor.usesTabsForIndentation
+            )
+        }
+        
+        Task {
+            await suggestionService?.notifyRejected(
+                filespaces[fileURL]?.nesSuggestions ?? [],
+                workspaceInfo: .init(
+                    workspaceURL: workspaceURL,
+                    projectURL: projectRootURL
+                )
+            )
+        }
+        filespaces[fileURL]?.resetNESSuggestion()
+    }
 
     @WorkspaceActor
     func acceptSuggestion(forFileAt fileURL: URL, editor: EditorContent?, suggestionLineLimit: Int? = nil) -> CodeSuggestion? {
@@ -158,10 +217,12 @@ public extension Workspace {
         else { return nil }
 
         if let editor, !editor.uti.isEmpty {
-            filespaces[fileURL]?.codeMetadata.uti = editor.uti
-            filespaces[fileURL]?.codeMetadata.tabSize = editor.tabSize
-            filespaces[fileURL]?.codeMetadata.indentSize = editor.indentSize
-            filespaces[fileURL]?.codeMetadata.usesTabsForIndentation = editor.usesTabsForIndentation
+            filespaces[fileURL]?.updateCodeMetadata(
+                uti: editor.uti,
+                tabSize: editor.tabSize,
+                indentSize: editor.indentSize,
+                usesTabsForIndentation: editor.usesTabsForIndentation
+            )
         }
 
         var allSuggestions = filespace.suggestions
@@ -184,5 +245,57 @@ public extension Workspace {
 
         return suggestion
     }
+    
+    @WorkspaceActor
+    func acceptNESSuggestion(forFileAt fileURL: URL, editor: EditorContent?, suggestionLineLimit: Int? = nil) -> CodeSuggestion? {
+        refreshUpdateTime()
+        guard let filespace = filespaces[fileURL],
+              let suggestion = filespace.presentingNESSuggestion
+        else { return nil }
+        
+        if let editor, !editor.uti.isEmpty {
+            filespaces[fileURL]?.updateCodeMetadata(
+                uti: editor.uti,
+                tabSize: editor.tabSize,
+                indentSize: editor.indentSize,
+                usesTabsForIndentation: editor.usesTabsForIndentation
+            )
+        }
+        
+        Task {
+             await gitHubCopilotService?.notifyAccepted(suggestion, acceptedLength: nil)
+        }
+        
+        filespace.resetNESSuggestion()
+        filespace.resetSnapshot()
+        
+        return suggestion
+    }
+    
+    @WorkspaceActor
+    func getNESSuggestion(forFileAt fileURL: URL) -> CodeSuggestion? {
+        guard let filespace = filespaces[fileURL],
+              let suggestion = filespace.presentingNESSuggestion
+        else { return nil }
+        
+        return suggestion
+    }
 }
 
+extension SuggestionRequest {
+    static func from(fileURL: URL, content: String, editor: EditorContent, projectRootURL: URL) -> Self {
+        return .init(
+            fileURL: fileURL,
+            relativePath: fileURL.path.replacingOccurrences(of: projectRootURL.path, with: ""),
+            content: content,
+            originalContent: content,
+            lines: editor.lines,
+            cursorPosition: editor.cursorPosition,
+            cursorOffset: editor.cursorOffset,
+            tabSize: editor.tabSize,
+            indentSize: editor.indentSize,
+            usesTabsForIndentation: editor.usesTabsForIndentation,
+            relevantCodeSnippets: []
+        )
+    }
+}

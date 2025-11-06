@@ -79,12 +79,9 @@ struct InputAreaTextEditor: View {
         return false
     }
     
-    var typedMessage: String {
-        chat.state.getChatContext(of: editorMode).typedMessage
-    }
-    
     var body: some View {
         WithPerceptionTracking {
+            let typedMessage = chat.state.getChatContext(of: editorMode).typedMessage
             VStack(spacing: 0) {
                 chatContextView
                 

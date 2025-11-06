@@ -11,6 +11,13 @@ struct PresentInWindowSuggestionPresenter {
             controller.suggestCode()
         }
     }
+    
+    func presentNESSuggestion(fileURL: URL) {
+        Task { @MainActor in
+            let controller = Service.shared.guiController.widgetController
+            controller.suggestNESCode()
+        }
+    }
 
     func expandSuggestion(fileURL: URL) {
         Task { @MainActor in
@@ -23,6 +30,13 @@ struct PresentInWindowSuggestionPresenter {
         Task { @MainActor in
             let controller = Service.shared.guiController.widgetController
             controller.discardSuggestion()
+        }
+    }
+    
+    func discardNESSuggestion(fileURL: URL) {
+        Task { @MainActor in
+            let controller = Service.shared.guiController.widgetController
+            controller.discardNESSuggestion()
         }
     }
 

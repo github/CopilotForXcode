@@ -17,6 +17,7 @@ enum Style {
     static let codeReviewPanelWidth: Double = 550
     static let codeReviewPanelHeight: Double = 450
     static let fixPanelToAnnotationSpacing: Double = 1
+    static let nesSuggestionMenuLeadingPadding: Double = 4
 }
 
 extension Color {

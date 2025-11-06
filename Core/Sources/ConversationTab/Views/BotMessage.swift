@@ -140,99 +140,101 @@ struct BotMessage: View {
     }
 
     var body: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 8) {
-                if !references.isEmpty {
-                    WithPerceptionTracking {
-                        ReferenceButton(
-                            references: references,
-                            chat: chat,
-                            isReferencesPresented: $isReferencesPresented
-                        )
-                    }
-                }
-                
-                // progress step
-                if steps.count > 0 {
-                    ProgressStep(steps: steps)
-                        
-                }
-                
-                if !panelMessages.isEmpty {
-                    WithPerceptionTracking {
-                        ForEach(panelMessages.indices, id: \.self) { index in
-                            FunctionMessage(text: panelMessages[index].message, chat: chat)
+        WithPerceptionTracking {
+            HStack {
+                VStack(alignment: .leading, spacing: 8) {
+                    if !references.isEmpty {
+                        WithPerceptionTracking {
+                            ReferenceButton(
+                                references: references,
+                                chat: chat,
+                                isReferencesPresented: $isReferencesPresented
+                            )
                         }
                     }
-                }
-                
-                if editAgentRounds.count > 0 {
-                    ProgressAgentRound(rounds: editAgentRounds, chat: chat)
-                }
-
-                if !text.isEmpty {
-                    Group{
-                        ThemedMarkdownText(text: text, chat: chat)
+                    
+                    // progress step
+                    if steps.count > 0 {
+                        ProgressStep(steps: steps)
+                        
                     }
-                    .scaledPadding(.leading, 2)
-                    .scaledPadding(.vertical, 4)
-                }
-                
-                if let codeReviewRound = codeReviewRound {
-                    CodeReviewMainView(
-                        store: chat, round: codeReviewRound
-                    )
-                    .frame(maxWidth: .infinity)
-                }
-
-                if !errorMessages.isEmpty {
-                    VStack(spacing: 4) {
-                        ForEach(errorMessages.indices, id: \.self) { index in
-                            if let attributedString = try? AttributedString(markdown: errorMessages[index]) {
-                                NotificationBanner(style: .warning) {
-                                    Text(attributedString)
-                                }
+                    
+                    if !panelMessages.isEmpty {
+                        WithPerceptionTracking {
+                            ForEach(panelMessages.indices, id: \.self) { index in
+                                FunctionMessage(text: panelMessages[index].message, chat: chat)
                             }
                         }
                     }
-                    .scaledPadding(.vertical, 4)
-                }
-                
-                HStack {
-                    if shouldShowTurnStatus() {
-                        TurnStatusView(message: message)
+                    
+                    if editAgentRounds.count > 0 {
+                        ProgressAgentRound(rounds: editAgentRounds, chat: chat)
                     }
                     
-                    Spacer()
+                    if !text.isEmpty {
+                        Group{
+                            ThemedMarkdownText(text: text, chat: chat)
+                        }
+                        .scaledPadding(.leading, 2)
+                        .scaledPadding(.vertical, 4)
+                    }
                     
-                    ResponseToolBar(id: id, chat: chat, text: text)
-                        .conditionalFontWeight(.medium)
-                        .opacity(shouldShowToolBar() ? 1 : 0)
-                        .scaledPadding(.trailing, -20)
+                    if let codeReviewRound = codeReviewRound {
+                        CodeReviewMainView(
+                            store: chat, round: codeReviewRound
+                        )
+                        .frame(maxWidth: .infinity)
+                    }
+                    
+                    if !errorMessages.isEmpty {
+                        VStack(spacing: 4) {
+                            ForEach(errorMessages.indices, id: \.self) { index in
+                                if let attributedString = try? AttributedString(markdown: errorMessages[index]) {
+                                    NotificationBanner(style: .warning) {
+                                        Text(attributedString)
+                                    }
+                                }
+                            }
+                        }
+                        .scaledPadding(.vertical, 4)
+                    }
+                    
+                    HStack {
+                        if shouldShowTurnStatus() {
+                            TurnStatusView(message: message)
+                        }
+                        
+                        Spacer()
+                        
+                        ResponseToolBar(id: id, chat: chat, text: text)
+                            .conditionalFontWeight(.medium)
+                            .opacity(shouldShowToolBar() ? 1 : 0)
+                            .scaledPadding(.trailing, -20)
+                    }
                 }
-            }
-            .shadow(color: .black.opacity(0.05), radius: 6)
-            .contextMenu {
-                Button("Copy") {
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(text, forType: .string)
+                .shadow(color: .black.opacity(0.05), radius: 6)
+                .contextMenu {
+                    Button("Copy") {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(text, forType: .string)
+                    }
+                    .scaledFont(.body)
+                    
+                    Button("Set as Extra System Prompt") {
+                        chat.send(.setAsExtraPromptButtonTapped(id))
+                    }
+                    .scaledFont(.body)
+                    
+                    Divider()
+                    
+                    Button("Delete") {
+                        chat.send(.deleteMessageButtonTapped(id))
+                    }
+                    .scaledFont(.body)
                 }
-                .scaledFont(.body)
-                
-                Button("Set as Extra System Prompt") {
-                    chat.send(.setAsExtraPromptButtonTapped(id))
+                .onHover {
+                    isHovering = $0
                 }
-                .scaledFont(.body)
-                
-                Divider()
-                
-                Button("Delete") {
-                    chat.send(.deleteMessageButtonTapped(id))
-                }
-                .scaledFont(.body)
-            }
-            .onHover {
-                isHovering = $0
             }
         }
     }

@@ -151,6 +151,7 @@ struct ChatPanelMessages: View {
                         Group {
 
                             ChatHistory(chat: chat)
+                                .fixedSize(horizontal: false, vertical: true)
 
                             ExtraSpacingInResponding(chat: chat)
 
@@ -302,11 +303,13 @@ struct ChatPanelMessages: View {
 
     struct ExtraSpacingInResponding: View {
         let chat: StoreOf<Chat>
+        
+        @AppStorage(\.fontScale) private var fontScale: Double
 
         var body: some View {
             WithPerceptionTracking {
                 if chat.isReceivingMessage {
-                    Spacer(minLength: 12)
+                    Spacer(minLength: 12 * fontScale)
                 }
             }
         }
