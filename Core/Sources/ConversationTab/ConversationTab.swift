@@ -26,7 +26,7 @@ public class ConversationTab: ChatTab {
     
     // Get chat tab title. As the tab title is always "Chat" and won't be modified.
     // Use the chat title as the tab title.
-    // TODO: modify tab title dynamicly
+    // TODO: modify tab title dynamically
     public func getChatTabTitle() -> String {
         return chat.title
     }
@@ -157,7 +157,7 @@ public class ConversationTab: ChatTab {
         let service = ChatService.service(for: chatTabInfo)
         let tab = ConversationTab(service: service, store: store, with: chatTabInfo)
         
-        // lazy restore converstaion tab for not selected
+        // lazy restore conversation tab for not selected
         if chatTabInfo.isSelected {
             tab.restoreIfNeeded()
         }

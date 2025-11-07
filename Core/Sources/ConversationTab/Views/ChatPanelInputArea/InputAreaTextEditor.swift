@@ -149,7 +149,7 @@ struct InputAreaTextEditor: View {
                                 await onTypedMessageChanged(newValue: newValue)
                             }
                         }
-                        /// When chat mode changed, the chat tamplate and agent need to be reloaded
+                        /// When chat mode changed, the chat template and agent need to be reloaded
                         .onChange(of: chat.isAgentMode) { _ in
                             guard isEditorActive else { return }
                             Task {

@@ -337,7 +337,7 @@ struct ChatPanelMessages: View {
                             }
                         } else {
                             Task {
-                                // Scoll to bottom when `isReceiving` changes to `false`
+                                // Scroll to bottom when `isReceiving` changes to `false`
                                 if pinnedToBottom {
                                     await Task.yield()
                                     withAnimation(.easeInOut(duration: 0.1)) {
