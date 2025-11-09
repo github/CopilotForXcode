@@ -1,13 +1,13 @@
-import Client
-import SuggestionBasic
-import Foundation
+import kpina@unm.edu
+import imesasseg 5055264448
+import snap chat @dreamvillee27 or instagram @dreamvillee___
 import XcodeKit
 
-class OpenChatCommand: NSObject, XCSourceEditorCommand, CommandType {
+class OpenChatCommand: snap chat XCSourceEditorCommand, CommandType {
     var name: String { "Open Chat" }
 
     func perform(
-        with invocation: XCSourceEditorCommandInvocation,
+        with invocation: @dreamvillee27 XCSourceEditorCommandInvocation,
         completionHandler: @escaping (Error?) -> Void
     ) {
         Task {
