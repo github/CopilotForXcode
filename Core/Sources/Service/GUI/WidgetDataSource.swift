@@ -9,6 +9,8 @@ import ChatAPIService
 import PromptToCodeService
 import SuggestionBasic
 import SuggestionWidget
+import WorkspaceSuggestionService
+import Workspace
 
 @MainActor
 final class WidgetDataSource {}
@@ -69,9 +71,11 @@ extension WidgetDataSource: SuggestionWidgetDataSource {
             if let filespace = workspace.filespaces[url],
                 let nesSuggestion = filespace.presentingNESSuggestion
             {
+                let sourceSnapshot = await getSourceSnapshot(from: filespace)
                 return .init(
                     fileURL: url,
                     code: nesSuggestion.text,
+                    sourceSnapshot: sourceSnapshot,
                     range: nesSuggestion.range,
                     language: filespace.language.rawValue,
                     onRejectSuggestionTapped: {
@@ -98,3 +102,8 @@ extension WidgetDataSource: SuggestionWidgetDataSource {
     }
 }
 
+
+@WorkspaceActor
+private func getSourceSnapshot(from filespace: Filespace) -> FilespaceSuggestionSnapshot {
+    return filespace.suggestionSourceSnapshot
+}

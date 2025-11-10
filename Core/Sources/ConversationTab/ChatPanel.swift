@@ -39,8 +39,15 @@ public struct ChatPanel: View {
                     ChatPanelMessages(chat: chat)
                         .accessibilityElement(children: .combine)
                         .accessibilityLabel("Chat Messages Group")
-                    
-                    if let _ = chat.history.last?.followUp {
+
+                    if chat.isAgentMode, let handOffs = chat.selectedAgent.handOffs, !handOffs.isEmpty, 
+                       chat.history.contains(where: { $0.role == .assistant && $0.turnStatus != .inProgress }),
+                       !chat.handOffClicked {
+                        ChatHandOffs(chat: chat)
+                            .scaledPadding(.vertical, 8)
+                            .scaledPadding(.horizontal, 16)
+                            .dimWithExitEditMode(chat)
+                    } else if let _ = chat.history.last?.followUp {
                         ChatFollowUp(chat: chat)
                             .scaledPadding(.vertical, 8)
                             .scaledPadding(.horizontal, 16)
@@ -407,11 +414,16 @@ struct ChatHistory: View {
                         }
                         
                         if message.role != .ignored && index < currentFilteredHistory.count - 1 {
-                            if message.role == .assistant {
-                                // check point
-                                CheckPoint(chat: chat, messageId: message.id)
-                                    .padding(.vertical, 8)
-                                    .padding(.trailing, 8)
+                            if message.role == .assistant && message.parentTurnId == nil {
+                                let nextMessage = currentFilteredHistory[index + 1]
+                                let hasContent = !message.text.isEmpty || !message.editAgentRounds.isEmpty
+                                let nextIsNotSubturn = nextMessage.parentTurnId != message.id
+                                
+                                if hasContent && nextIsNotSubturn {
+                                    CheckPoint(chat: chat, messageId: message.id)
+                                        .padding(.vertical, 8)
+                                        .padding(.trailing, 8)
+                                }
                             }
                         }
                         
@@ -489,11 +501,54 @@ struct ChatFollowUp: View {
                     }
                     .buttonStyle(.plain)
                     .onHover { isHovered in
-                        if isHovered {
-                            NSCursor.pointingHand.push()
-                        } else {
-                            NSCursor.pop()
+                        DispatchQueue.main.async {
+                            if isHovered {
+                                NSCursor.pointingHand.push()
+                            } else {
+                                NSCursor.pop()
+                            }
                         }
+                    }
+                    .onDisappear {
+                        NSCursor.pop()
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+}
+
+struct ChatHandOffs: View {
+    let chat: StoreOf<Chat>
+    @AppStorage(\.chatFontSize) var chatFontSize
+
+    var body: some View {
+        WithPerceptionTracking {
+            VStack(alignment: .leading) {
+                Text("PROCEED FROM \(chat.selectedAgent.name.uppercased())")
+                    .foregroundStyle(.secondary)
+                    .scaledPadding(.horizontal, 4)
+                    .scaledPadding(.bottom, -4)
+
+                FlowLayout(mode: .vstack, items: chat.selectedAgent.handOffs ?? [], itemSpacing: 4) { item in
+                    Button(action: {
+                        chat.send(.handOffButtonClicked(item))
+                    }) {
+                        Text(item.label)
+                    }
+                    .buttonStyle(.bordered)
+                    .onHover { isHovered in
+                        DispatchQueue.main.async {
+                            if isHovered {
+                                NSCursor.pointingHand.push()
+                            } else {
+                                NSCursor.pop()
+                            }
+                        }
+                    }
+                    .onDisappear {
+                        NSCursor.pop()
                     }
                 }
             }

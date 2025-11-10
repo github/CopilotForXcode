@@ -61,8 +61,7 @@ struct PseudoCommandHandler {
         let codeCompletionEnabled = UserDefaults.shared.value(for: \.realtimeSuggestionToggle)
         let nesEnabled = UserDefaults.shared.value(for: \.realtimeNESToggle)
         guard codeCompletionEnabled || nesEnabled else {
-            filespace.reset()
-            filespace.resetNESSuggestion()
+            cleanupAllSuggestions(filespace: filespace, presenter: nil)
             return
         }
 
@@ -85,7 +84,7 @@ struct PseudoCommandHandler {
                     presenter: presenter
                 )
             } else {
-                filespace.reset()
+                cleanupCodeCompletionSuggestion(filespace: filespace, presenter: presenter)
             }
             
             if nesEnabled,
@@ -98,11 +97,47 @@ struct PseudoCommandHandler {
                     presenter: presenter
                 )
             } else {
-                filespace.resetNESSuggestion()
+                cleanupNESSuggestion(filespace: filespace, presenter: presenter)
             }
+            
+            if filespace.presentingSuggestion != nil || filespace.presentingNESSuggestion != nil {
+                let snapshot = FilespaceSuggestionSnapshot(content: editor)
+                filespace.suggestionSourceSnapshot = snapshot
+            } else {
+                filespace.resetSnapshot()
+            }
+            
         } catch {
-            return
+            cleanupAllSuggestions(filespace: filespace, presenter: presenter)
         }
+    }
+    
+    @WorkspaceActor
+    private func cleanupCodeCompletionSuggestion(
+        filespace: Filespace,
+        presenter: PresentInWindowSuggestionPresenter?
+    ) {
+        filespace.reset()
+        presenter?.discardSuggestion(fileURL: filespace.fileURL)
+    }
+    
+    @WorkspaceActor
+    private func cleanupNESSuggestion(
+        filespace: Filespace,
+        presenter: PresentInWindowSuggestionPresenter?
+    ) {
+        filespace.resetNESSuggestion()
+        presenter?.discardNESSuggestion(fileURL: filespace.fileURL)
+    }
+    
+    @WorkspaceActor
+    private func cleanupAllSuggestions(
+        filespace: Filespace,
+        presenter: PresentInWindowSuggestionPresenter?
+    ) {
+        cleanupCodeCompletionSuggestion(filespace: filespace, presenter: presenter)
+        cleanupNESSuggestion(filespace: filespace, presenter: presenter)
+        filespace.resetSnapshot()
     }
     
     @WorkspaceActor
@@ -121,6 +156,7 @@ struct PseudoCommandHandler {
             ) {
                 return
             } else {
+                filespace.reset()
                 presenter.discardSuggestion(fileURL: filespace.fileURL)
             }
         }
@@ -170,6 +206,7 @@ struct PseudoCommandHandler {
             ) {
                 return
             } else {
+                filespace.resetNESSuggestion()
                 presenter.discardNESSuggestion(fileURL: filespace.fileURL)
             }
         }

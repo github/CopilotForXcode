@@ -6,7 +6,7 @@
 ## Chat
 
 GitHub Copilot Chat provides suggestions to your specific coding tasks via chat.
-<img alt="Chat of GitHub Copilot for Xcode" src="./Docs/Images/chat_dark.gif" width="800" />
+<img alt="Chat of GitHub Copilot for Xcode" src="./Docs/Images/chat_agent.gif" width="800" />
 
 ## Agent Mode
 

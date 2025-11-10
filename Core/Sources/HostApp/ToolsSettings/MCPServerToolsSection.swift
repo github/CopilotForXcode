@@ -4,14 +4,20 @@ import GitHubCopilotService
 import Client
 import Logger
 import Foundation
+import SharedUIComponents
+import ConversationServiceProvider
 
 /// Section for a single server's tools
 struct MCPServerToolsSection: View {
     let serverTools: MCPServerToolsCollection
     @Binding var isServerEnabled: Bool
     var forceExpand: Bool = false
+    var isInteractionAllowed: Bool = true
+    @Binding var modes: [ConversationMode]
+    @Binding var selectedMode: ConversationMode
     @State private var toolEnabledStates: [String: Bool] = [:]
     @State private var isExpanded: Bool = true
+    @State private var checkboxMixedState: CheckboxMixedState = .off
     private var originalServerName: String { serverTools.name }
 
     private var serverToggleLabel: some View {
@@ -72,15 +78,35 @@ struct MCPServerToolsSection: View {
     }
     
     private var serverToggle: some View {
-        Toggle(isOn: Binding(
-            get: { isServerEnabled },
-            set: { updateAllToolsStatus(enabled: $0) }
-        )) {
+        HStack(spacing: 8) {
+            MixedStateCheckbox(
+                title: "",
+                font: .systemFont(ofSize: 13),
+                state: $checkboxMixedState
+            ) {
+                switch checkboxMixedState {
+                case .off, .mixed:
+                    // Enable all tools
+                    updateAllToolsStatus(enabled: true)
+                case .on:
+                    // Disable all tools
+                    updateAllToolsStatus(enabled: false)
+                }
+                updateMixedState()
+            }
+            .disabled(serverTools.status == .error || serverTools.status == .blocked || !isInteractionAllowed)
+            
             serverToggleLabel
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    if serverTools.status != .error && serverTools.status != .blocked {
+                        withAnimation {
+                            isExpanded.toggle()
+                        }
+                    }
+                }
         }
-        .toggleStyle(.checkbox)
         .padding(.leading, 4)
-        .disabled(serverTools.status == .error || serverTools.status == .blocked)
     }
     
     private var divider: some View {
@@ -100,6 +126,7 @@ struct MCPServerToolsSection: View {
                     toolStatus: tool._status,
                     isServerEnabled: isServerEnabled,
                     isToolEnabled: toolBindingFor(tool),
+                    isInteractionAllowed: isInteractionAllowed,
                     onToolToggleChanged: { handleToolToggleChange(tool: tool, isEnabled: $0) }
                 )
                 .padding(.leading, 36)
@@ -107,6 +134,7 @@ struct MCPServerToolsSection: View {
         }
         .onChange(of: serverTools) { newValue in
             initializeToolStates(server: newValue)
+            updateMixedState()
         }
     }
 
@@ -129,6 +157,7 @@ struct MCPServerToolsSection: View {
                 }
                 .onAppear {
                     initializeToolStates(server: serverTools)
+                    updateMixedState()
                     if forceExpand {
                         isExpanded = true
                     }
@@ -136,6 +165,16 @@ struct MCPServerToolsSection: View {
                 .onChange(of: forceExpand) { newForceExpand in
                     if newForceExpand {
                         isExpanded = true
+                    }
+                }
+                .onChange(of: selectedMode) { _ in
+                    toolEnabledStates = [:]
+                    initializeToolStates(server: serverTools)
+                    updateMixedState()
+                }
+                .onChange(of: selectedMode.customTools) { _ in
+                    Task {
+                        await reloadModesAndUpdateStates()
                     }
                 }
 
@@ -187,15 +226,27 @@ struct MCPServerToolsSection: View {
 
     private func initializeToolStates(server: MCPServerToolsCollection) {
         var disabled = 0
-        toolEnabledStates = server.tools.reduce(into: [:]) { result, tool in
-            result[tool.name] = tool._status == .enabled
-            disabled += result[tool.name]! ? 0 : 1
+        let newStates: [String: Bool] = server.tools.reduce(into: [:]) { result, tool in
+            let isEnabled = isToolEnabledInMode(tool.name, currentStatus: tool._status)
+            result[tool.name] = isEnabled
+            disabled += isEnabled ? 0 : 1
+        }
+        
+        for (toolName, newState) in newStates {
+            if toolEnabledStates[toolName] != newState {
+                toolEnabledStates[toolName] = newState
+            }
+        }
+        
+        for existingToolName in toolEnabledStates.keys {
+            if newStates[existingToolName] == nil {
+                toolEnabledStates.removeValue(forKey: existingToolName)
+            }
         }
 
         let enabled = toolEnabledStates.count - disabled
         Logger.client.info("Server \(server.name) initialized with \(toolEnabledStates.count) tools (\(enabled) enabled, \(disabled) disabled).")
 
-        // Check if all tools are disabled to properly set server state
         if !toolEnabledStates.isEmpty && toolEnabledStates.values.allSatisfy({ !$0 }) {
             DispatchQueue.main.async {
                 isServerEnabled = false
@@ -205,7 +256,9 @@ struct MCPServerToolsSection: View {
 
     private func toolBindingFor(_ tool: MCPTool) -> Binding<Bool> {
         Binding(
-            get: { toolEnabledStates[tool.name] ?? (tool._status == .enabled) },
+            get: {
+                toolEnabledStates[tool.name] ?? isToolEnabledInMode(tool.name, currentStatus: tool._status)
+            },
             set: { toolEnabledStates[tool.name] = $0 }
         )
     }
@@ -215,6 +268,9 @@ struct MCPServerToolsSection: View {
         
         // Update server state based on tool states
         updateServerState()
+        
+        // Update mixed state
+        updateMixedState()
         
         // Update only this specific tool status
         updateToolStatus(tool: tool, isEnabled: isEnabled)
@@ -261,18 +317,96 @@ struct MCPServerToolsSection: View {
         
         updateMCPStatus([serverUpdate])
     }
+    
+    private func updateMixedState() {
+        let allServerTools = CopilotMCPToolManagerObservable.shared.availableMCPServerTools
+            .first(where: { $0.name == originalServerName })?.tools ?? serverTools.tools
+        
+        let enabledCount = allServerTools.filter { tool in
+            toolEnabledStates[tool.name] ?? (tool._status == .enabled)
+        }.count
+        
+        let totalCount = allServerTools.count
+        
+        if enabledCount == 0 {
+            checkboxMixedState = .off
+        } else if enabledCount == totalCount {
+            checkboxMixedState = .on
+        } else {
+            checkboxMixedState = .mixed
+        }
+    }
 
     private func updateMCPStatus(_ serverUpdates: [UpdateMCPToolsStatusServerCollection]) {
-        // Update status in AppState and CopilotMCPToolManager
-        AppState.shared.updateMCPToolsStatus(serverUpdates)
+        let isDefaultAgentMode = selectedMode.isDefaultAgent
+
+        if isDefaultAgentMode {
+            AppState.shared.updateMCPToolsStatus(serverUpdates)
+        }
 
         Task {
             do {
                 let service = try getService()
-                try await service.updateMCPServerToolsStatus(serverUpdates)
+                
+                if !isDefaultAgentMode {
+                    let chatMode = selectedMode.kind
+                    let customChatModeId = selectedMode.isBuiltIn == false ? selectedMode.id : nil
+                    let workspaceFolders = await getWorkspaceFolders()
+                    
+                    try await service
+                        .updateMCPServerToolsStatus(
+                            serverUpdates,
+                            chatAgentMode: chatMode,
+                            customChatModeId: customChatModeId,
+                            workspaceFolders: workspaceFolders
+                        )
+                } else {
+                    try await service.updateMCPServerToolsStatus(serverUpdates)
+                }
             } catch {
                 Logger.client.error("Failed to update MCP status: \(error.localizedDescription)")
             }
         }
+    }
+    
+    @MainActor
+    private func reloadModesAndUpdateStates() async {
+        do {
+            let service = try getService()
+            let workspaceFolders = await getWorkspaceFolders()
+            if let fetchedModes = try await service.getModes(workspaceFolders: workspaceFolders) {
+                modes = fetchedModes.filter { $0.kind == .Agent }
+                
+                if let updatedMode = modes.first(where: { $0.id == selectedMode.id }) {
+                    selectedMode = updatedMode
+                    
+                    let allServerTools = CopilotMCPToolManagerObservable.shared.availableMCPServerTools
+                        .first(where: { $0.name == originalServerName })?.tools ?? serverTools.tools
+                    
+                    for tool in allServerTools {
+                        let toolName = "\(serverTools.name)/\(tool.name)"
+                        if let customTools = updatedMode.customTools {
+                            toolEnabledStates[tool.name] = customTools.contains(toolName)
+                        } else {
+                            toolEnabledStates[tool.name] = false
+                        }
+                    }
+                    
+                    updateMixedState()
+                    updateServerState()
+                }
+            }
+        } catch {
+            Logger.client.error("Failed to reload modes: \(error.localizedDescription)")
+        }
+    }
+    
+    private func isToolEnabledInMode(_ toolName: String, currentStatus: ToolStatus) -> Bool {
+        let configurationKey = "\(serverTools.name)/\(toolName)"
+        return AgentModeToolHelpers.isToolEnabledInMode(
+            configurationKey: configurationKey,
+            currentStatus: currentStatus,
+            selectedMode: selectedMode
+        )
     }
 }

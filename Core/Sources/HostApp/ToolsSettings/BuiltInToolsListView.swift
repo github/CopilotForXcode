@@ -5,12 +5,16 @@ import GitHubCopilotService
 import Logger
 import Persist
 import SwiftUI
+import SharedUIComponents
 
 struct BuiltInToolsListView: View {
     @ObservedObject private var builtInToolManager = CopilotBuiltInToolManagerObservable.shared
     @State private var isSearchBarVisible: Bool = false
     @State private var searchText: String = ""
     @State private var toolEnabledStates: [String: Bool] = [:]
+    @State private var modes: [ConversationMode] = []
+    @Binding var selectedMode: ConversationMode
+    let isCustomAgentEnabled: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -25,19 +29,30 @@ struct BuiltInToolsListView: View {
         .onChange(of: builtInToolManager.availableLanguageModelTools) { _ in
             initializeToolStates()
         }
+        .onChange(of: selectedMode) { _ in
+            toolEnabledStates = [:] // Clear state immediately
+            initializeToolStates()
+        }
     }
 
     // MARK: - Header View
 
     private var headerView: some View {
-        HStack(alignment: .center) {
-            Text("Built-In Tools").fontWeight(.bold)
-            Spacer()
-            SearchBar(isVisible: $isSearchBarVisible, text: $searchText)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .center) {
+                Text("Built-In Tools").fontWeight(.bold)
+                if isCustomAgentEnabled {
+                    AgentModeDropdown(modes: $modes, selectedMode: $selectedMode)
+                }
+                Spacer()
+                CollapsibleSearchField(searchText: $searchText, isExpanded: $isSearchBarVisible)
+            }
+            .clipped()
+            
+            AgentModeDescriptionView(selectedMode: selectedMode, isLoadingMode: false)
         }
-        .clipped()
     }
-
+    
     // MARK: - Content View
 
     private var contentView: some View {
@@ -61,6 +76,7 @@ struct BuiltInToolsListView: View {
                     toolStatus: tool.status,
                     isServerEnabled: true,
                     isToolEnabled: toolBindingFor(tool),
+                    isInteractionAllowed: isInteractionAllowed(),
                     onToolToggleChanged: { isEnabled in
                         handleToolToggleChange(tool: tool, isEnabled: isEnabled)
                     }
@@ -72,21 +88,19 @@ struct BuiltInToolsListView: View {
     // MARK: - Helper Methods
     
     private func initializeToolStates() {
+        // When mode changes, recalculate everything from scratch
         var map: [String: Bool] = [:]
         for tool in builtInToolManager.availableLanguageModelTools {
-            // Preserve existing state if already toggled locally
-            if let existing = toolEnabledStates[tool.name] {
-                map[tool.name] = existing
-            } else {
-                map[tool.name] = (tool.status == .enabled)
-            }
+            map[tool.name] = isToolEnabledInMode(tool)
         }
         toolEnabledStates = map
     }
 
     private func toolBindingFor(_ tool: LanguageModelTool) -> Binding<Bool> {
         Binding(
-            get: { toolEnabledStates[tool.name] ?? (tool.status == .enabled) },
+            get: {
+                toolEnabledStates[tool.name] ?? isToolEnabledInMode(tool)
+            },
             set: { newValue in
                 toolEnabledStates[tool.name] = newValue
             }
@@ -105,7 +119,6 @@ struct BuiltInToolsListView: View {
     }
 
     private func handleToolToggleChange(tool: LanguageModelTool, isEnabled: Bool) {
-        // Optimistically update local state already done in binding.
         let toolUpdate = ToolStatusUpdate(name: tool.name, status: isEnabled ? .enabled : .disabled)
         updateToolStatus([toolUpdate])
     }
@@ -114,16 +127,72 @@ struct BuiltInToolsListView: View {
         Task {
             do {
                 let service = try getService()
-                let updatedTools = try await service.updateToolsStatus(toolUpdates)
-                if updatedTools == nil {
-                    Logger.client.error("Failed to update built-in tool status: No updated tools returned")
+                
+                if !selectedMode.isDefaultAgent {
+                    let chatMode = selectedMode.kind
+                    let customChatModeId = selectedMode.isBuiltIn == false ? selectedMode.id : nil
+                    let workspaceFolders = await getWorkspaceFolders()
+                    
+                    let updatedTools = try await service
+                        .updateToolsStatus(
+                            toolUpdates,
+                            chatAgentMode: chatMode,
+                            customChatModeId: customChatModeId,
+                            workspaceFolders: workspaceFolders
+                        )
+                    
+                    if updatedTools == nil {
+                        Logger.client.error("Failed to update built-in tool status: No updated tools returned")
+                    }
+                    
+                    await reloadModesAndUpdateStates()
+                } else {
+                    let updatedTools = try await service.updateToolsStatus(toolUpdates)
+                    if updatedTools == nil {
+                        Logger.client.error("Failed to update built-in tool status: No updated tools returned")
+                    }
                 }
-                // CopilotLanguageModelToolManager will broadcast changes; our local
-                // toolEnabledStates keep rows visible even if disabled.
             } catch {
                 Logger.client.error("Failed to update built-in tool status: \(error.localizedDescription)")
             }
         }
+    }
+    
+    @MainActor
+    private func reloadModesAndUpdateStates() async {
+        do {
+            let service = try getService()
+            let workspaceFolders = await getWorkspaceFolders()
+            if let fetchedModes = try await service.getModes(workspaceFolders: workspaceFolders) {
+                modes = fetchedModes.filter { $0.kind == .Agent }
+                
+                if let updatedMode = modes.first(where: { $0.id == selectedMode.id }) {
+                    selectedMode = updatedMode
+                    
+                    for tool in builtInToolManager.availableLanguageModelTools {
+                        if let customTools = updatedMode.customTools {
+                            toolEnabledStates[tool.name] = customTools.contains(tool.name)
+                        } else {
+                            toolEnabledStates[tool.name] = false
+                        }
+                    }
+                }
+            }
+        } catch {
+            Logger.client.error("Failed to reload modes: \(error.localizedDescription)")
+        }
+    }
+    
+    private func isToolEnabledInMode(_ tool: LanguageModelTool) -> Bool {
+        return AgentModeToolHelpers.isToolEnabledInMode(
+            configurationKey: tool.name,
+            currentStatus: tool.status,
+            selectedMode: selectedMode
+        )
+    }
+    
+    private func isInteractionAllowed() -> Bool {
+        return AgentModeToolHelpers.isInteractionAllowed(selectedMode: selectedMode)
     }
 }
 

@@ -22,6 +22,7 @@ let package = Package(
         .library(name: "Persist", targets: ["Persist"]),
         .library(name: "UserDefaultsObserver", targets: ["UserDefaultsObserver"]),
         .library(name: "Workspace", targets: ["Workspace", "WorkspaceSuggestionService"]),
+        .library(name: "WorkspaceSuggestionService", targets: ["WorkspaceSuggestionService"]),
         .library(name: "WebContentExtractor", targets: ["WebContentExtractor"]),
         .library(
             name: "SuggestionProvider",
@@ -196,6 +197,7 @@ let package = Package(
         .target(
             name: "SharedUIComponents",
             dependencies: [
+                "AppKitExtension",
                 "Highlightr",
                 "Preferences",
                 "SuggestionBasic",
@@ -279,6 +281,7 @@ let package = Package(
         
         .target(name: "ConversationServiceProvider", dependencies: [
             "GitHelper",
+            "SuggestionBasic",
             .product(name: "CopilotForXcodeKit", package: "CopilotForXcodeKit"),
             .product(name: "LanguageServerProtocol", package: "LanguageServerProtocol"),
         ]),

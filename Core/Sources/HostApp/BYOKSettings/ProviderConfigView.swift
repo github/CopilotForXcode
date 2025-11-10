@@ -150,7 +150,7 @@ struct BYOKProviderConfigView: View {
     private var ConfiguredProviderActions: some View {
         HStack(spacing: 8) {
             if provider.authType == .GlobalApiKey && isExpanded {
-                SearchBar(isVisible: $isSearchBarVisible, text: $searchText)
+                CollapsibleSearchField(searchText: $searchText, isExpanded: $isSearchBarVisible)
 
                 Button(action: { Task {
                     await dataManager.listModelsWithFetch(providerName: provider)

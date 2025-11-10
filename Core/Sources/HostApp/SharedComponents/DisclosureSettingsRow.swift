@@ -1,4 +1,5 @@
 import SwiftUI
+import SharedUIComponents
 
 public struct DisclosureSettingsRow<Title: View, Subtitle: View, Actions: View>: View {
     @Binding private var isExpanded: Bool

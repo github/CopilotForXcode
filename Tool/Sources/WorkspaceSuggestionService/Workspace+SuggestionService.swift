@@ -66,10 +66,6 @@ public extension Workspace {
     
     filespace.codeMetadata.guessLineEnding(from: editor.lines.first)
     
-    let snapshot = FilespaceSuggestionSnapshot(content: editor)
-    
-    filespace.suggestionSourceSnapshot = snapshot
-    
     guard let suggestionService else { throw SuggestionFeatureDisabledError() }
     let content = editor.lines.joined(separator: "")
     let completions = try await suggestionService.getSuggestions(

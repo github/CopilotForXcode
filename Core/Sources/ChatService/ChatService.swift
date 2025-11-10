@@ -31,6 +31,7 @@ public protocol ChatServiceType {
         model: String?,
         modelProviderName: String?,
         agentMode: Bool,
+        customChatModeId: String?,
         userLanguage: String?,
         turnId: String?
     ) async throws
@@ -318,6 +319,7 @@ public final class ChatService: ChatServiceType, ObservableObject {
         model: String? = nil,
         modelProviderName: String? = nil,
         agentMode: Bool = false,
+        customChatModeId: String? = nil,
         userLanguage: String? = nil,
         turnId: String? = nil
     ) async throws {
@@ -423,6 +425,7 @@ public final class ChatService: ChatServiceType, ObservableObject {
             model: model,
             modelProviderName: modelProviderName,
             agentMode: agentMode,
+            customChatModeId: customChatModeId,
             userLanguage: userLanguage,
             turnId: currentTurnId,
             skillSet: validSkillSet
@@ -430,7 +433,9 @@ public final class ChatService: ChatServiceType, ObservableObject {
         
         self.lastUserRequest = request
         self.skillSet = validSkillSet
-        try await sendConversationRequest(request)
+        if let response = try await sendConversationRequest(request) {
+            await handleConversationCreateResponse(response)
+        }
     }
     
     private func createConversationRequest(
@@ -442,6 +447,7 @@ public final class ChatService: ChatServiceType, ObservableObject {
         model: String? = nil,
         modelProviderName: String? = nil,
         agentMode: Bool = false,
+        customChatModeId: String? = nil,
         userLanguage: String? = nil,
         turnId: String? = nil,
         skillSet: [ConversationSkill]
@@ -467,9 +473,21 @@ public final class ChatService: ChatServiceType, ObservableObject {
             model: model,
             modelProviderName: modelProviderName,
             agentMode: agentMode,
+            customChatModeId: customChatModeId,
             userLanguage: userLanguage,
             turnId: turnId
         )
+    }
+    
+    private func handleConversationCreateResponse(_ response: ConversationCreateResponse) async {
+        await memory.mutateHistory { history in
+            if let index = history.firstIndex(where: { $0.id == response.turnId && $0.role.isAssistant }) {
+                history[index].modelName = response.modelName
+                history[index].billingMultiplier = response.billingMultiplier
+                
+                self.saveChatMessageToStorage(history[index])
+            }
+        }
     }
 
     public func sendAndWait(_ id: String, content: String) async throws -> String {
@@ -535,6 +553,7 @@ public final class ChatService: ChatServiceType, ObservableObject {
                 model: model != nil ? model : lastUserRequest.model,
                 modelProviderName: modelProviderName,
                 agentMode: lastUserRequest.agentMode,
+                customChatModeId: lastUserRequest.customChatModeId,
                 userLanguage: lastUserRequest.userLanguage,
                 turnId: id
             )
@@ -652,8 +671,13 @@ public final class ChatService: ChatServiceType, ObservableObject {
     
     private func handleProgressBegin(token: String, progress: ConversationProgressBegin) {
         guard let workDoneToken = activeRequestId, workDoneToken == token else { return }
-        conversationId = progress.conversationId
+        // Only update conversationId for main turns, not subagent turns
+        // Subagent turns have their own conversation ID which should not replace the parent
+        if progress.parentTurnId == nil {
+            conversationId = progress.conversationId
+        }
         let turnId = progress.turnId
+        let parentTurnId = progress.parentTurnId
         
         Task {
             if var lastUserMessage = await memory.history.last(where: { $0.role == .user }) {
@@ -677,10 +701,17 @@ public final class ChatService: ChatServiceType, ObservableObject {
             /// Display an initial assistant message immediately after the user sends a message.
             /// This improves perceived responsiveness, especially in Agent Mode where the first
             /// ProgressReport may take long time.
-            let message = ChatMessage(assistantMessageWithId: turnId, chatTabID: chatTabInfo.id, turnStatus: .inProgress)
+            /// Skip creating a new message for subturns - they will be merged into the parent turn
+            if parentTurnId == nil {
+                let message = ChatMessage(
+                    assistantMessageWithId: turnId, 
+                    chatTabID: chatTabInfo.id, 
+                    turnStatus: .inProgress
+                )
 
-            // will persist in resetOngoingRequest()
-            await memory.appendMessage(message)
+                // will persist in resetOngoingRequest()
+                await memory.appendMessage(message)
+            }
         }
     }
 
@@ -694,6 +725,7 @@ public final class ChatService: ChatServiceType, ObservableObject {
         var references: [ConversationReference] = []
         var steps: [ConversationProgressStep] = []
         var editAgentRounds: [AgentRound] = []
+        let parentTurnId = progress.parentTurnId
 
         if let reply = progress.reply {
             content = reply
@@ -711,15 +743,15 @@ public final class ChatService: ChatServiceType, ObservableObject {
             editAgentRounds = progressAgentRounds
         }
         
-        if content.isEmpty && references.isEmpty && steps.isEmpty && editAgentRounds.isEmpty {
+        if content.isEmpty && references.isEmpty && steps.isEmpty && editAgentRounds.isEmpty && parentTurnId == nil {
             return
         }
         
-        // create immutable copies
         let messageContent = content
         let messageReferences = references
         let messageSteps = steps
         let messageAgentRounds = editAgentRounds
+        let messageParentTurnId = parentTurnId
 
         Task {
             let message = ChatMessage(
@@ -729,10 +761,10 @@ public final class ChatService: ChatServiceType, ObservableObject {
                 references: messageReferences,
                 steps: messageSteps,
                 editAgentRounds: messageAgentRounds,
+                parentTurnId: messageParentTurnId,
                 turnStatus: .inProgress
             )
 
-            // will persist in resetOngoingRequest()
             await memory.appendMessage(message)
         }
     }
@@ -801,10 +833,16 @@ public final class ChatService: ChatServiceType, ObservableObject {
                 }
             } else {
                 Task {
+                    var clsErrorMessage = CLSError.message
+                    if CLSError.code == ConversationErrorCode.toolRoundExceedError.rawValue {
+                        // TODO: Remove this after `Continue` is supported.
+                        clsErrorMessage = HardCodedToolRoundExceedErrorMessage
+                    }
+                    
                     let errorMessage = ChatMessage(
                         errorMessageWithId: progress.turnId,
                         chatTabID: chatTabInfo.id,
-                        errorMessages: [CLSError.message]
+                        errorMessages: [clsErrorMessage]
                     )
                     // will persist in resetOngoingRequest()
                     await memory.appendMessage(errorMessage)
@@ -874,6 +912,20 @@ public final class ChatService: ChatServiceType, ObservableObject {
                             history[lastIndex].editAgentRounds[i].toolCalls![j].status = .cancelled
                         }
                     }
+                    
+                    // Cancel tool calls in subagent rounds
+                    if let subAgentRounds = history[lastIndex].editAgentRounds[i].subAgentRounds {
+                        for k in 0..<subAgentRounds.count {
+                            if let toolCalls = subAgentRounds[k].toolCalls {
+                                for l in 0..<toolCalls.count {
+                                    if toolCalls[l].status == .running
+                                        || toolCalls[l].status == .waitForConfirmation {
+                                        history[lastIndex].editAgentRounds[i].subAgentRounds![k].toolCalls![l].status = .cancelled
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
                 
                 if history[lastIndex].codeReviewRound != nil,
@@ -897,14 +949,14 @@ public final class ChatService: ChatServiceType, ObservableObject {
         }
     }
     
-    private func sendConversationRequest(_ request: ConversationRequest) async throws {
+    private func sendConversationRequest(_ request: ConversationRequest) async throws -> ConversationCreateResponse? {
         guard !isReceivingMessage else { throw CancellationError() }
         isReceivingMessage = true
         requestType = .conversation
         
         do {
             if let conversationId = conversationId {
-                try await conversationProvider?
+                return try await conversationProvider?
                     .createTurn(
                         with: conversationId,
                         request: request,
@@ -922,7 +974,7 @@ public final class ChatService: ChatServiceType, ObservableObject {
                     requestWithTurns.turns = turns
                 }
                 
-                try await conversationProvider?.createConversation(requestWithTurns, workspaceURL: getWorkspaceURL())
+                return try await conversationProvider?.createConversation(requestWithTurns, workspaceURL: getWorkspaceURL())
             }
         } catch {
             resetOngoingRequest(with: .error)
@@ -952,6 +1004,7 @@ public final class ChatService: ChatServiceType, ObservableObject {
 public final class SharedChatService {
     public var chatTemplates: [ChatTemplate]? = nil
     public var chatAgents: [ChatAgent]? = nil
+    public var conversationModes: [ConversationMode]? = nil
     private let conversationProvider: ConversationServiceProvider?
     
     public static let shared = SharedChatService.service()
@@ -972,6 +1025,19 @@ public final class SharedChatService {
             if let templates = (try await conversationProvider?.templates()) {
                 self.chatTemplates = templates
                 return templates
+            }
+        } catch {
+            // handle error if desired
+        }
+
+        return nil
+    }
+    
+    public func loadConversationModes() async -> [ConversationMode]? {
+        do {
+            if let modes = (try await conversationProvider?.modes()) {
+                self.conversationModes = modes
+                return modes
             }
         } catch {
             // handle error if desired

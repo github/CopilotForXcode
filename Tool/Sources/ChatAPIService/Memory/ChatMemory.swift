@@ -9,10 +9,59 @@ public protocol ChatMemory {
 }
 
 public extension ChatMemory {
-    /// Append a message to the history.
     func appendMessage(_ message: ChatMessage) async {
         await mutateHistory { history in
-            if let index = history.firstIndex(where: { $0.id == message.id }) {
+            if let parentTurnId = message.parentTurnId {
+                history.removeAll { $0.id == message.id }
+                
+                guard let parentIndex = history.firstIndex(where: { $0.id == parentTurnId }) else {
+                    return
+                }
+                
+                var parentMessage = history[parentIndex]
+                
+                if !message.editAgentRounds.isEmpty {
+                    var parentRounds = parentMessage.editAgentRounds
+                    
+                    if let lastParentRoundIndex = parentRounds.indices.last {
+                        var existingSubRounds = parentRounds[lastParentRoundIndex].subAgentRounds ?? []
+                        
+                        for messageRound in message.editAgentRounds {
+                            if let subIndex = existingSubRounds.firstIndex(where: { $0.roundId == messageRound.roundId }) {
+                                existingSubRounds[subIndex].reply = existingSubRounds[subIndex].reply + messageRound.reply
+                                
+                                if let messageToolCalls = messageRound.toolCalls, !messageToolCalls.isEmpty {
+                                    var mergedToolCalls = existingSubRounds[subIndex].toolCalls ?? []
+                                    for newToolCall in messageToolCalls {
+                                        if let toolCallIndex = mergedToolCalls.firstIndex(where: { $0.id == newToolCall.id }) {
+                                            mergedToolCalls[toolCallIndex].status = newToolCall.status
+                                            if let progressMessage = newToolCall.progressMessage, !progressMessage.isEmpty {
+                                                mergedToolCalls[toolCallIndex].progressMessage = progressMessage
+                                            }
+                                            if let error = newToolCall.error, !error.isEmpty {
+                                                mergedToolCalls[toolCallIndex].error = error
+                                            }
+                                            if let invokeParams = newToolCall.invokeParams {
+                                                mergedToolCalls[toolCallIndex].invokeParams = invokeParams
+                                            }
+                                        } else {
+                                            mergedToolCalls.append(newToolCall)
+                                        }
+                                    }
+                                    existingSubRounds[subIndex].toolCalls = mergedToolCalls
+                                }
+                            } else {
+                                existingSubRounds.append(messageRound)
+                            }
+                        }
+                        
+                        parentRounds[lastParentRoundIndex].subAgentRounds = existingSubRounds
+                        parentMessage.editAgentRounds = parentRounds
+                    }
+                }
+                
+                history[parentIndex] = parentMessage
+            } else if let index = history.firstIndex(where: { $0.id == message.id }) {
                 history[index].mergeMessage(with: message)
             } else {
                 history.append(message)
@@ -44,26 +93,19 @@ public extension ChatMemory {
 
 extension ChatMessage {
     mutating func mergeMessage(with message: ChatMessage) {
-        // merge content
         self.content = self.content + message.content
         
-        // merge references
         var seen = Set<ConversationReference>()
-        // without duplicated and keep order
         self.references = (self.references + message.references).filter { seen.insert($0).inserted }
         
-        // merge followUp
         self.followUp = message.followUp ?? self.followUp
         
-        // merge suggested title
         self.suggestedTitle = message.suggestedTitle ?? self.suggestedTitle
         
-        // merge error message
         self.errorMessages = self.errorMessages + message.errorMessages
         
         self.panelMessages = self.panelMessages + message.panelMessages
         
-        // merge steps
         if !message.steps.isEmpty {
             var mergedSteps = self.steps
             
@@ -78,7 +120,6 @@ extension ChatMessage {
             self.steps = mergedSteps
         }
         
-        // merge agent steps
         if !message.editAgentRounds.isEmpty {
             let mergedAgentRounds = mergeEditAgentRounds(
                 oldRounds: self.editAgentRounds, 
@@ -88,13 +129,17 @@ extension ChatMessage {
             self.editAgentRounds = mergedAgentRounds
         }
         
+        self.parentTurnId = message.parentTurnId ?? self.parentTurnId
+        
         self.codeReviewRound = message.codeReviewRound
         
-        // merge file edits
         self.fileEdits = mergeFileEdits(oldEdits: self.fileEdits, newEdits: message.fileEdits)
         
-        // merge turn status
         self.turnStatus = message.turnStatus ?? self.turnStatus
+        
+        // merge modelName and billingMultiplier
+        self.modelName = message.modelName ?? self.modelName
+        self.billingMultiplier = message.billingMultiplier ?? self.billingMultiplier
     }
     
     private func mergeEditAgentRounds(oldRounds: [AgentRound], newRounds: [AgentRound]) -> [AgentRound] {
@@ -123,6 +168,39 @@ extension ChatMessage {
                         }
                     }
                     mergedAgentRounds[index].toolCalls = mergedToolCalls
+                }
+                
+                if let newSubAgentRounds = newRound.subAgentRounds, !newSubAgentRounds.isEmpty {
+                    var mergedSubRounds = mergedAgentRounds[index].subAgentRounds ?? []
+                    for newSubRound in newSubAgentRounds {
+                        if let subIndex = mergedSubRounds.firstIndex(where: { $0.roundId == newSubRound.roundId }) {
+                            mergedSubRounds[subIndex].reply = mergedSubRounds[subIndex].reply + newSubRound.reply
+                            
+                            if let subToolCalls = newSubRound.toolCalls, !subToolCalls.isEmpty {
+                                var mergedSubToolCalls = mergedSubRounds[subIndex].toolCalls ?? []
+                                for newSubToolCall in subToolCalls {
+                                    if let toolCallIndex = mergedSubToolCalls.firstIndex(where: { $0.id == newSubToolCall.id }) {
+                                        mergedSubToolCalls[toolCallIndex].status = newSubToolCall.status
+                                        if let progressMessage = newSubToolCall.progressMessage, !progressMessage.isEmpty {
+                                            mergedSubToolCalls[toolCallIndex].progressMessage = newSubToolCall.progressMessage
+                                        }
+                                        if let error = newSubToolCall.error, !error.isEmpty {
+                                            mergedSubToolCalls[toolCallIndex].error = newSubToolCall.error
+                                        }
+                                        if let invokeParams = newSubToolCall.invokeParams {
+                                            mergedSubToolCalls[toolCallIndex].invokeParams = invokeParams
+                                        }
+                                    } else {
+                                        mergedSubToolCalls.append(newSubToolCall)
+                                    }
+                                }
+                                mergedSubRounds[subIndex].toolCalls = mergedSubToolCalls
+                            }
+                        } else {
+                            mergedSubRounds.append(newSubRound)
+                        }
+                    }
+                    mergedAgentRounds[index].subAgentRounds = mergedSubRounds
                 }
             } else {
                 mergedAgentRounds.append(newRound)

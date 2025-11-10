@@ -4,6 +4,7 @@ import Workspace
 import XPCShared
 
 public struct FilespaceSuggestionSnapshot: Equatable {
+    public let lines: [String]
     public let linesHash: Int
     public let prefixLinesHash: Int
     public let suffixLinesHash: Int
@@ -15,6 +16,7 @@ public struct FilespaceSuggestionSnapshot: Equatable {
             return max(min(index, lines.endIndex), lines.startIndex)
         }
 
+        self.lines = lines
         self.linesHash = lines.hashValue
         self.cursorPosition = cursorPosition
         self.prefixLinesHash = lines[0..<safeIndex(cursorPosition.line)].hashValue
@@ -141,43 +143,6 @@ public extension Filespace {
         if updatedSnapshot == self.suggestionSourceSnapshot {
             return true
         }
-        
-        // other parts of the document have changed
-        if !self.suggestionSourceSnapshot.equalOrOnlyCurrentLineDiffers(comparedTo: updatedSnapshot) {
-            resetNESSuggestion()
-            resetSnapshot()
-            return false
-        }
-        
-        // the cursor position is invalid
-        if cursorPosition.line >= lines.count {
-            resetNESSuggestion()
-            resetSnapshot()
-            return false
-        }
-        
-        let edit = LineEdit(
-            snapshot: self.suggestionSourceSnapshot,
-            suggestion: presentingNESSuggestion,
-            lines: lines,
-            cursor: cursorPosition
-        )
-        let suggestionLines = presentingNESSuggestion.text.split(whereSeparator: \.isNewline)
-        let suggestionFirstLine = suggestionLines.first ?? ""
-        
-        // there is user-entered text to the right of the cursor
-        if edit.userEntered.count > cursorPosition.character {
-            resetNESSuggestion()
-            resetSnapshot()
-            return false
-        }
-        
-        // TODO: Handle apply the same nes suggestion
-        // typing into the completion
-        // if edit.line.count < suggestionFirstLine.count && suggestionFirstLine.hasPrefix(edit.userEntered) {
-        //    updateSuggestionsWithSameSelection(edit.updateSuggestions(suggestions))
-        //    return true
-        // }
         
         resetNESSuggestion()
         resetSnapshot()

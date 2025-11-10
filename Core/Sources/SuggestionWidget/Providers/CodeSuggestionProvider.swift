@@ -5,6 +5,7 @@ import SharedUIComponents
 import SwiftUI
 import XcodeInspector
 import SuggestionBasic
+import WorkspaceSuggestionService
 
 @Perceptible
 public final class CodeSuggestionProvider: Equatable {
@@ -67,6 +68,7 @@ public final class NESCodeSuggestionProvider: Equatable {
     
     public let fileURL: URL
     public let code: String
+    public let sourceSnapshot: FilespaceSuggestionSnapshot
     public let range: CursorRange
     public let language: String
     
@@ -76,7 +78,8 @@ public final class NESCodeSuggestionProvider: Equatable {
     
     public init(
         fileURL: URL,
-        code: String = "",
+        code: String,
+        sourceSnapshot: FilespaceSuggestionSnapshot,
         range: CursorRange,
         language: String = "",
         onRejectSuggestionTapped: @escaping () -> Void = {},
@@ -85,6 +88,7 @@ public final class NESCodeSuggestionProvider: Equatable {
     ) {
         self.fileURL = fileURL
         self.code = code
+        self.sourceSnapshot = sourceSnapshot
         self.range = range
         self.language = language
         self.onRejectSuggestionTapped = onRejectSuggestionTapped
@@ -97,11 +101,8 @@ public final class NESCodeSuggestionProvider: Equatable {
     func dismissNESSuggestion() { onDismissNESSuggestionTapped() }
     
     func getOriginalCodeSnippet() -> String? {
-        guard let editor = XcodeInspector.shared.focusedEditor,
-              editor.realtimeDocumentURL == fileURL
-        else { return nil }
-        
-        let lines = editor.getContent().content.components(separatedBy: .newlines)
+        /// The lines is from `EditorContent`, the "\n" is kept there.
+        let lines = sourceSnapshot.lines.joined(separator: "").components(separatedBy: .newlines)
         guard range.start.line >= 0,
               range.end.line >= range.start.line,
               range.end.line < lines.count

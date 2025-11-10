@@ -56,30 +56,34 @@ public final class BuiltinExtensionConversationServiceProvider<
         }
     }
 
-    public func createConversation(_ request: ConversationRequest, workspaceURL: URL?) async throws {
+    public func createConversation(
+        _ request: ConversationRequest, workspaceURL: URL?
+    ) async throws -> ConversationCreateResponse? {
         guard let conversationService else {
             Logger.service.error("Builtin chat service not found.")
-            return
+            return nil
         }
         guard let workspaceInfo = await activeWorkspace(workspaceURL) else {
             Logger.service.error("Could not get active workspace info")
-            return
+            return nil
         }
         
-        try await conversationService.createConversation(request, workspace: workspaceInfo)
+        return try await conversationService.createConversation(request, workspace: workspaceInfo)
     }
 
-    public func createTurn(with conversationId: String, request: ConversationRequest, workspaceURL: URL?) async throws {
+    public func createTurn(
+        with conversationId: String, request: ConversationRequest, workspaceURL: URL?
+    ) async throws -> ConversationCreateResponse? {
         guard let conversationService else {
             Logger.service.error("Builtin chat service not found.")
-            return
+            return nil
         }
         guard let workspaceInfo = await activeWorkspace(workspaceURL) else {
             Logger.service.error("Could not get active workspace info")
-            return
+            return nil
         }
         
-        try await conversationService
+        return try await conversationService
             .createTurn(
                 with: conversationId,
                 request: request,
@@ -148,6 +152,19 @@ public final class BuiltinExtensionConversationServiceProvider<
         }
 
         return (try? await conversationService.templates(workspace: workspaceInfo))
+    }
+    
+    public func modes() async throws -> [ConversationMode]? {
+        guard let conversationService else {
+            Logger.service.error("Builtin chat service not found.")
+            return nil
+        }
+        guard let workspaceInfo = await activeWorkspace() else {
+            Logger.service.error("Could not get active workspace info")
+            return nil
+        }
+
+        return (try? await conversationService.modes(workspace: workspaceInfo))
     }
 
     public func models() async throws -> [CopilotModel]? {

@@ -4,13 +4,14 @@ import CodableWrappers
 import LanguageServerProtocol
 
 public protocol ConversationServiceType {
-    func createConversation(_ request: ConversationRequest, workspace: WorkspaceInfo) async throws
-    func createTurn(with conversationId: String, request: ConversationRequest, workspace: WorkspaceInfo) async throws
+    func createConversation(_ request: ConversationRequest, workspace: WorkspaceInfo) async throws -> ConversationCreateResponse?
+    func createTurn(with conversationId: String, request: ConversationRequest, workspace: WorkspaceInfo) async throws -> ConversationCreateResponse?
     func deleteTurn(with conversationId: String, turnId: String, workspace: WorkspaceInfo) async throws
     func cancelProgress(_ workDoneToken: String, workspace: WorkspaceInfo) async throws
     func rateConversation(turnId: String, rating: ConversationRating, workspace: WorkspaceInfo) async throws
     func copyCode(request: CopyCodeRequest, workspace: WorkspaceInfo) async throws
     func templates(workspace: WorkspaceInfo) async throws -> [ChatTemplate]?
+    func modes(workspace: WorkspaceInfo) async throws -> [ConversationMode]?
     func models(workspace: WorkspaceInfo) async throws -> [CopilotModel]?
     func notifyDidChangeWatchedFiles(_ event: DidChangeWatchedFilesEvent, workspace: WorkspaceInfo) async throws
     func agents(workspace: WorkspaceInfo) async throws -> [ChatAgent]?
@@ -22,13 +23,14 @@ public protocol ConversationServiceType {
 }
 
 public protocol ConversationServiceProvider {
-    func createConversation(_ request: ConversationRequest, workspaceURL: URL?) async throws
-    func createTurn(with conversationId: String, request: ConversationRequest, workspaceURL: URL?) async throws
+    func createConversation(_ request: ConversationRequest, workspaceURL: URL?) async throws -> ConversationCreateResponse?
+    func createTurn(with conversationId: String, request: ConversationRequest, workspaceURL: URL?) async throws -> ConversationCreateResponse?
     func deleteTurn(with conversationId: String, turnId: String, workspaceURL: URL?) async throws
     func stopReceivingMessage(_ workDoneToken: String, workspaceURL: URL?) async throws
     func rateConversation(turnId: String, rating: ConversationRating, workspaceURL: URL?) async throws
     func copyCode(_ request: CopyCodeRequest, workspaceURL: URL?) async throws
     func templates() async throws -> [ChatTemplate]?
+    func modes() async throws -> [ConversationMode]?
     func models() async throws -> [CopilotModel]?
     func notifyDidChangeWatchedFiles(_ event: DidChangeWatchedFilesEvent, workspace: WorkspaceInfo) async throws
     func agents() async throws -> [ChatAgent]?
@@ -344,6 +346,7 @@ public struct ConversationRequest {
     public var modelProviderName: String?
     public var turns: [TurnSchema]
     public var agentMode: Bool = false
+    public var customChatModeId: String? = nil
     public var userLanguage: String? = nil
     public var turnId: String? = nil
 
@@ -360,6 +363,7 @@ public struct ConversationRequest {
         modelProviderName: String? = nil,
         turns: [TurnSchema] = [],
         agentMode: Bool = false,
+        customChatModeId: String? = nil,
         userLanguage: String?,
         turnId: String? = nil
     ) {
@@ -375,6 +379,7 @@ public struct ConversationRequest {
         self.modelProviderName = modelProviderName
         self.turns = turns
         self.agentMode = agentMode
+        self.customChatModeId = customChatModeId
         self.userLanguage = userLanguage
         self.turnId = turnId
     }
@@ -460,11 +465,13 @@ public struct AgentRound: Codable, Equatable {
     public let roundId: Int
     public var reply: String
     public var toolCalls: [AgentToolCall]?
+    public var subAgentRounds: [AgentRound]?
     
-    public init(roundId: Int, reply: String, toolCalls: [AgentToolCall]? = []) {
+    public init(roundId: Int, reply: String, toolCalls: [AgentToolCall]? = [], subAgentRounds: [AgentRound]? = []) {
         self.roundId = roundId
         self.reply = reply
         self.toolCalls = toolCalls
+        self.subAgentRounds = subAgentRounds
     }
 }
 

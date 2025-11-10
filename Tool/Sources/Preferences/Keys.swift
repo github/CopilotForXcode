@@ -312,6 +312,10 @@ public extension UserDefaultPreferenceKeys {
     var chatResponseLocale: PreferenceKey<String> {
         .init(defaultValue: "en", key: "ChatResponseLocale")
     }
+    
+    var agentMaxToolCallingLoop: PreferenceKey<Int> {
+        .init(defaultValue: 25, key: "AgentMaxToolCallingLoop")
+    }
 
     var globalCopilotInstructions: PreferenceKey<String> {
         .init(defaultValue: "", key: "GlobalCopilotInstructions")
@@ -327,6 +331,10 @@ public extension UserDefaultPreferenceKeys {
     
     var suppressRestoreCheckpointConfirmation: PreferenceKey<Bool> {
         .init(defaultValue: false, key: "SuppressRestoreCheckpointConfirmation")
+    }
+    
+    var enableSubagent: PreferenceKey<Bool> {
+        .init(defaultValue: true, key: "EnableSubagent")
     }
 }
 

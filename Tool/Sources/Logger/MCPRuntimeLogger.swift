@@ -7,7 +7,7 @@ public final class MCPRuntimeFileLogger {
         .month()
         .day()
         .timeZone(separator: .omitted).time(includingFractionalSeconds: true)
-    private static let implementation = MCPRuntimeFileLoggerImplementation()
+    private let implementation = MCPRuntimeFileLoggerImplementation()
     
     /// Converts a timestamp in milliseconds since the Unix epoch to a formatted date string.
     private func timestamp(timeStamp: Double) -> String {
@@ -22,10 +22,11 @@ public final class MCPRuntimeFileLogger {
         tool: String? = nil,
         time: Double
     ) {
-        let log = "[\(timestamp(timeStamp: time))] [\(level)] [\(server)\(tool == nil ? "" : "-\(tool!))")] \(message)\(message.hasSuffix("\n") ? "" : "\n")"
+        let toolSuffix = tool.map { "-\($0)" } ?? ""
+        let log = "[\(timestamp(timeStamp: time))] [\(level)] [\(server)\(toolSuffix)] \(message)\(message.hasSuffix("\n") ? "" : "\n")"
         
         Task {
-            await MCPRuntimeFileLogger.implementation.logToFile(logFileName: logFileName, log: log)
+            await self.implementation.logToFile(logFileName: logFileName, log: log)
         }
     }
 }

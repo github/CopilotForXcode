@@ -106,6 +106,7 @@ public enum RequestType: String, Equatable, Codable {
     case conversation, codeReview
 }
 
+public let HardCodedToolRoundExceedErrorMessage: String = "Oops, maximum tool attempts reached. You can update the max tool requests in settings."
 
 public struct ChatMessage: Equatable, Codable {
     public typealias ID = String
@@ -114,6 +115,8 @@ public struct ChatMessage: Equatable, Codable {
         case user
         case assistant
         case system
+        
+        public var isAssistant: Bool { self == .assistant }
     }
     
     public enum TurnStatus: String, Codable, Equatable {
@@ -157,6 +160,8 @@ public struct ChatMessage: Equatable, Codable {
     
     public var editAgentRounds: [AgentRound]
     
+    public var parentTurnId: String?
+    
     public var panelMessages: [CopilotShowMessageParams]
     
     public var codeReviewRound: CodeReviewRound?
@@ -169,6 +174,10 @@ public struct ChatMessage: Equatable, Codable {
     public var turnStatus: TurnStatus?
     
     public let requestType: RequestType
+    
+    // The model name used for the turn.
+    public var modelName: String?
+    public var billingMultiplier: Float?
     
     /// The timestamp of the message.
     public var createdAt: Date
@@ -188,11 +197,14 @@ public struct ChatMessage: Equatable, Codable {
         rating: ConversationRating = .unrated,
         steps: [ConversationProgressStep] = [],
         editAgentRounds: [AgentRound] = [],
+        parentTurnId: String? = nil,
         panelMessages: [CopilotShowMessageParams] = [],
         codeReviewRound: CodeReviewRound? = nil,
         fileEdits: [FileEdit] = [],
         turnStatus: TurnStatus? = nil,
         requestType: RequestType = .conversation,
+        modelName: String? = nil,
+        billingMultiplier: Float? = nil,
         createdAt: Date? = nil,
         updatedAt: Date? = nil
     ) {
@@ -209,11 +221,14 @@ public struct ChatMessage: Equatable, Codable {
         self.rating = rating
         self.steps = steps
         self.editAgentRounds = editAgentRounds
+        self.parentTurnId = parentTurnId
         self.panelMessages = panelMessages
         self.codeReviewRound = codeReviewRound
         self.fileEdits = fileEdits
         self.turnStatus = turnStatus
         self.requestType = requestType
+        self.modelName = modelName
+        self.billingMultiplier = billingMultiplier
 
         let now = Date.now
         self.createdAt = createdAt ?? now
@@ -248,10 +263,13 @@ public struct ChatMessage: Equatable, Codable {
         suggestedTitle: String? = nil,
         steps: [ConversationProgressStep] = [],
         editAgentRounds: [AgentRound] = [],
+        parentTurnId: String? = nil,
         codeReviewRound: CodeReviewRound? = nil,
         fileEdits: [FileEdit] = [],
         turnStatus: TurnStatus? = nil,
-        requestType: RequestType = .conversation
+        requestType: RequestType = .conversation,
+        modelName: String? = nil,
+        billingMultiplier: Float? = nil
     ) {
         self.init(
             id: id,
@@ -264,10 +282,13 @@ public struct ChatMessage: Equatable, Codable {
             suggestedTitle: suggestedTitle,
             steps: steps,
             editAgentRounds: editAgentRounds,
+            parentTurnId: parentTurnId,
             codeReviewRound: codeReviewRound,
             fileEdits: fileEdits,
             turnStatus: turnStatus,
-            requestType: requestType
+            requestType: requestType,
+            modelName: modelName,
+            billingMultiplier: billingMultiplier
         )
     }
     

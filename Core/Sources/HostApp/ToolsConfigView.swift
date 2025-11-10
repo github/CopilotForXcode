@@ -4,6 +4,7 @@ import ConversationServiceProvider
 import Foundation
 import GitHubCopilotService
 import Logger
+import Persist
 import SharedUIComponents
 import SwiftUI
 import SystemUtils
@@ -12,14 +13,19 @@ import Toast
 struct MCPConfigView: View {
     @State private var mcpConfig: String = ""
     @Environment(\.toast) var toast
+    @ObservedObject private var featureFlags = FeatureFlagManager.shared
+    @ObservedObject private var copilotPolicy = CopilotPolicyManager.shared
     @State private var configFilePath: String = mcpConfigFilePath
     @State private var isMonitoring: Bool = false
     @State private var lastModificationDate: Date? = nil
     @State private var fileMonitorTask: Task<Void, Error>? = nil
-    @State private var isMCPFFEnabled = false
-    @State private var isEditorPreviewEnabled = false
     @State private var selectedOption = ToolType.MCP
+    @State private var selectedMode: ConversationMode = .defaultAgent
     @Environment(\.colorScheme) var colorScheme
+    
+    private var isCustomAgentEnabled: Bool {
+        featureFlags.isEditorPreviewEnabled && copilotPolicy.isCustomAgentEnabled
+    }
 
     private static var lastSyncTimestamp: Date? = nil
     @State private var debounceTimer: Timer?
@@ -51,15 +57,18 @@ struct MCPConfigView: View {
                 Group {
                     if selectedOption == .MCP {
                         VStack(alignment: .leading, spacing: 8) {
-                            MCPIntroView(isMCPFFEnabled: $isMCPFFEnabled)
-                            if isMCPFFEnabled {
+                            MCPIntroView(isMCPFFEnabled: featureFlags.isMCPEnabled)
+                            if featureFlags.isMCPEnabled {
                                 MCPManualInstallView()
 
-                                if isEditorPreviewEnabled && ( SystemUtils.isPrereleaseBuild || SystemUtils.isDeveloperMode ) {
+                                if featureFlags.isEditorPreviewEnabled && ( SystemUtils.isPrereleaseBuild || SystemUtils.isDeveloperMode ) {
                                     MCPRegistryURLView()
                                 }
 
-                                MCPToolsListView()
+                                MCPToolsListView(
+                                    selectedMode: $selectedMode,
+                                    isCustomAgentEnabled: isCustomAgentEnabled
+                                )
 
                                 HStack {
                                     Spacer()
@@ -71,18 +80,14 @@ struct MCPConfigView: View {
                         }
                         .onAppear {
                             setupConfigFilePath()
-                            Task {
-                                await updateFeatureFlag()
-                                // Start monitoring if feature is already enabled on initial load
-                                if isMCPFFEnabled {
-                                    startMonitoringConfigFile()
-                                }
+                            if featureFlags.isMCPEnabled {
+                                startMonitoringConfigFile()
                             }
                         }
                         .onDisappear {
                             stopMonitoringConfigFile()
                         }
-                        .onChange(of: isMCPFFEnabled) { newMCPFFEnabled in
+                        .onChange(of: featureFlags.isMCPEnabled) { newMCPFFEnabled in
                             if newMCPFFEnabled {
                                 startMonitoringConfigFile()
                                 refreshConfiguration()
@@ -90,30 +95,20 @@ struct MCPConfigView: View {
                                 stopMonitoringConfigFile()
                             }
                         }
-                        .onReceive(DistributedNotificationCenter.default()
-                            .publisher(for: .gitHubCopilotFeatureFlagsDidChange)) { _ in
-                                Task {
-                                    await updateFeatureFlag()
-                                }
+                        .onChange(of: isCustomAgentEnabled) { isEnabled in
+                            if !isEnabled && !selectedMode.isDefaultAgent {
+                                selectedMode = .defaultAgent
+                            }
                         }
                     } else {
-                        BuiltInToolsListView()
+                        BuiltInToolsListView(
+                            selectedMode: $selectedMode,
+                            isCustomAgentEnabled: isCustomAgentEnabled
+                        )
                     }
                 }
                 .padding(.horizontal, 20)
             }
-        }
-    }
-
-    private func updateFeatureFlag() async {
-        do {
-            let service = try getService()
-            if let featureFlags = try await service.getCopilotFeatureFlags() {
-                isMCPFFEnabled = featureFlags.mcp
-                isEditorPreviewEnabled = featureFlags.editorPreviewFeatures
-            }
-        } catch {
-            Logger.client.error("Failed to get copilot feature flags: \(error)")
         }
     }
 
@@ -274,9 +269,4 @@ extension String {
         let right = deficit - left
         return String(repeating: pad, count: left) + self + String(repeating: pad, count: right)
     }
-}
-
-#Preview {
-    MCPConfigView()
-        .frame(width: 800, height: 600)
 }

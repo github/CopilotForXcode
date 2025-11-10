@@ -9,6 +9,7 @@ import XPCShared
 import HostAppActivator
 import XcodeInspector
 import GitHubCopilotViewModel
+import Workspace
 import ConversationServiceProvider
 
 public class XPCService: NSObject, XPCServiceProtocol {
@@ -331,22 +332,61 @@ public class XPCService: NSObject, XPCServiceProtocol {
         }
     }
 
-    public func updateMCPServerToolsStatus(tools: Data) {
+    public func updateMCPServerToolsStatus(
+        tools: Data,
+        chatAgentMode: Data?,
+        customChatModeId: Data?,
+        workspaceFolders: Data?
+    ) {
         // Decode the data
         let decoder = JSONDecoder()
         var collections: [UpdateMCPToolsStatusServerCollection] = []
+        var folders: [WorkspaceFolder]? = nil
+        var mode: ChatMode? = nil
+        var modeId: String? = nil
         do {
             collections = try decoder.decode([UpdateMCPToolsStatusServerCollection].self, from: tools)
+            if let workspaceFolders = workspaceFolders {
+                folders = try? decoder.decode([WorkspaceFolder].self, from: workspaceFolders)
+            }
+            if let chatAgentMode = chatAgentMode {
+                mode = try? decoder.decode(ChatMode.self, from: chatAgentMode)
+            }
+            if let customChatModeId = customChatModeId {
+                modeId = try? decoder.decode(String.self, from: customChatModeId)
+            }
             if collections.isEmpty {
                 return
             }
         } catch {
-            Logger.service.error("Failed to decode MCP server collections: \(error)")
+            Logger.service.error("Failed to decode MCP server collections or workspace folders: \(error)")
             return
         }
 
         Task { @MainActor in
-            await GitHubCopilotService.updateAllClsMCP(collections: collections)
+            // Only use auth service when ALL three parameters are provided.
+            if mode != nil, modeId != nil, folders != nil {
+                do {
+                    if let uri = folders!.first?.uri, let projectRootURL = URL(string: uri) {
+                        if let service = GitHubCopilotService.getProjectGithubCopilotService(
+                            for: projectRootURL
+                        ) {
+                            let params = UpdateMCPToolsStatusParams(
+                                chatModeKind: mode,
+                                customChatModeId: modeId,
+                                workspaceFolders: folders,
+                                servers: collections
+                            )
+                            try await service.updateMCPToolsStatus(params: params)
+                        }
+                    }
+                } catch {
+                    Logger.service.error("Failed to update MCP tool status via auth service: \(error)")
+                }
+            } else {
+                // Fallback to legacy/global update when context not fully provided.
+                await GitHubCopilotService.updateAllClsMCP(collections: collections)
+            }
         }
     }
     
@@ -424,26 +464,68 @@ public class XPCService: NSObject, XPCServiceProtocol {
         }
     }
     
-    public func updateToolsStatus(tools: Data, withReply reply: @escaping (Data?) -> Void) {
+    public func updateToolsStatus(
+        tools: Data,
+        chatAgentMode: Data?,
+        customChatModeId: Data?,
+        workspaceFolders: Data?,
+        withReply reply: @escaping (Data?) -> Void
+    ) {
         // Decode the data
         let decoder = JSONDecoder()
         var toolStatusUpdates: [ToolStatusUpdate] = []
+        var folders: [WorkspaceFolder]? = nil
+        var mode: ChatMode? = nil
+        var modeId: String? = nil
         do {
             toolStatusUpdates = try decoder.decode([ToolStatusUpdate].self, from: tools)
+            if let workspaceFolders = workspaceFolders {
+                folders = try? decoder.decode([WorkspaceFolder].self, from: workspaceFolders)
+            }
+            if let chatAgentMode = chatAgentMode {
+                mode = try? decoder.decode(ChatMode.self, from: chatAgentMode)
+            }
+            if let customChatModeId = customChatModeId {
+                modeId = try? decoder.decode(String.self, from: customChatModeId)
+            }
             if toolStatusUpdates.isEmpty {
                 let emptyData = try JSONEncoder().encode([LanguageModelTool]())
                 reply(emptyData)
                 return
             }
         } catch {
-            Logger.service.error("Failed to decode built-in tools: \(error)")
+            Logger.service.error("Failed to decode built-in tools or workspace folders: \(error)")
             reply(nil)
             return
         }
 
         Task { @MainActor in
-            let updatedTools = await GitHubCopilotService.updateAllCLSTools(tools: toolStatusUpdates)
-            
+            var updatedTools: [LanguageModelTool] = []
+            if mode != nil, modeId != nil, folders != nil {
+                // Use auth service path when all three context parameters are present.
+                do {
+                    if let uri = folders!.first?.uri, let projectRootURL = URL(string: uri) {
+                        if let service = GitHubCopilotService.getProjectGithubCopilotService(
+                            for: projectRootURL
+                        ) {
+                            updatedTools = try await service.updateToolsStatus(
+                                params: .init(
+                                    chatmodeKind: mode,
+                                    customChatModeId: modeId,
+                                    workspaceFolders: folders,
+                                    tools: toolStatusUpdates
+                                )
+                            )
+                        }
+                    }
+                } catch {
+                    Logger.service.error("Failed contextual tools update: \(error)")
+                    updatedTools = await GitHubCopilotService.updateAllCLSTools(tools: toolStatusUpdates)
+                }
+            } else {
+                // Fallback without contextual parameters.
+                updatedTools = await GitHubCopilotService.updateAllCLSTools(tools: toolStatusUpdates)
+            }
             // Encode and return the updated tools
             do {
                 let data = try JSONEncoder().encode(updatedTools)
@@ -462,6 +544,33 @@ public class XPCService: NSObject, XPCServiceProtocol {
         let featureFlags = FeatureFlagNotifierImpl.shared.featureFlags
         let data = try? JSONEncoder().encode(featureFlags)
         reply(data)
+    }
+    
+    public func getCopilotPolicy(
+        withReply reply: @escaping (Data?) -> Void
+    ) {
+        let copilotPolicy = CopilotPolicyNotifierImpl.shared.copilotPolicy
+        let data = try? JSONEncoder().encode(copilotPolicy)
+        reply(data)
+    }
+    
+    public func getModes(workspaceFolders: Data?, withReply reply: @escaping (Data?, Error?) -> Void) {
+        Task { @MainActor in
+            do {
+                let service = try GitHubCopilotViewModel.shared.getGitHubCopilotAuthService()
+                var folders: [WorkspaceFolder]? = nil
+                if let workspaceFolders = workspaceFolders {
+                    folders = try JSONDecoder().decode([WorkspaceFolder].self, from: workspaceFolders)
+                }
+                
+                let modes = try await service.modes(workspaceFolders: folders)
+                let data = try JSONEncoder().encode(modes)
+                reply(data, nil)
+            } catch {
+                Logger.service.error("Failed to get modes: \(error.localizedDescription)")
+                reply(nil, NSError.from(error))
+            }
+        }
     }
     
     // MARK: - Auth

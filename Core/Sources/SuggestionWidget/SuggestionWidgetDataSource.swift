@@ -32,6 +32,10 @@ struct MockWidgetDataSource: SuggestionWidgetDataSource {
                 let z = x + y
             }
             """,
+            sourceSnapshot: .init(
+                lines: [""],
+                cursorPosition: .init(line: 0, character: 0)
+            ),
             range: .init(startPair: (1, 0), endPair: (2, 0)),
             language: "swift"
         )

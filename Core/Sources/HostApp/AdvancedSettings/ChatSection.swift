@@ -1,15 +1,20 @@
+import AppKitExtension
 import Client
 import ComposableArchitecture
+import ConversationServiceProvider
 import SwiftUI
 import Toast
 import XcodeInspector
 import SharedUIComponents
 import Logger
+import SystemUtils
 
 struct ChatSection: View {
     @AppStorage(\.autoAttachChatToXcode) var autoAttachChatToXcode
     @AppStorage(\.enableFixError) var enableFixError
-    @State private var isEditorPreviewEnabled: Bool = false
+    @AppStorage(\.enableSubagent) var enableSubagent
+    @ObservedObject private var featureFlags = FeatureFlagManager.shared
+    @ObservedObject private var copilotPolicy = CopilotPolicyManager.shared
 
     var body: some View {
         SettingsSection(title: "Chat Settings") {
@@ -25,12 +30,41 @@ struct ChatSection: View {
 
             Divider()
 
-            if isEditorPreviewEnabled {
+            if featureFlags.isEditorPreviewEnabled {
                 // Custom Prompts - .github/prompts/*.prompt.md
                 PromptFileSetting(promptType: .prompt)
                     .padding(SettingsToggle.defaultPadding)
 
                 Divider()
+
+                if featureFlags.isAgentModeEnabled && copilotPolicy.isCustomAgentEnabled {
+                    // Custom Agents - .github/agents/*.agent.md
+                    AgentFileSetting(promptType: .agent)
+                        .padding(SettingsToggle.defaultPadding)
+
+                    Divider()
+
+                    // SubAgent toggle
+                    SettingsToggle(
+                        title: "Automatically run subagents for specialized tasks",
+                        subtitle: "Quit and restart GitHub Copilot for Xcode to apply the change",
+                        isOn: Binding(
+                            get: { enableSubagent && copilotPolicy.isSubagentEnabled },
+                            set: { if copilotPolicy.isSubagentEnabled { enableSubagent = $0 } }
+                        ),
+                        badge: copilotPolicy.isSubagentEnabled 
+                            ? nil 
+                            : BadgeItem(
+                                text: "Disabled by organization policy",
+                                level: .warning,
+                                icon: "exclamationmark.triangle.fill",
+                                tooltip: "Subagents are disabled by your organization's policy. Please contact your administrator to enable them."
+                            )
+                    )
+                    .disabled(!copilotPolicy.isSubagentEnabled)
+
+                    Divider()
+                }
             }
             
             // Auto Attach toggle
@@ -58,28 +92,14 @@ struct ChatSection: View {
             // Font Size
             FontSizeSetting()
                 .padding(SettingsToggle.defaultPadding)
-        }
-        .onAppear {
-            Task {
-                await updateEditorPreviewFeatureFlag()
+            
+            if featureFlags.isAgentModeEnabled {
+                Divider()
+                
+                // Agent Max Tool Calling Requests
+                AgentMaxToolCallLoopSetting()
+                    .padding(SettingsToggle.defaultPadding)
             }
-        }
-        .onReceive(DistributedNotificationCenter.default()
-            .publisher(for: .gitHubCopilotFeatureFlagsDidChange)) { _ in
-                Task {
-                    await updateEditorPreviewFeatureFlag()
-                }
-            }
-    }
-    
-    private func updateEditorPreviewFeatureFlag() async {
-        do {
-            let service = try getService()
-            if let featureFlags = try await service.getCopilotFeatureFlags() {
-                isEditorPreviewEnabled = featureFlags.editorPreviewFeatures
-            }
-        } catch {
-            Logger.client.error("Failed to get copilot feature flags: \(error)")
         }
     }
 }
@@ -260,6 +280,67 @@ struct FontSizeSetting: View {
     }
 }
 
+struct AgentMaxToolCallLoopSetting: View {
+    @AppStorage(\.agentMaxToolCallingLoop) var agentMaxToolCallingLoop
+    @State private var numberInput: String = ""
+    @State private var debounceTimer: Timer?
+    
+    private static let debounceDelay: TimeInterval = 0.5
+    
+    var body: some View {
+        WithPerceptionTracking {
+            HStack {
+                VStack(alignment: .leading) {
+                    Text("Agent Max Requests")
+                        .font(.body)
+                    Text("Sets the maximum number of tool call requests Copilot can make in a single agent turn.")
+                        .font(.footnote)
+                }
+                
+                Spacer()
+                
+                TextField("", text: $numberInput)
+                    .textFieldStyle(.roundedBorder)
+                    .frame(minWidth: 40, maxWidth: 120)
+                    .fixedSize(horizontal: true, vertical: false)
+                    .onChange(of: numberInput) { newValue in
+                        if newValue.isEmpty { return }
+                        
+                        guard let number = Int(newValue.filter { $0.isNumber }), number > 0 else {
+                            numberInput = ""
+                            return
+                        }
+                        
+                        numberInput = "\(number)"
+                        
+                        debounceTimer?.invalidate()
+                        debounceTimer = Timer.scheduledTimer(
+                            withTimeInterval: Self.debounceDelay,
+                            repeats: false
+                        ) { _ in
+                            agentMaxToolCallingLoop = number
+                            DistributedNotificationCenter
+                                .default()
+                                .post(name: .githubCopilotAgentMaxToolCallingLoopDidChange, object: nil)
+                        }
+                    }
+            }
+            .onAppear {
+                numberInput = "\(agentMaxToolCallingLoop)"
+            }
+            .onDisappear {
+                // Flush before invalidating
+                if let timer = debounceTimer, timer.isValid {
+                    timer.fire()
+                }
+                
+                debounceTimer?.invalidate()
+                debounceTimer = nil
+            }
+        }
+    }
+}
+
 struct CopilotInstructionSetting: View {
     @State var isGlobalInstructionsViewOpen = false
     @Environment(\.toast) var toast
@@ -351,8 +432,15 @@ struct PromptFileSetting: View {
             }
             .sheet(isPresented: $isCreateSheetPresented) {
                 CreateCustomCopilotFileView(
-                    isOpen: $isCreateSheetPresented,
-                    promptType: promptType
+                    promptType: promptType,
+                    editorPluginVersion: SystemUtils.editorPluginVersionString,
+                    getCurrentProjectURL: { await getCurrentProjectURL() },
+                    onSuccess: { message in
+                        toast(message, .info)
+                    },
+                    onError: { message in
+                        toast(message, .error)
+                    }
                 )
             }
         }
@@ -370,6 +458,105 @@ struct PromptFileSetting: View {
             do {
                 try ensureDirectoryExists(at: directory)
                 NSWorkspace.shared.open(directory)
+            } catch {
+                toast("Failed to create \(promptType.directoryName) directory: \(error)", .error)
+            }
+        }
+    }
+}
+
+struct AgentFileSetting: View {
+    let promptType: PromptType
+    @State private var isCreateSheetPresented = false
+    @Environment(\.toast) var toast
+
+    var body: some View {
+        WithPerceptionTracking {
+            HStack {
+                VStack(alignment: .leading) {
+                    Text(promptType.settingTitle)
+                        .font(.body)
+                    Text(
+                        (try? AttributedString(markdown: promptType.description)) ?? AttributedString(
+                            promptType.description
+                        )
+                    )
+                    .font(.footnote)
+                }
+
+                Spacer()
+
+                Button("Create") {
+                    isCreateSheetPresented = true
+                }
+
+                Button("Browse \(promptType.displayName)s") {
+                    openDirectory()
+                }
+            }
+            .sheet(isPresented: $isCreateSheetPresented) {
+                CreateCustomCopilotFileView(
+                    promptType: promptType,
+                    editorPluginVersion: SystemUtils.editorPluginVersionString,
+                    getCurrentProjectURL: { await getCurrentProjectURL() },
+                    onSuccess: { message in
+                        toast(message, .info)
+                    },
+                    onError: { message in
+                        toast(message, .error)
+                    }
+                )
+            }
+        }
+    }
+
+    private func openDirectory() {
+        Task {
+            guard let projectURL = await getCurrentProjectURL() else {
+                toast("No active workspace found", .error)
+                return
+            }
+
+            let directory = promptType.getDirectoryPath(projectURL: projectURL)
+
+            do {
+                try ensureDirectoryExists(at: directory)
+
+                // Open file picker for .agent.md files
+                await MainActor.run {
+                    let panel = NSOpenPanel()
+                    panel.allowedContentTypes = [.init(filenameExtension: "agent.md") ?? .plainText]
+                    panel.allowsMultipleSelection = false
+                    panel.canChooseFiles = true
+                    panel.canChooseDirectories = false
+                    panel.level = .modalPanel
+                    panel.directoryURL = directory
+                    panel.message = "Select an existing agent file"
+                    panel.prompt = "Select"
+                    panel.showsHiddenFiles = false
+
+                    panel.allowsOtherFileTypes = false
+                    panel.isExtensionHidden = false
+
+                    panel.begin { response in
+                        if response == .OK, let selectedURL = panel.url {
+                            // If the file doesn't exist, create it
+                            if !FileManager.default.fileExists(atPath: selectedURL.path) {
+                                do {
+                                    // Create empty agent file with basic structure
+                                    let template = promptType.defaultTemplate
+                                    try template.write(to: selectedURL, atomically: true, encoding: .utf8)
+                                } catch {
+                                    toast("Failed to create agent file: \(error)", .error)
+                                    return
+                                }
+                            }
+
+                            // Open the file in Xcode
+                            NSWorkspace.openFileInXcode(fileURL: selectedURL)
+                        }
+                    }
+                }
             } catch {
                 toast("Failed to create \(promptType.directoryName) directory: \(error)", .error)
             }

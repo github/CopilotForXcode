@@ -13,6 +13,8 @@ public extension Notification.Name {
         .Name("com.github.CopilotForXcode.OpenBYOKSettingsWindowRequest")
     static let openAdvancedSettingsWindowRequest = Notification
         .Name("com.github.CopilotForXcode.OpenAdvancedSettingsWindowRequest")
+    static let selectedAgentSubModeDidChange = Notification
+        .Name("com.github.CopilotForXcode.SelectedAgentSubModeDidChange")
 }
 
 public enum GitHubCopilotForXcodeSettingsLaunchError: Error, LocalizedError {
@@ -58,7 +60,7 @@ public func launchHostAppSettings() throws {
     }
 }
 
-public func launchHostAppToolsSettings() throws {
+public func launchHostAppToolsSettings(currentAgentSubMode: String) throws {
     // Try the AppleScript approach first, but only if app is already running
     if let hostApp = getRunningHostApp() {
         let activated = hostApp.activate(options: [.activateIgnoringOtherApps])
@@ -70,6 +72,15 @@ public func launchHostAppToolsSettings() throws {
             .openToolsSettingsWindowRequest,
             object: nil
         )
+        
+        // Notify settings app of current agent submode
+        DistributedNotificationCenter.default().postNotificationName(
+            .selectedAgentSubModeDidChange,
+            object: nil,
+            userInfo: ["agentSubMode": currentAgentSubMode],
+            options: .deliverImmediately
+        )
+        
         Logger.ui.info("\(hostAppName()) MCP settings notification sent after activation")
         return
     } else {
@@ -185,3 +196,5 @@ func hostAppName() -> String {
     return Bundle.main.object(forInfoDictionaryKey: "HOST_APP_NAME") as? String
         ?? "GitHub Copilot for Xcode"
 }
+
+public let SELECTED_AGENT_SUBMODE_KEY = "selectedAgentSubMode"

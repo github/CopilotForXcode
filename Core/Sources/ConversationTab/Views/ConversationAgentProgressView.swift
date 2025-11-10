@@ -19,10 +19,39 @@ struct ProgressAgentRound: View {
                         if let toolCalls = round.toolCalls, !toolCalls.isEmpty {
                             ProgressToolCalls(tools: toolCalls, chat: chat)
                         }
+                        if let subAgentRounds = round.subAgentRounds, !subAgentRounds.isEmpty {
+                            SubAgentRounds(rounds: subAgentRounds, chat: chat)
+                        }
                     }
                 }
             }
             .foregroundStyle(.secondary)
+        }
+    }
+}
+
+struct SubAgentRounds: View {
+    let rounds: [AgentRound]
+    let chat: StoreOf<Chat>
+    
+    @Environment(\.colorScheme) var colorScheme
+    
+    var body: some View {
+        WithPerceptionTracking {
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(rounds, id: \.roundId) { round in
+                    VStack(alignment: .leading, spacing: 8) {
+                        ThemedMarkdownText(text: round.reply, chat: chat)
+                        if let toolCalls = round.toolCalls, !toolCalls.isEmpty {
+                            ProgressToolCalls(tools: toolCalls, chat: chat)
+                        }
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .scaledPadding(.horizontal, 16)
+            .scaledPadding(.vertical, 12)
+            .background(RoundedRectangle(cornerRadius: 8).fill(Color("SubagentTurnBackground")))
         }
     }
 }
@@ -200,6 +229,7 @@ struct ToolStatusItemView: View {
                 
                 Spacer()
             }
+            .help(tool.progressMessage ?? "")
         }
     }
 }

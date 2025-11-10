@@ -1,5 +1,6 @@
 import GitHubCopilotService
 import SwiftUI
+import SharedUIComponents
 
 struct MCPRegistryURLSheet: View {
     @AppStorage(\.mcpRegistryURL) private var mcpRegistryURL

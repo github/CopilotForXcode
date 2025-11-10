@@ -4,6 +4,10 @@ import Foundation
 
 @Reducer
 public struct PanelFeature {
+    public enum PanelType {
+        case suggestion, nes, agentConfiguration
+    }
+    
     @ObservableState
     public struct State: Equatable {
         public var content: SharedPanelFeature.Content {
@@ -32,6 +36,10 @@ public struct PanelFeature {
         // MARK: NESSuggestionPanel
         
         public var nesSuggestionPanelState = NESSuggestionPanelFeature.State()
+        
+        // MARK: SubAgent
+        
+        public var agentConfigurationWidgetState = AgentConfigurationWidgetFeature.State()
 
         var warningMessage: String?
         var warningURL: String?
@@ -51,15 +59,14 @@ public struct PanelFeature {
         case discardNESSuggestion
         case removeDisplayedContent
         case switchToAnotherEditorAndUpdateContent
-        case hidePanel
-        case showPanel
-        case hideNESPanel
-        case showNESPanel
+        case hidePanel(PanelType)
+        case showPanel(PanelType)
         case onRealtimeNESToggleChanged(Bool)
 
         case sharedPanel(SharedPanelFeature.Action)
         case suggestionPanel(SuggestionPanelFeature.Action)
         case nesSuggestionPanel(NESSuggestionPanelFeature.Action)
+        case agentConfigurationWidget(AgentConfigurationWidgetFeature.Action)
 
         case presentWarning(message: String, url: String?)
         case dismissWarning
@@ -81,6 +88,10 @@ public struct PanelFeature {
         
         Scope(state: \.nesSuggestionPanelState, action: \.nesSuggestionPanel) {
             NESSuggestionPanelFeature()
+        }
+        
+        Scope(state: \.agentConfigurationWidgetState, action: \.agentConfigurationWidget) {
+            AgentConfigurationWidgetFeature()
         }
 
         Reduce { state, action in
@@ -168,22 +179,30 @@ public struct PanelFeature {
                         )
                     ))
                 }
-            case .hidePanel:
-                state.suggestionPanelState.isPanelDisplayed = false
+            case .hidePanel(let panelType):
+                switch panelType {
+                case .suggestion:
+                    state.suggestionPanelState.isPanelDisplayed = false
+                case .nes:
+                    state.nesSuggestionPanelState.isPanelDisplayed = false
+                case .agentConfiguration:
+                    state.agentConfigurationWidgetState.isPanelDisplayed = false
+                }
                 return .none
-            case .showPanel:
-                state.suggestionPanelState.isPanelDisplayed = true
-                return .none
-            case .hideNESPanel:
-                state.nesSuggestionPanelState.isPanelDisplayed = false
-                return .none
-            case .showNESPanel:
-                state.nesSuggestionPanelState.isPanelDisplayed = true
+            case .showPanel(let panelType):
+                switch panelType {
+                case .suggestion:
+                    state.suggestionPanelState.isPanelDisplayed = true
+                case .nes:
+                    state.nesSuggestionPanelState.isPanelDisplayed = true
+                case .agentConfiguration:
+                    state.agentConfigurationWidgetState.isPanelDisplayed = true
+                }
                 return .none
             case let .onRealtimeNESToggleChanged(isOn):
                 if !isOn {
                     return .run { send in
-                        await send(.hideNESPanel)
+                        await send(.hidePanel(.nes))
                         await send(.discardNESSuggestion)
                     }
                 }
@@ -216,6 +235,9 @@ public struct PanelFeature {
                 return .none
                 
             case .nesSuggestionPanel:
+                return .none
+                
+            case .agentConfigurationWidget:
                 return .none
 
             case .presentWarning(let message, let url):

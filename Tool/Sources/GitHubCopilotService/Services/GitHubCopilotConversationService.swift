@@ -40,8 +40,10 @@ public final class GitHubCopilotConversationService: ConversationServiceType {
         return message
     }
 
-    public func createConversation(_ request: ConversationRequest, workspace: WorkspaceInfo) async throws {
-        guard let service = await serviceLocator.getService(from: workspace) else { return }
+    public func createConversation(
+        _ request: ConversationRequest, workspace: WorkspaceInfo
+    ) async throws -> ConversationCreateResponse? {
+        guard let service = await serviceLocator.getService(from: workspace) else { return nil }
         
         let message = getMessageContent(request)
         
@@ -57,11 +59,14 @@ public final class GitHubCopilotConversationService: ConversationServiceType {
                                                     modelProviderName: request.modelProviderName,
                                                     turns: request.turns,
                                                     agentMode: request.agentMode,
+                                                    customChatModeId: request.customChatModeId,
                                                     userLanguage: request.userLanguage)
     }
     
-    public func createTurn(with conversationId: String, request: ConversationRequest, workspace: WorkspaceInfo) async throws {
-        guard let service = await serviceLocator.getService(from: workspace) else { return }
+    public func createTurn(
+        with conversationId: String, request: ConversationRequest, workspace: WorkspaceInfo
+    ) async throws -> ConversationCreateResponse? {
+        guard let service = await serviceLocator.getService(from: workspace) else { return nil }
         
         let message = getMessageContent(request)
         
@@ -76,7 +81,8 @@ public final class GitHubCopilotConversationService: ConversationServiceType {
                                             modelProviderName: request.modelProviderName,
                                             workspaceFolder: workspace.projectURL.absoluteString,
                                             workspaceFolders: getWorkspaceFolders(workspace: workspace),
-                                            agentMode: request.agentMode)
+                                            agentMode: request.agentMode,
+                                            customChatModeId: request.customChatModeId)
     }
     
     public func deleteTurn(with conversationId: String, turnId: String, workspace: WorkspaceInfo) async throws {
@@ -106,6 +112,16 @@ public final class GitHubCopilotConversationService: ConversationServiceType {
         let isPreviewEnabled = FeatureFlagNotifierImpl.shared.featureFlags.editorPreviewFeatures
         let workspaceFolders = isPreviewEnabled ? getWorkspaceFolders(workspace: workspace) : nil
         return try await service.templates(workspaceFolders: workspaceFolders)
+    }
+    
+    public func modes(workspace: WorkspaceInfo) async throws -> [ConversationMode]? {
+        guard let service = await serviceLocator.getService(from: workspace) else { return nil }
+        let isPreviewEnabled = FeatureFlagNotifierImpl.shared.featureFlags.editorPreviewFeatures
+        let isCustomAgentEnabled = CopilotPolicyNotifierImpl.shared.copilotPolicy.customAgentEnabled
+        let workspaceFolders = isPreviewEnabled && isCustomAgentEnabled ? getWorkspaceFolders(
+            workspace: workspace
+        ) : nil
+        return try await service.modes(workspaceFolders: workspaceFolders)
     }
 
     public func models(workspace: WorkspaceInfo) async throws -> [CopilotModel]? {

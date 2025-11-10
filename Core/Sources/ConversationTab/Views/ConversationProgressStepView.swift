@@ -46,12 +46,11 @@ struct StatusItemView: View {
         .scaledFont(size: chatFontSize - 1, weight: .medium)
     }
     
-    var statusTitle: some View {
-        var title = step.title
+    var statusTitleText: String {
         if step.id == ProjectContextSkill.ProgressID && step.status == .failed {
-            title = step.error?.message ?? step.title
+            return step.error?.message ?? step.title
         }
-        return Text(title)
+        return step.title
     }
     
     var body: some View {
@@ -60,12 +59,13 @@ struct StatusItemView: View {
                 statusIcon
                     .scaledFrame(width: 16, height: 16)
                 
-                statusTitle
+                Text(statusTitleText)
                     .scaledFont(size: chatFontSize - 1)
                     .lineLimit(1)
                 
                 Spacer()
             }
+            .help(statusTitleText)
         }
     }
 }

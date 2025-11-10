@@ -156,9 +156,20 @@ public struct UpdateMCPToolsStatusServerCollection: Codable, Hashable {
 }
 
 public struct UpdateMCPToolsStatusParams: Codable, Hashable {
+    public var chatModeKind: ChatMode?
+    public var customChatModeId: String?
+    public var workspaceFolders: [WorkspaceFolder]?
     public var servers: [UpdateMCPToolsStatusServerCollection]
-    
-    public init(servers: [UpdateMCPToolsStatusServerCollection]) {
+
+    public init(
+        chatModeKind: ChatMode? = nil,
+        customChatModeId: String? = nil,
+        workspaceFolders: [WorkspaceFolder]? = nil,
+        servers: [UpdateMCPToolsStatusServerCollection]
+    ) {
+        self.chatModeKind = chatModeKind
+        self.customChatModeId = customChatModeId
+        self.workspaceFolders = workspaceFolders
         self.servers = servers
     }
 }

@@ -93,6 +93,7 @@ let package = Package(
                 .product(name: "ChatAPIService", package: "Tool"),
                 .product(name: "Preferences", package: "Tool"),
                 .product(name: "AXHelper", package: "Tool"),
+                .product(name: "WorkspaceSuggestionService", package: "Tool"),
                 .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
                 .product(name: "Dependencies", package: "swift-dependencies"),

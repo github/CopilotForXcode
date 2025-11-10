@@ -1,9 +1,9 @@
+import ConversationServiceProvider
 import Foundation
 import JSONRPC
 import LanguageServerProtocol
 import Status
 import SuggestionBasic
-import ConversationServiceProvider
 
 struct GitHubCopilotDoc: Codable {
     var source: String
@@ -80,7 +80,7 @@ public func editorConfiguration(includeMCP: Bool) -> JSONValue {
 
     var authProvider: JSONValue? {
         let enterpriseURI = UserDefaults.shared.value(for: \.gitHubCopilotEnterpriseURI)
-        return .hash([ "uri": .string(enterpriseURI) ])
+        return .hash(["uri": .string(enterpriseURI)])
     }
 
     var mcp: JSONValue? {
@@ -91,6 +91,15 @@ public func editorConfiguration(includeMCP: Bool) -> JSONValue {
     var customInstructions: JSONValue? {
         let instructions = UserDefaults.shared.value(for: \.globalCopilotInstructions)
         return .string(instructions)
+    }
+    
+    var agent: JSONValue? {
+        var d: [String: JSONValue] = [:]
+        
+        let agentMaxToolCallingLoop = Double(UserDefaults.shared.value(for: \.agentMaxToolCallingLoop))
+        d["maxToolCallingLoop"] = .number(agentMaxToolCallingLoop)
+        
+        return .hash(d)
     }
 
     var d: [String: JSONValue] = [:]
@@ -103,6 +112,7 @@ public func editorConfiguration(includeMCP: Bool) -> JSONValue {
             copilot["mcp"] = mcp
         }
         copilot["globalCopilotInstructions"] = customInstructions
+        copilot["agent"] = agent
         github["copilot"] = .hash(copilot)
         d["github"] = .hash(github)
     }
@@ -135,7 +145,7 @@ enum GitHubCopilotRequest {
             .custom("checkStatus", .hash([:]), ClientRequest.NullHandler)
         }
     }
-    
+
     struct CheckQuota: GitHubCopilotRequestType {
         typealias Response = GitHubCopilotQuotaInfo
 
@@ -342,7 +352,7 @@ enum GitHubCopilotRequest {
     // MARK: Conversation
 
     struct CreateConversation: GitHubCopilotRequestType {
-        struct Response: Codable {}
+        typealias Response = ConversationCreateResponse
 
         var params: ConversationCreateParams
 
@@ -356,7 +366,7 @@ enum GitHubCopilotRequest {
     // MARK: Conversation turn
 
     struct CreateTurn: GitHubCopilotRequestType {
-        struct Response: Codable {}
+        typealias Response = ConversationCreateResponse
 
         var params: TurnCreateParams
 
@@ -366,12 +376,12 @@ enum GitHubCopilotRequest {
             return .custom("conversation/turn", dict, ClientRequest.NullHandler)
         }
     }
-    
+
     struct DeleteTurn: GitHubCopilotRequestType {
         struct Response: Codable {}
-        
+
         var params: TurnDeleteParams
-        
+
         var request: ClientRequest {
             let data = (try? JSONEncoder().encode(params)) ?? Data()
             let dict = (try? JSONDecoder().decode(JSONValue.self, from: data)) ?? .hash([:])
@@ -392,12 +402,12 @@ enum GitHubCopilotRequest {
             return .custom("conversation/rating", dict, ClientRequest.NullHandler)
         }
     }
-    
+
     // MARK: Conversation templates
 
     struct GetTemplates: GitHubCopilotRequestType {
         typealias Response = Array<ChatTemplate>
-        
+
         var params: ConversationTemplatesParams
 
         var request: ClientRequest {
@@ -407,6 +417,22 @@ enum GitHubCopilotRequest {
         }
     }
 
+    // MARK: Conversation Modes
+
+    struct GetModes: GitHubCopilotRequestType {
+        typealias Response = Array<ConversationMode>
+
+        var params: ConversationModesParams
+
+        var request: ClientRequest {
+            let data = (try? JSONEncoder().encode(params)) ?? Data()
+            let dict = (try? JSONDecoder().decode(JSONValue.self, from: data)) ?? .hash([:])
+            return .custom("conversation/modes", dict, ClientRequest.NullHandler)
+        }
+    }
+
+    // MARK: Copilot Models
+
     struct CopilotModels: GitHubCopilotRequestType {
         typealias Response = Array<CopilotModel>
 
@@ -414,12 +440,12 @@ enum GitHubCopilotRequest {
             .custom("copilot/models", .hash([:]), ClientRequest.NullHandler)
         }
     }
-    
+
     // MARK: MCP Tools
-    
+
     struct UpdatedMCPToolsStatus: GitHubCopilotRequestType {
         typealias Response = Array<MCPServerToolsCollection>
-        
+
         var params: UpdateMCPToolsStatusParams
 
         var request: ClientRequest {
@@ -428,43 +454,43 @@ enum GitHubCopilotRequest {
             return .custom("mcp/updateToolsStatus", dict, ClientRequest.NullHandler)
         }
     }
-    
+
     // MARK: MCP Registry
-    
+
     struct MCPRegistryListServers: GitHubCopilotRequestType {
         typealias Response = MCPRegistryServerList
-        
+
         var params: MCPRegistryListServersParams
-        
+
         var request: ClientRequest {
             let data = (try? JSONEncoder().encode(params)) ?? Data()
             let dict = (try? JSONDecoder().decode(JSONValue.self, from: data)) ?? .hash([:])
             return .custom("mcp/registry/listServers", dict, ClientRequest.NullHandler)
         }
     }
-    
+
     struct MCPRegistryGetServer: GitHubCopilotRequestType {
         typealias Response = MCPRegistryServerDetail
-        
+
         var params: MCPRegistryGetServerParams
-        
+
         var request: ClientRequest {
             let data = (try? JSONEncoder().encode(params)) ?? Data()
             let dict = (try? JSONDecoder().decode(JSONValue.self, from: data)) ?? .hash([:])
             return .custom("mcp/registry/getServer", dict, ClientRequest.NullHandler)
         }
     }
-    
+
     struct MCPRegistryGetAllowlist: GitHubCopilotRequestType {
         typealias Response = GetMCPRegistryAllowlistResult
-        
+
         var request: ClientRequest {
             .custom("mcp/registry/getAllowlist", .hash([:]), ClientRequest.NullHandler)
         }
     }
-    
+
     // MARK: - Conversation Agents
-    
+
     struct GetAgents: GitHubCopilotRequestType {
         typealias Response = Array<ChatAgent>
 
@@ -472,14 +498,14 @@ enum GitHubCopilotRequest {
             .custom("conversation/agents", .hash([:]), ClientRequest.NullHandler)
         }
     }
-    
+
     // MARK: - Code Review
-    
+
     struct ReviewChanges: GitHubCopilotRequestType {
         typealias Response = CodeReviewResult
-        
+
         var params: ReviewChangesParams
-        
+
         var request: ClientRequest {
             let data = (try? JSONEncoder().encode(params)) ?? Data()
             let dict = (try? JSONDecoder().decode(JSONValue.self, from: data)) ?? .hash([:])
@@ -498,7 +524,7 @@ enum GitHubCopilotRequest {
             return .custom("conversation/registerTools", dict, ClientRequest.NullHandler)
         }
     }
-    
+
     struct UpdateToolsStatus: GitHubCopilotRequestType {
         typealias Response = Array<LanguageModelTool>
 
@@ -524,7 +550,7 @@ enum GitHubCopilotRequest {
             return .custom("conversation/copyCode", dict, ClientRequest.NullHandler)
         }
     }
-    
+
     // MARK: Telemetry
 
     struct TelemetryException: GitHubCopilotRequestType {
@@ -538,11 +564,12 @@ enum GitHubCopilotRequest {
             return .custom("telemetry/exception", dict, ClientRequest.NullHandler)
         }
     }
-    
+
     // MARK: BYOK
+
     struct BYOKSaveModel: GitHubCopilotRequestType {
         typealias Response = BYOKSaveModelResponse
-        
+
         var params: BYOKSaveModelParams
 
         var request: ClientRequest {
@@ -551,10 +578,10 @@ enum GitHubCopilotRequest {
             return .custom("copilot/byok/saveModel", dict, ClientRequest.NullHandler)
         }
     }
-    
+
     struct BYOKDeleteModel: GitHubCopilotRequestType {
         typealias Response = BYOKDeleteModelResponse
-        
+
         var params: BYOKDeleteModelParams
 
         var request: ClientRequest {
@@ -563,10 +590,10 @@ enum GitHubCopilotRequest {
             return .custom("copilot/byok/deleteModel", dict, ClientRequest.NullHandler)
         }
     }
-    
+
     struct BYOKListModels: GitHubCopilotRequestType {
         typealias Response = BYOKListModelsResponse
-        
+
         var params: BYOKListModelsParams
 
         var request: ClientRequest {
@@ -575,10 +602,10 @@ enum GitHubCopilotRequest {
             return .custom("copilot/byok/listModels", dict, ClientRequest.NullHandler)
         }
     }
-    
+
     struct BYOKSaveApiKey: GitHubCopilotRequestType {
         typealias Response = BYOKSaveApiKeyResponse
-        
+
         var params: BYOKSaveApiKeyParams
 
         var request: ClientRequest {
@@ -587,10 +614,10 @@ enum GitHubCopilotRequest {
             return .custom("copilot/byok/saveApiKey", dict, ClientRequest.NullHandler)
         }
     }
-    
+
     struct BYOKDeleteApiKey: GitHubCopilotRequestType {
         typealias Response = BYOKDeleteApiKeyResponse
-        
+
         var params: BYOKDeleteApiKeyParams
 
         var request: ClientRequest {
@@ -599,10 +626,10 @@ enum GitHubCopilotRequest {
             return .custom("copilot/byok/deleteApiKey", dict, ClientRequest.NullHandler)
         }
     }
-    
+
     struct BYOKListApiKeys: GitHubCopilotRequestType {
         typealias Response = BYOKListApiKeysResponse
-        
+
         var params: BYOKListApiKeysParams
 
         var request: ClientRequest {
@@ -616,9 +643,8 @@ enum GitHubCopilotRequest {
 // MARK: Notifications
 
 public enum GitHubCopilotNotification {
-
     public struct StatusNotification: Codable {
-        public enum StatusKind : String, Codable {
+        public enum StatusKind: String, Codable {
             case normal = "Normal"
             case error = "Error"
             case warning = "Warning"
@@ -627,13 +653,13 @@ public enum GitHubCopilotNotification {
             public var clsStatus: CLSStatus.Status {
                 switch self {
                 case .normal:
-                        .normal
+                    .normal
                 case .error:
-                        .error
+                    .error
                 case .warning:
-                        .warning
+                    .warning
                 case .inactive:
-                        .inactive
+                    .inactive
                 }
             }
         }
@@ -647,7 +673,6 @@ public enum GitHubCopilotNotification {
         }
     }
 
-    
     public struct MCPRuntimeNotification: Codable {
         public enum MCPRuntimeLogLevel: String, Codable {
             case Info = "info"
@@ -660,10 +685,9 @@ public enum GitHubCopilotNotification {
         public var server: String
         public var tool: String?
         public var time: Double
-        
+
         public static func decode(fromParams params: JSONValue?) -> MCPRuntimeNotification? {
             try? JSONDecoder().decode(Self.self, from: (try? JSONEncoder().encode(params)) ?? Data())
         }
     }
-    
 }

@@ -3,6 +3,7 @@ import GitHubCopilotService
 import ConversationServiceProvider
 import Logger
 import Status
+import LanguageServerProtocol
 
 public enum XPCExtensionServiceError: Swift.Error, LocalizedError {
     case failedToGetServiceEndpoint
@@ -420,12 +421,25 @@ extension XPCExtensionService {
     }
 
     @XPCServiceActor
-    public func updateMCPServerToolsStatus(_ update: [UpdateMCPToolsStatusServerCollection]) async throws {
+    public func updateMCPServerToolsStatus(
+        _ update: [UpdateMCPToolsStatusServerCollection],
+        chatAgentMode: ChatMode? = nil,
+        customChatModeId: String? = nil,
+        workspaceFolders: [WorkspaceFolder]? = nil
+    ) async throws {
         return try await withXPCServiceConnected {
             service, continuation in
             do {
                 let data = try JSONEncoder().encode(update)
-                service.updateMCPServerToolsStatus(tools: data)
+                let foldersData = workspaceFolders.flatMap { try? JSONEncoder().encode($0) }
+                let modeData = chatAgentMode.flatMap { try? JSONEncoder().encode($0) }
+                let modeIdData = customChatModeId.flatMap { try? JSONEncoder().encode($0) }
+                service.updateMCPServerToolsStatus(
+                    tools: data,
+                    chatAgentMode: modeData,
+                    customChatModeId: modeIdData,
+                    workspaceFolders: foldersData
+                )
                 continuation.resume(())
             } catch {
                 continuation.reject(error)
@@ -541,12 +555,25 @@ extension XPCExtensionService {
     }
     
     @XPCServiceActor
-    public func updateToolsStatus(_ update: [ToolStatusUpdate]) async throws -> [LanguageModelTool]? {
+    public func updateToolsStatus(
+        _ update: [ToolStatusUpdate],
+        chatAgentMode: ChatMode? = nil,
+        customChatModeId: String? = nil,
+        workspaceFolders: [WorkspaceFolder]? = nil
+    ) async throws -> [LanguageModelTool]? {
         return try await withXPCServiceConnected {
             service, continuation in
             do {
                 let data = try JSONEncoder().encode(update)
-                service.updateToolsStatus(tools: data) { data in
+                let foldersData = workspaceFolders.flatMap { try? JSONEncoder().encode($0) }
+                let modeData = chatAgentMode.flatMap { try? JSONEncoder().encode($0) }
+                let modeIdData = customChatModeId.flatMap { try? JSONEncoder().encode($0) }
+                service.updateToolsStatus(
+                    tools: data,
+                    chatAgentMode: modeData,
+                    customChatModeId: modeIdData,
+                    workspaceFolders: foldersData
+                ) { data in
                     guard let data else {
                         continuation.resume(nil)
                         return
@@ -578,6 +605,52 @@ extension XPCExtensionService {
                 do {
                     let featureFlags = try JSONDecoder().decode(FeatureFlags.self, from: data)
                     continuation.resume(featureFlags)
+                } catch {
+                    continuation.reject(error)
+                }
+            }
+        }
+    }
+    
+    @XPCServiceActor
+    public func getCopilotPolicy() async throws -> CopilotPolicy? {
+        return try await withXPCServiceConnected {
+            service, continuation in
+            service.getCopilotPolicy { data in
+                guard let data else {
+                    continuation.resume(nil)
+                    return
+                }
+
+                do {
+                    let copilotPolicy = try JSONDecoder().decode(CopilotPolicy.self, from: data)
+                    continuation.resume(copilotPolicy)
+                } catch {
+                    continuation.reject(error)
+                }
+            }
+        }
+    }
+    
+    @XPCServiceActor
+    public func getModes(workspaceFolders: [WorkspaceFolder]? = nil) async throws -> [ConversationMode]? {
+        return try await withXPCServiceConnected {
+            service, continuation in
+            let workspaceFoldersData = workspaceFolders.flatMap { try? JSONEncoder().encode($0) }
+            service.getModes(workspaceFolders: workspaceFoldersData) { data, error in
+                if let error {
+                    continuation.reject(error)
+                    return
+                }
+
+                guard let data else {
+                    continuation.resume(nil)
+                    return
+                }
+
+                do {
+                    let modes = try JSONDecoder().decode([ConversationMode].self, from: data)
+                    continuation.resume(modes)
                 } catch {
                     continuation.reject(error)
                 }

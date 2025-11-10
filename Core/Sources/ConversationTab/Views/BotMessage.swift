@@ -7,6 +7,7 @@ import SwiftUI
 import ConversationServiceProvider
 import ChatTab
 import ChatAPIService
+import HostAppActivator
 
 struct BotMessage: View {
     var r: Double { messageBubbleCornerRadius }
@@ -29,31 +30,6 @@ struct BotMessage: View {
 
     @State var isReferencesPresented = false
     @State var isHovering = false
-    
-    struct ResponseToolBar: View {
-        let id: String
-        let chat: StoreOf<Chat>
-        let text: String
-        
-        var body: some View {
-            HStack(spacing: 4) {
-                
-                UpvoteButton { rating in
-                    chat.send(.upvote(id, rating))
-                }
-                
-                DownvoteButton { rating in
-                    chat.send(.downvote(id, rating))
-                }
-                
-                CopyButton {
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(text, forType: .string)
-                    chat.send(.copyCode(id))
-                }
-            }
-        }
-    }
     
     struct ReferenceButton: View {
         var r: Double { messageBubbleCornerRadius }
@@ -187,31 +163,28 @@ struct BotMessage: View {
                     }
                     
                     if !errorMessages.isEmpty {
-                        VStack(spacing: 4) {
-                            ForEach(errorMessages.indices, id: \.self) { index in
-                                if let attributedString = try? AttributedString(markdown: errorMessages[index]) {
-                                    NotificationBanner(style: .warning) {
-                                        Text(attributedString)
-                                    }
-                                }
-                            }
-                        }
-                        .scaledPadding(.vertical, 4)
+                        buildErrorMessageView()
                     }
-                    
+
                     HStack {
                         if shouldShowTurnStatus() {
                             TurnStatusView(message: message)
                         }
-                        
+
                         Spacer()
-                        
-                        ResponseToolBar(id: id, chat: chat, text: text)
+
+                        ResponseToolBar(
+                            id: id,
+                            chat: chat,
+                            text: text,
+                            message: message
+                        )
                             .conditionalFontWeight(.medium)
                             .opacity(shouldShowToolBar() ? 1 : 0)
                             .scaledPadding(.trailing, -20)
                     }
                 }
+                .padding(.leading, message.parentTurnId != nil ? 4 : 0)
                 .shadow(color: .black.opacity(0.05), radius: 6)
                 .contextMenu {
                     Button("Copy") {
@@ -237,6 +210,33 @@ struct BotMessage: View {
                 }
             }
         }
+    }
+    
+    @ViewBuilder
+    private func buildErrorMessageView() -> some View {
+        VStack(spacing: 4) {
+            ForEach(errorMessages.indices, id: \.self) { index in
+                if let attributedString = try? AttributedString(markdown: errorMessages[index]) {
+                    NotificationBanner(style: .warning) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(attributedString)
+                            
+                            if errorMessages[index] == HardCodedToolRoundExceedErrorMessage {
+                                Button(action: {
+                                    Task {
+                                        try? launchHostAppAdvancedSettings()
+                                    }
+                                }) {
+                                    Text("Open Settings")
+                                }
+                                .buttonStyle(.link)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .scaledPadding(.vertical, 4)
     }
     
     private func shouldShowTurnStatus() -> Bool {
@@ -470,6 +470,7 @@ struct BotMessage_Previews: PreviewProvider {
         .fixedSize(horizontal: true, vertical: true)
     }
 }
+    
 
 struct ReferenceList_Previews: PreviewProvider {
     static var previews: some View {

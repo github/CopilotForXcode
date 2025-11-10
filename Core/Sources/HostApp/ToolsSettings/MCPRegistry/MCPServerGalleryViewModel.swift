@@ -11,7 +11,6 @@ final class MCPServerGalleryViewModel: ObservableObject {
     private let pageSize: Int
 
     // User / UI state
-    @Published var isSearchBarVisible: Bool = false
     @Published var searchText: String = ""
 
     // Data

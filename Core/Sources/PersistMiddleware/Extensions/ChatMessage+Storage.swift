@@ -16,10 +16,13 @@ extension ChatMessage {
         var errorMessages: [String] = []
         var steps: [ConversationProgressStep]
         var editAgentRounds: [AgentRound]
+        var parentTurnId: String?
         var panelMessages: [CopilotShowMessageParams]
         var fileEdits: [FileEdit]
         var turnStatus: ChatMessage.TurnStatus?
         let requestType: RequestType
+        var modelName: String?
+        var billingMultiplier: Float?
 
         // Custom decoder to provide default value for steps
         init(from decoder: Decoder) throws {
@@ -33,10 +36,13 @@ extension ChatMessage {
             errorMessages = try container.decodeIfPresent([String].self, forKey: .errorMessages) ?? []
             steps = try container.decodeIfPresent([ConversationProgressStep].self, forKey: .steps) ?? []
             editAgentRounds = try container.decodeIfPresent([AgentRound].self, forKey: .editAgentRounds) ?? []
+            parentTurnId = try container.decodeIfPresent(String.self, forKey: .parentTurnId)
             panelMessages = try container.decodeIfPresent([CopilotShowMessageParams].self, forKey: .panelMessages) ?? []
             fileEdits = try container.decodeIfPresent([FileEdit].self, forKey: .fileEdits) ?? []
             turnStatus = try container.decodeIfPresent(ChatMessage.TurnStatus.self, forKey: .turnStatus)
             requestType = try container.decodeIfPresent(RequestType.self, forKey: .requestType) ?? .conversation
+            modelName = try container.decodeIfPresent(String.self, forKey: .modelName)
+            billingMultiplier = try container.decodeIfPresent(Float.self, forKey: .billingMultiplier)
         }
 
         // Default memberwise init for encoding
@@ -50,10 +56,13 @@ extension ChatMessage {
             errorMessages: [String] = [],
             steps: [ConversationProgressStep]?,
             editAgentRounds: [AgentRound]? = nil,
+            parentTurnId: String? = nil,
             panelMessages: [CopilotShowMessageParams]? = nil,
             fileEdits: [FileEdit]? = nil,
             turnStatus: ChatMessage.TurnStatus? = nil,
-            requestType: RequestType = .conversation
+            requestType: RequestType = .conversation,
+            modelName: String? = nil,
+            billingMultiplier: Float? = nil
         ) {
             self.content = content
             self.contentImageReferences = contentImageReferences ?? []
@@ -64,10 +73,13 @@ extension ChatMessage {
             self.errorMessages = errorMessages
             self.steps = steps ?? []
             self.editAgentRounds = editAgentRounds ?? []
+            self.parentTurnId = parentTurnId
             self.panelMessages = panelMessages ?? []
             self.fileEdits = fileEdits ?? []
             self.turnStatus = turnStatus
             self.requestType = requestType
+            self.modelName = modelName
+            self.billingMultiplier = billingMultiplier
         }
     }
     
@@ -82,10 +94,13 @@ extension ChatMessage {
             errorMessages: self.errorMessages,
             steps: self.steps,
             editAgentRounds: self.editAgentRounds,
+            parentTurnId: self.parentTurnId,
             panelMessages: self.panelMessages,
             fileEdits: self.fileEdits,
             turnStatus: self.turnStatus,
-            requestType: self.requestType
+            requestType: self.requestType,
+            modelName: self.modelName,
+            billingMultiplier: self.billingMultiplier
         )
         
         // TODO: handle exception
@@ -118,10 +133,13 @@ extension ChatMessage {
                     rating: turnItemData.rating,
                     steps: turnItemData.steps,
                     editAgentRounds: turnItemData.editAgentRounds,
+                    parentTurnId: turnItemData.parentTurnId,
                     panelMessages: turnItemData.panelMessages,
                     fileEdits: turnItemData.fileEdits,
                     turnStatus: turnItemData.turnStatus,
                     requestType: turnItemData.requestType,
+                    modelName: turnItemData.modelName,
+                    billingMultiplier: turnItemData.billingMultiplier,
                     createdAt: turnItem.createdAt,
                     updatedAt: turnItem.updatedAt
                 )

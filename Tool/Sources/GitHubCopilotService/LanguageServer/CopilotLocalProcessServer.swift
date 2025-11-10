@@ -1,4 +1,5 @@
 import Combine
+import ConversationServiceProvider
 import Foundation
 import JSONRPC
 import LanguageClient
@@ -219,6 +220,9 @@ class CopilotLocalProcessServer {
                 notificationPublisher.send(anyNotification)
                 return true
             case "copilot/mcpRuntimeLogs":
+                notificationPublisher.send(anyNotification)
+                return true
+            case "policy/didChange":
                 notificationPublisher.send(anyNotification)
                 return true
             case "conversation/preconditionsNotification", "statusNotification":

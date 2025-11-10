@@ -1,6 +1,7 @@
 import Foundation
 import JSONRPC
 import LanguageServerProtocol
+import SuggestionBasic
 
 // MARK: Conversation template
 public struct ChatTemplate: Codable, Equatable {
@@ -70,6 +71,71 @@ public struct CopilotModelBilling: Codable, Equatable, Hashable {
     }
 }
 
+// MARK: ChatModes
+public enum ChatMode: String, Codable {
+    case Ask = "Ask"
+    case Edit = "Edit"
+    case Agent = "Agent"
+}
+
+public struct ConversationMode: Codable, Equatable {
+    public let id: String
+    public let name: String
+    public let kind: ChatMode
+    public let isBuiltIn: Bool
+    public let uri: String?
+    public let description: String?
+    public let customTools: [String]?
+    public let model: String?
+    public let handOffs: [HandOff]?
+    
+    public var isDefaultAgent: Bool { id == "Agent" }
+    
+    public static let `defaultAgent` = ConversationMode(
+        id: "Agent",
+        name: "Agent",
+        kind: .Agent,
+        isBuiltIn: true,
+        description: "Advanced agent mode with access to tools and capabilities"
+    )
+
+    public init(
+        id: String,
+        name: String,
+        kind: ChatMode,
+        isBuiltIn: Bool,
+        uri: String? = nil,
+        description: String? = nil,
+        customTools: [String]? = nil,
+        model: String? = nil,
+        handOffs: [HandOff]? = nil
+    ) {
+        self.id = id
+        self.name = name
+        self.kind = kind
+        self.isBuiltIn = isBuiltIn
+        self.uri = uri
+        self.description = description
+        self.customTools = customTools
+        self.model = model
+        self.handOffs = handOffs
+    }
+}
+
+public struct HandOff: Codable, Equatable {
+    public let agent: String
+    public let label: String
+    public let prompt: String
+    public let send: Bool?
+
+    public init(agent: String, label: String, prompt: String, send: Bool?) {
+        self.agent = agent
+        self.label = label
+        self.prompt = prompt
+        self.send = send
+    }
+}
+
 // MARK: Conversation Agents
 public struct ChatAgent: Codable, Equatable {
     public let slug: String
@@ -96,9 +162,20 @@ public struct RegisterToolsParams: Codable, Equatable {
 }
 
 public struct UpdateToolsStatusParams: Codable, Equatable {
+    public let chatModeKind: ChatMode?
+    public let customChatModeId: String?
+    public let workspaceFolders: [WorkspaceFolder]?
     public let tools: [ToolStatusUpdate]
 
-    public init(tools: [ToolStatusUpdate]) {
+    public init(
+        chatmodeKind: ChatMode? = nil,
+        customChatModeId: String? = nil,
+        workspaceFolders: [WorkspaceFolder]? = nil,
+        tools: [ToolStatusUpdate]
+    ) {
+        self.chatModeKind = chatmodeKind
+        self.customChatModeId = customChatModeId
+        self.workspaceFolders = workspaceFolders
         self.tools = tools
     }
 }
@@ -496,4 +573,166 @@ public struct CodeReviewResult: Codable, Equatable {
     public init(comments: [ReviewComment]) {
         self.comments = comments
     }
+}
+
+
+// MARK: - Conversation / Turn
+
+public enum ConversationSource: String, Codable {
+    case panel, inline
+}
+
+public struct FileReference: Codable, Equatable, Hashable {
+    public var type: String = "file"
+    public let uri: String
+    public let position: Position?
+    public let visibleRange: SuggestionBasic.CursorRange?
+    public let selection: SuggestionBasic.CursorRange?
+    public let openedAt: String?
+    public let activeAt: String?
+}
+
+public struct DirectoryReference: Codable, Equatable, Hashable {
+    public var type: String = "directory"
+    public let uri: String
+}
+
+public enum Reference: Codable, Equatable, Hashable {
+    case file(FileReference)
+    case directory(DirectoryReference)
+    
+    public func encode(to encoder: Encoder) throws {
+        switch self {
+        case .file(let fileRef):
+            try fileRef.encode(to: encoder)
+        case .directory(let directoryRef):
+            try directoryRef.encode(to: encoder)
+        }
+    }
+    
+    private enum CodingKeys: String, CodingKey {
+        case type
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let type = try container.decode(String.self, forKey: .type)
+        
+        switch type {
+        case "file":
+            let fileRef = try FileReference(from: decoder)
+            self = .file(fileRef)
+        case "directory":
+            let directoryRef = try DirectoryReference(from: decoder)
+            self = .directory(directoryRef)
+        default:
+            throw DecodingError.dataCorrupted(
+                DecodingError.Context(
+                    codingPath: decoder.codingPath,
+                    debugDescription: "Unknown reference type: \(type)"
+                )
+            )
+        }
+    }
+    
+    public static func from(_ ref: ConversationAttachedReference) -> Reference {
+        switch ref {
+        case .file(let fileRef):
+            return .file(
+                .init(
+                    uri: fileRef.url.absoluteString,
+                    position: nil,
+                    visibleRange: nil,
+                    selection: nil,
+                    openedAt: nil,
+                    activeAt: nil
+                )
+            )
+        case .directory(let directoryRef):
+            return .directory(.init(uri: directoryRef.url.absoluteString))
+        }
+    }
+}
+
+public struct ConversationCreateResponse: Codable {
+    public let conversationId: String
+    public let turnId: String
+    public let agentSlug: String?
+    public let modelName: String?
+    public let modelProviderName: String?
+    public let billingMultiplier: Float?
+}
+
+public struct ConversationCreateParams: Codable {
+    public var workDoneToken: String
+    public var turns: [TurnSchema]
+    public var capabilities: Capabilities
+    public var textDocument: Doc?
+    public var references: [Reference]?
+    public var computeSuggestions: Bool?
+    public var source: ConversationSource?
+    public var workspaceFolder: String?
+    public var workspaceFolders: [WorkspaceFolder]?
+    public var ignoredSkills: [String]?
+    public var model: String?
+    public var modelProviderName: String?
+    public var chatMode: String?
+    public var customChatModeId: String?
+    public var needToolCallConfirmation: Bool?
+    public var userLanguage: String?
+    
+    public struct Capabilities: Codable {
+        public var skills: [String]
+        public var allSkills: Bool?
+        
+        public init(skills: [String], allSkills: Bool? = nil) {
+            self.skills = skills
+            self.allSkills = allSkills
+        }
+    }
+    
+    public init(
+        workDoneToken: String,
+        turns: [TurnSchema],
+        capabilities: Capabilities,
+        textDocument: Doc? = nil,
+        references: [Reference]? = nil,
+        computeSuggestions: Bool? = nil,
+        source: ConversationSource? = nil,
+        workspaceFolder: String? = nil,
+        workspaceFolders: [WorkspaceFolder]? = nil,
+        ignoredSkills: [String]? = nil,
+        model: String? = nil,
+        modelProviderName: String? = nil,
+        chatMode: String? = nil,
+        customChatModeId: String? = nil,
+        needToolCallConfirmation: Bool? = nil,
+        userLanguage: String? = nil
+    ) {
+        self.workDoneToken = workDoneToken
+        self.turns = turns
+        self.capabilities = capabilities
+        self.textDocument = textDocument
+        self.references = references
+        self.computeSuggestions = computeSuggestions
+        self.source = source
+        self.workspaceFolder = workspaceFolder
+        self.workspaceFolders = workspaceFolders
+        self.ignoredSkills = ignoredSkills
+        self.model = model
+        self.modelProviderName = modelProviderName
+        self.chatMode = chatMode
+        self.customChatModeId = customChatModeId
+        self.needToolCallConfirmation = needToolCallConfirmation
+        self.userLanguage = userLanguage
+    }
+}
+
+// MARK: - ConversationErrorCode
+public enum ConversationErrorCode: Int {
+    // -1: Unknown error, used when the error may not be user friendly.
+    case unknown = -1
+    // 0: Default error code, for backward compatibility with Copilot Chat.
+    case `default` = 0
+    case toolRoundExceedError = 10000
 }

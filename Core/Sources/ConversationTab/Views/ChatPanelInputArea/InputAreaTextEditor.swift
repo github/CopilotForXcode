@@ -78,6 +78,13 @@ struct InputAreaTextEditor: View {
         
         return false
     }
+
+    var projectRootURL: URL? {
+        WorkspaceXcodeWindowInspector.extractProjectURL(
+            workspaceURL: chat.workspaceURL,
+            documentURL: chat.state.currentEditor?.url
+        )
+    }
     
     var body: some View {
         WithPerceptionTracking {
@@ -162,8 +169,8 @@ struct InputAreaTextEditor: View {
                 .padding(.top, 4)
                 
                 HStack(spacing: 0) {
-                    ModelPicker()
-                    
+                    ModeAndModelPicker(projectRootURL: projectRootURL, selectedAgent: $chat.selectedAgent)
+
                     Spacer()
                     
                     if chat.editorMode.isDefault {

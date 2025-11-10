@@ -1,5 +1,6 @@
 import ComposableArchitecture
 import SwiftUI
+import SharedUIComponents
 
 struct GeneralSettingsView: View {
     @AppStorage(\.extensionPermissionShown) var extensionPermissionShown: Bool

@@ -28,14 +28,27 @@ public protocol XPCServiceProtocol {
     func getXcodeInspectorData(withReply reply: @escaping (Data?, Error?) -> Void)
 
     func getAvailableMCPServerToolsCollections(withReply reply: @escaping (Data?) -> Void)
-    func updateMCPServerToolsStatus(tools: Data)
+    func updateMCPServerToolsStatus(
+        tools: Data,
+        chatAgentMode: Data?,
+        customChatModeId: Data?,
+        workspaceFolders: Data?
+    )
     func listMCPRegistryServers(_ params: Data, withReply reply: @escaping (Data?, Error?) -> Void)
     func getMCPRegistryServer(_ params: Data, withReply reply: @escaping (Data?, Error?) -> Void)
     func getMCPRegistryAllowlist(withReply reply: @escaping (Data?, Error?) -> Void)
     func getAvailableLanguageModelTools(withReply reply: @escaping (Data?) -> Void)
-    func updateToolsStatus(tools: Data, withReply reply: @escaping (Data?) -> Void)
+    func updateToolsStatus(
+        tools: Data,
+        chatAgentMode: Data?,
+        customChatModeId: Data?,
+        workspaceFolders: Data?,
+        withReply reply: @escaping (Data?) -> Void
+    )
 
     func getCopilotFeatureFlags(withReply reply: @escaping (Data?) -> Void)
+    func getCopilotPolicy(withReply reply: @escaping (Data?) -> Void)
+    func getModes(workspaceFolders: Data?, withReply reply: @escaping (Data?, Error?) -> Void)
 
     func signOutAllGitHubCopilotService()
     func getXPCServiceAuthStatus(withReply reply: @escaping (Data?) -> Void)

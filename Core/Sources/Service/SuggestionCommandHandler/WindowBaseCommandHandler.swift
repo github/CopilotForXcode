@@ -229,7 +229,8 @@ struct WindowBaseCommandHandler: SuggestionCommandHandler {
                 intoContentWithoutSuggestion: &lines,
                 cursorPosition: &cursorPosition,
                 completion: acceptedSuggestion,
-                extraInfo: &extraInfo
+                extraInfo: &extraInfo,
+                isNES: true
             )
             
             presenter.discardNESSuggestion(fileURL: fileURL)
