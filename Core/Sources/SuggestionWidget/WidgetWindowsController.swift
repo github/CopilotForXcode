@@ -100,6 +100,9 @@ actor WidgetWindowsController: NSObject {
         
         // Observer state change for NES
         setupNESSuggestionPanelObservers()
+
+        // Observe feature flags
+        setupFeatureFlagObservers()
     }
     
     private func setupCodeReviewPanelObservers() {
@@ -501,8 +504,7 @@ extension WidgetWindowsController {
                     send(.panel(noFocus ? .hidePanel(.suggestion) : .showPanel(.suggestion)))
                     windows.suggestionPanelWindow.alphaValue = noFocus ? 0 : 1
                     send(.panel(noFocus ? .hidePanel(.nes) : .showPanel(.nes)))
-                    windows.nesMenuWindow.alphaValue = noFocus ? 0 : 1
-                    windows.nesDiffWindow.alphaValue = noFocus ? 0 : 1
+                    applyOpacityForNESWindows(by: noFocus)
                     send(.panel(noFocus ? .hidePanel(.agentConfiguration) : .showPanel(.agentConfiguration)))
                     applyOpacityForAgentConfigurationWidget(by: noFocus)
                     windows.nesNotificationWindow.alphaValue = noFocus ? 0 : 1
@@ -530,8 +532,7 @@ extension WidgetWindowsController {
                     send(.panel(noFocus ? .hidePanel(.suggestion) : .showPanel(.suggestion)))
                     windows.sharedPanelWindow.alphaValue = noFocus ? 0 : 1
                     send(.panel(noFocus ? .hidePanel(.nes) : .showPanel(.nes)))
-                    windows.nesMenuWindow.alphaValue = noFocus ? 0 : 1
-                    windows.nesDiffWindow.alphaValue = noFocus ? 0 : 1
+                    applyOpacityForNESWindows(by: noFocus)
                     send(.panel(noFocus ? .hidePanel(.agentConfiguration) : .showPanel(.agentConfiguration)))
                     applyOpacityForAgentConfigurationWidget(by: noFocus)
                     windows.nesNotificationWindow.alphaValue = noFocus ? 0 : 1

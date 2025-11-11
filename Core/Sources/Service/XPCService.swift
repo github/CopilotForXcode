@@ -594,6 +594,21 @@ public class XPCService: NSObject, XPCServiceProtocol {
         }
     }
     
+    public func updateCopilotModels(withReply reply: @escaping (Data?, Error?) -> Void) {
+        Task { @MainActor in
+            do {
+                let service = try GitHubCopilotViewModel.shared.getGitHubCopilotAuthService()
+                let models = try await service.models()
+                CopilotModelManager.updateLLMs(models)
+                let data = try JSONEncoder().encode(models)
+                reply(data, nil)
+            } catch {
+                Logger.service.error("Failed to get models: \(error.localizedDescription)")
+                reply(nil, NSError.from(error))
+            }
+        }
+    }
+    
     // MARK: - BYOK
     public func saveBYOKApiKey(_ params: Data, withReply reply: @escaping (Data?) -> Void) {
         let decoder = JSONDecoder()

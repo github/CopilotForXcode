@@ -68,6 +68,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         Logger.service.info("XPC Service started.")
         NSApp.setActivationPolicy(.accessory)
         buildStatusBarMenu()
+        _ = FeatureFlagNotifierImpl.shared
+        observeFeatureFlags()
         watchServiceStatus()
         watchAXStatus()
         watchAuthStatus()
@@ -233,6 +235,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
                 guard let self else { return }
                 self.updateStatusBarItem()
             }
+        }
+    }
+    
+    
+    func observeFeatureFlags() {
+        Task { @MainActor in
+            FeatureFlagNotifierImpl.shared.featureFlagsDidChange
+                .sink(receiveValue: { [weak self] featureFlags in
+                    self?.toggleNES.isHidden = !featureFlags.editorPreviewFeatures
+                })
         }
     }
 

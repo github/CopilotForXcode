@@ -685,6 +685,31 @@ extension XPCExtensionService {
         }
     }
     
+    @XPCServiceActor
+    public func updateCopilotModels() async throws -> [CopilotModel]? {
+        return try await withXPCServiceConnected {
+            service, continuation in
+            service.updateCopilotModels { data, error in
+                if let error {
+                    continuation.reject(error)
+                    return
+                }
+                
+                guard let data else {
+                    continuation.resume(nil)
+                    return
+                }
+
+                do {
+                    let models = try JSONDecoder().decode([CopilotModel].self, from: data)
+                    continuation.resume(models)
+                } catch {
+                    continuation.reject(error)
+                }
+            }
+        }
+    }
+    
     // MARK: BYOK
     @XPCServiceActor
     public func saveBYOKApiKey(_ params: BYOKSaveApiKeyParams) async throws -> BYOKSaveApiKeyResponse? {

@@ -77,7 +77,7 @@ struct ChatLoginView: View {
                 Button("Cancel", role: .cancel, action: {})
                     .scaledFont(.body)
                 
-                Button("Copy Code and Open", action: viewModel.copyAndOpen)
+                Button("Copy Code and Open", action: { viewModel.copyAndOpen(fromHostApp: false) })
                     .scaledFont(.body)
             } message: { response in
                 Text("""

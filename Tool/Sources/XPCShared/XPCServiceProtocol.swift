@@ -48,6 +48,7 @@ public protocol XPCServiceProtocol {
 
     func getCopilotFeatureFlags(withReply reply: @escaping (Data?) -> Void)
     func getCopilotPolicy(withReply reply: @escaping (Data?) -> Void)
+    func updateCopilotModels(withReply reply: @escaping (Data?, Error?) -> Void)
     func getModes(workspaceFolders: Data?, withReply reply: @escaping (Data?, Error?) -> Void)
 
     func signOutAllGitHubCopilotService()

@@ -10,6 +10,7 @@ import WorkspaceSuggestionService
 import XcodeInspector
 import XPCShared
 import AXHelper
+import GitHubCopilotService
 
 /// It's used to run some commands without really triggering the menu bar item.
 ///
@@ -59,7 +60,8 @@ struct PseudoCommandHandler {
         if Task.isCancelled { return }
         
         let codeCompletionEnabled = UserDefaults.shared.value(for: \.realtimeSuggestionToggle)
-        let nesEnabled = UserDefaults.shared.value(for: \.realtimeNESToggle)
+        // Enabled both by Feature Flag and User.
+        let nesEnabled = FeatureFlagNotifierImpl.shared.featureFlags.editorPreviewFeatures && UserDefaults.shared.value(for: \.realtimeNESToggle)
         guard codeCompletionEnabled || nesEnabled else {
             cleanupAllSuggestions(filespace: filespace, presenter: nil)
             return

@@ -57,7 +57,10 @@ struct CopilotConnectionView: View {
                     isPresented: $viewModel.isSignInAlertPresented,
                     presenting: viewModel.signInResponse) { _ in
                         Button("Cancel", role: .cancel, action: {})
-                        Button("Copy Code and Open", action: viewModel.copyAndOpen)
+                        Button(
+                            "Copy Code and Open",
+                            action: { viewModel.copyAndOpen(fromHostApp: true) }
+                        )
                     } message: { response in
                         Text("""
                                Please enter the above code in the \

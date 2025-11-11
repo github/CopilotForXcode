@@ -179,7 +179,7 @@ public extension CopilotModelManager {
     static func getDefaultChatModel(scope: PromptTemplateScope = .chatPanel) -> LLMModel? {
         let LLMs = CopilotModelManager.getAvailableLLMs()
         let LLMsInScope = LLMs.filter({ $0.scopes.contains(scope) })
-        let defaultModel = LLMsInScope.first(where: { $0.isChatDefault })
+        let defaultModel = LLMsInScope.first(where: { $0.isChatDefault && !$0.isAutoModel })
         // If a default model is found, return it
         if let defaultModel = defaultModel {
             return LLMModel(
@@ -202,7 +202,7 @@ public extension CopilotModelManager {
         }
 
         // If no default model is found, fallback to the first available model
-        if let firstModel = LLMsInScope.first {
+        if let firstModel = LLMsInScope.first(where: { !$0.isAutoModel }) {
             return LLMModel(
                 modelName: firstModel.modelName,
                 modelFamily: firstModel.modelFamily,
@@ -269,4 +269,8 @@ public extension LLMModel {
     var isStandardModel: Bool { !isPremiumModel || billing == nil }
     /// Apply to `Copilot Models`
     var isAutoModel: Bool { isStandardModel && modelName == "Auto" }
+}
+
+extension CopilotModel {
+    var isAutoModel: Bool { modelName == "Auto" }
 }
