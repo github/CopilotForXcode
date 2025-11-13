@@ -208,7 +208,7 @@ public struct ChatModePicker: View {
         .task {
             subscribeToFeatureFlagsDidChangeEvent()
             subscribeToPolicyDidChangeEvent()
-            loadCustomAgents()
+            await loadCustomAgentsAsync()
             loadSelectedAgentSubMode()
             if !isAgentModeFFEnabled {
                 setAskMode()

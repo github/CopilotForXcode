@@ -40,11 +40,22 @@ public struct FilespaceSuggestionSnapshotKey: FilespacePropertyKey {
         -> FilespaceSuggestionSnapshot { .init(lines: [], cursorPosition: .outOfScope) }
 }
 
+public struct FilespaceNESSuggestionSnapshotKey: FilespacePropertyKey {
+    public static func createDefaultValue()
+        -> FilespaceSuggestionSnapshot { .init(lines: [], cursorPosition: .outOfScope) }
+}
+
 public extension FilespacePropertyValues {
     @WorkspaceActor
     var suggestionSourceSnapshot: FilespaceSuggestionSnapshot {
         get { self[FilespaceSuggestionSnapshotKey.self] }
         set { self[FilespaceSuggestionSnapshotKey.self] = newValue }
+    }
+    
+    @WorkspaceActor
+    var nesSuggestionSourceSnapshot: FilespaceSuggestionSnapshot {
+        get { self[FilespaceNESSuggestionSnapshotKey.self] }
+        set { self[FilespaceNESSuggestionSnapshotKey.self] = newValue }
     }
 }
 
@@ -53,6 +64,13 @@ public extension Filespace {
     func resetSnapshot() {
         // swiftformat:disable redundantSelf
         self.suggestionSourceSnapshot = FilespaceSuggestionSnapshotKey.createDefaultValue()
+        // swiftformat:enable all
+    }
+    
+    @WorkspaceActor
+    func resetNESSnapshot() {
+        // swiftformat:disable redundantSelf
+        self.nesSuggestionSourceSnapshot = FilespaceNESSuggestionSnapshotKey.createDefaultValue()
         // swiftformat:enable all
     }
 
@@ -140,12 +158,12 @@ public extension Filespace {
         let updatedSnapshot = FilespaceSuggestionSnapshot(lines: lines, cursorPosition: cursorPosition)
         
         // document state is unchanged
-        if updatedSnapshot == self.suggestionSourceSnapshot {
+        if updatedSnapshot == self.nesSuggestionSourceSnapshot {
             return true
         }
         
         resetNESSuggestion()
-        resetSnapshot()
+        resetNESSnapshot()
         return false
     }
 }

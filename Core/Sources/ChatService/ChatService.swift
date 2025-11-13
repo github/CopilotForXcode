@@ -49,6 +49,16 @@ struct ToolCallRequest {
     let completion: (AnyJSONRPCResponse) -> Void
 }
 
+struct ConversationTurnTrackingState {
+    var turnParentMap: [String: String] = [:] // Maps subturn ID to parent turn ID
+    var validConversationIds: Set<String> = [] // Tracks all valid conversation IDs including subagents
+    
+    mutating func reset() {
+        turnParentMap.removeAll()
+        validConversationIds.removeAll()
+    }
+}
+
 public final class ChatService: ChatServiceType, ObservableObject {
     
     public var memory: ContextAwareAutoManagedChatMemory
@@ -69,6 +79,9 @@ public final class ChatService: ChatServiceType, ObservableObject {
     private var lastUserRequest: ConversationRequest?
     private var isRestored: Bool = false
     private var pendingToolCallRequests: [String: ToolCallRequest] = [:]
+    // Workaround: toolConfirmation request does not have parent turnId
+    private var conversationTurnTracking = ConversationTurnTrackingState()
+    
     init(provider: any ConversationServiceProvider,
          memory: ContextAwareAutoManagedChatMemory = ContextAwareAutoManagedChatMemory(),
          conversationProgressHandler: ConversationProgressHandler = ConversationProgressHandlerImpl.shared,
@@ -136,7 +149,15 @@ public final class ChatService: ChatServiceType, ObservableObject {
 
     private func subscribeToClientToolConfirmationEvent() {
         ClientToolHandlerImpl.shared.onClientToolConfirmationEvent.sink(receiveValue: { [weak self] (request, completion) in
-            guard let params = request.params, params.conversationId == self?.conversationId else { return }
+            guard let params = request.params else { return }
+            
+            // Check if this conversationId is valid (main conversation or subagent conversation)
+            guard let validIds = self?.conversationTurnTracking.validConversationIds, validIds.contains(params.conversationId) else {
+                return
+            }
+            
+            let parentTurnId = self?.conversationTurnTracking.turnParentMap[params.turnId]
+            
             let editAgentRounds: [AgentRound] = [
                 AgentRound(roundId: params.roundId,
                            reply: "",
@@ -145,7 +166,7 @@ public final class ChatService: ChatServiceType, ObservableObject {
                            ]
                           )
             ]
-            self?.appendToolCallHistory(turnId: params.turnId, editAgentRounds: editAgentRounds)
+            self?.appendToolCallHistory(turnId: params.turnId, editAgentRounds: editAgentRounds, parentTurnId: parentTurnId)
             self?.pendingToolCallRequests[params.toolCallId] = ToolCallRequest(
                 requestId: request.id,
                 turnId: params.turnId,
@@ -157,7 +178,13 @@ public final class ChatService: ChatServiceType, ObservableObject {
 
     private func subscribeToClientToolInvokeEvent() {
         ClientToolHandlerImpl.shared.onClientToolInvokeEvent.sink(receiveValue: { [weak self] (request, completion) in
-            guard let params = request.params, params.conversationId == self?.conversationId else { return }
+            guard let params = request.params else { return }
+            
+            // Check if this conversationId is valid (main conversation or subagent conversation)
+            guard let validIds = self?.conversationTurnTracking.validConversationIds, validIds.contains(params.conversationId) else {
+                return
+            }
+            
             guard let copilotTool = CopilotToolRegistry.shared.getTool(name: params.name) else {
                 completion(AnyJSONRPCResponse(id: request.id,
                                               result: JSONValue.array([
@@ -173,11 +200,11 @@ public final class ChatService: ChatServiceType, ObservableObject {
                 return
             }
 
-            copilotTool.invokeTool(request, completion: completion, contextProvider: self)
+            _ = copilotTool.invokeTool(request, completion: completion, contextProvider: self)
         }).store(in: &cancellables)
     }
 
-    func appendToolCallHistory(turnId: String, editAgentRounds: [AgentRound], fileEdits: [FileEdit] = []) {
+    func appendToolCallHistory(turnId: String, editAgentRounds: [AgentRound], fileEdits: [FileEdit] = [], parentTurnId: String? = nil) {
         let chatTabId = self.chatTabInfo.id
         Task {
             let turnStatus: ChatMessage.TurnStatus? = {
@@ -196,6 +223,7 @@ public final class ChatService: ChatServiceType, ObservableObject {
                 assistantMessageWithId: turnId,
                 chatTabID: chatTabId,
                 editAgentRounds: editAgentRounds,
+                parentTurnId: parentTurnId,
                 fileEdits: fileEdits,
                 turnStatus: turnStatus
             )
@@ -229,73 +257,62 @@ public final class ChatService: ChatServiceType, ObservableObject {
         self.isRestored = true
     }
 
+    /// Updates the status of a tool call (accepted, cancelled, etc.) and notifies the server
+    /// 
+    /// This method handles two key responsibilities:
+    /// 1. Sends confirmation response back to the server when user accepts/cancels
+    /// 2. Updates the tool call status in chat history UI (including subagent tool calls)
     public func updateToolCallStatus(toolCallId: String, status: AgentToolCall.ToolCallStatus, payload: Any? = nil) {
-        // Send the tool call result back to the server
-        if let toolCallRequest = self.pendingToolCallRequests[toolCallId], status == .accepted || status == .cancelled {
+        // Capture the pending request info before removing it from the dictionary
+        let toolCallRequest = self.pendingToolCallRequests[toolCallId]
+        
+        // Step 1: Send confirmation response to server (for accept/cancel actions only)
+        if let toolCallRequest = toolCallRequest, status == .accepted || status == .cancelled {
             self.pendingToolCallRequests.removeValue(forKey: toolCallId)
-            let toolResult = LanguageModelToolConfirmationResult(
-                result: status == .accepted ? .Accept : .Dismiss
-            )
-            let jsonResult = try? JSONEncoder().encode(toolResult)
-            let jsonValue = (try? JSONDecoder().decode(JSONValue.self, from: jsonResult ?? Data())) ?? JSONValue.null
-            toolCallRequest.completion(
-                AnyJSONRPCResponse(
-                    id: toolCallRequest.requestId,
-                    result: JSONValue.array([
-                        jsonValue,
-                        JSONValue.null
-                    ])
-                )
-            )
+            sendToolConfirmationResponse(toolCallRequest, accepted: status == .accepted)
         }
 
-        // Update the tool call status in the chat history
+        // Step 2: Update the tool call status in chat history UI
         Task {
-            guard let lastMessage = await memory.history.last, lastMessage.role == .assistant else {
+            guard let targetMessage = await ToolCallStatusUpdater.findMessageContainingToolCall(
+                toolCallRequest,
+                conversationTurnTracking: conversationTurnTracking,
+                history: await memory.history
+            ) else {
                 return
             }
-
-            var updatedAgentRounds: [AgentRound] = []
-            for i in 0..<lastMessage.editAgentRounds.count {
-                if lastMessage.editAgentRounds[i].toolCalls == nil {
-                    continue
-                }
-                for j in 0..<lastMessage.editAgentRounds[i].toolCalls!.count {
-                    if lastMessage.editAgentRounds[i].toolCalls![j].id == toolCallId {
-                        updatedAgentRounds.append(
-                            AgentRound(roundId: lastMessage.editAgentRounds[i].roundId,
-                                       reply: "",
-                                       toolCalls: [
-                                        AgentToolCall(id: toolCallId,
-                                                      name: lastMessage.editAgentRounds[i].toolCalls![j].name,
-                                                      status: status)
-                                       ]
-                                      )
-                        )
-                        break
-                    }
-                }
-                if !updatedAgentRounds.isEmpty {
-                    break
-                }
-            }
-
-            if !updatedAgentRounds.isEmpty {
-                let message = ChatMessage(
-                    id: lastMessage.id,
-                    chatTabID: lastMessage.chatTabID,
-                    clsTurnID: lastMessage.clsTurnID,
-                    role: .assistant,
-                    content: "",
-                    references: [],
-                    steps: [],
-                    editAgentRounds: updatedAgentRounds,
-                    turnStatus: .inProgress
+            
+            // Search for the tool call in main rounds or subagent rounds
+            if let updatedRound = ToolCallStatusUpdater.findAndUpdateToolCall(
+                toolCallId: toolCallId,
+                newStatus: status,
+                in: targetMessage.editAgentRounds
+            ) {
+                let message = ToolCallStatusUpdater.createMessageUpdate(
+                    targetMessage: targetMessage,
+                    updatedRound: updatedRound
                 )
-
-                await self.memory.appendMessage(message)
+                await memory.appendMessage(message)
             }
         }
+    }
+    
+    // MARK: - Helper Methods for Tool Call Status Updates
+    
+    /// Sends the confirmation response (accept/dismiss) back to the server
+    private func sendToolConfirmationResponse(_ request: ToolCallRequest, accepted: Bool) {
+        let toolResult = LanguageModelToolConfirmationResult(
+            result: accepted ? .Accept : .Dismiss
+        )
+        let jsonResult = try? JSONEncoder().encode(toolResult)
+        let jsonValue = (try? JSONDecoder().decode(JSONValue.self, from: jsonResult ?? Data())) ?? JSONValue.null
+        
+        request.completion(
+            AnyJSONRPCResponse(
+                id: request.requestId,
+                result: JSONValue.array([jsonValue, JSONValue.null])
+            )
+        )
     }
     
     public enum ChatServiceError: Error, LocalizedError {
@@ -676,8 +693,17 @@ public final class ChatService: ChatServiceType, ObservableObject {
         if progress.parentTurnId == nil {
             conversationId = progress.conversationId
         }
+        
+        // Track all valid conversation IDs for the current turn (main conversation + its subturns)
+        conversationTurnTracking.validConversationIds.insert(progress.conversationId)
+        
         let turnId = progress.turnId
         let parentTurnId = progress.parentTurnId
+        
+        // Track parent-subturn relationship
+        if let parentTurnId = parentTurnId {
+            conversationTurnTracking.turnParentMap[turnId] = parentTurnId
+        }
         
         Task {
             if var lastUserMessage = await memory.history.last(where: { $0.role == .user }) {
@@ -870,6 +896,9 @@ public final class ChatService: ChatServiceType, ObservableObject {
         activeRequestId = nil
         isReceivingMessage = false
         requestType = nil
+        
+        // Clear turn tracking data
+        conversationTurnTracking.reset()
 
         // cancel all pending tool call requests
         for (_, request) in pendingToolCallRequests {

@@ -101,6 +101,7 @@ class AgentModeButtonMenuItem: NSView {
         isSelected: Bool,
         menuHasSelection: Bool,
         fontScale: Double = 1.0,
+        fixedWidth: CGFloat? = nil,
         onSelect: @escaping () -> Void,
         onEdit: (() -> Void)? = nil,
         onDelete: (() -> Void)? = nil
@@ -114,8 +115,8 @@ class AgentModeButtonMenuItem: NSView {
         self.onEdit = onEdit
         self.onDelete = onDelete
 
-        // Calculate dynamic width based on content
-        let calculatedWidth = Self.calculateWidth(
+        // Use fixed width if provided, otherwise calculate dynamically
+        let calculatedWidth = fixedWidth ?? Self.calculateMenuItemWidth(
             name: name,
             hasIcon: iconName != nil,
             isSelected: isSelected,
@@ -133,7 +134,7 @@ class AgentModeButtonMenuItem: NSView {
         fatalError("init(coder:) has not been implemented")
     }
 
-    private static func calculateWidth(
+    static func calculateMenuItemWidth(
         name: String,
         hasIcon: Bool,
         isSelected: Bool,

@@ -48,6 +48,10 @@ struct AgentConfigurationWidgetView: View {
                     if newValue {
                         // Load state from agent file when popover is opened
                         loadToolStatesFromAgentFile(currentMode: store.currentMode)
+                        // Refresh client tools to get any late-arriving server tools
+                        Task {
+                            await GitHubCopilotService.refreshClientTools()
+                        }
                     }
                 }
             }
@@ -371,6 +375,14 @@ struct AgentConfigurationWidgetView: View {
                 )
             )
             Logger.extension.info("MCP tools updated via API")
+            
+            // Notify Settings app about custom agent tool changes
+            DistributedNotificationCenter.default().postNotificationName(
+                .gitHubCopilotCustomAgentToolsDidChange,
+                object: nil,
+                userInfo: nil,
+                deliverImmediately: true
+            )
         } catch {
             Logger.extension.error("Error updating MCP tools via API: \(error)")
         }
@@ -394,6 +406,14 @@ struct AgentConfigurationWidgetView: View {
                 )
             )
             Logger.extension.info("Built-in tools updated via API")
+            
+            // Notify Settings app about custom agent tool changes
+            DistributedNotificationCenter.default().postNotificationName(
+                .gitHubCopilotCustomAgentToolsDidChange,
+                object: nil,
+                userInfo: nil,
+                deliverImmediately: true
+            )
         } catch {
             Logger.extension.error("Error updating built-in tools via API: \(error)")
         }

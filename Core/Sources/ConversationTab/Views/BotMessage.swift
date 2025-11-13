@@ -361,8 +361,6 @@ private struct TurnStatusView: View {
                 case .waitForConfirmation:
                     waitForConfirmationStatus
                 }
-                
-                Spacer()
             }
         }
     }

@@ -93,6 +93,34 @@ class NESMenuController: ObservableObject {
         
     }
     
+    private func createParagraphAttributedTitle(_ text: String, systemSymbolName: String) -> NSAttributedString {
+        let attributedTitle = NSMutableAttributedString(string: text)
+        attributedTitle.append(NSAttributedString(string: "\t"))
+
+        if let image = createImage(systemSymbolName, description: "\(systemSymbolName) key") {
+            let attachment = NSTextAttachment()
+            attachment.image = image
+            
+            let attachmentString = NSMutableAttributedString(attachment: attachment)
+            attachmentString.addAttributes([
+                .foregroundColor: Self.shortcutIconColor,
+                .font: NSFont.systemFont(ofSize: fontSize - 1, weight: .regular),
+                .paragraphStyle: paragraphStyle
+            ], range: NSRange(location: 0, length: attachmentString.length))
+            
+            attributedTitle.append(attachmentString)
+        }
+        
+        attributedTitle.addAttribute(
+            .paragraphStyle,
+            value: paragraphStyle,
+            range: NSRange(location: 0, length: attributedTitle.length)
+        )
+        
+        return attributedTitle
+        
+    }
+    
     @objc func handleSettingsAction() {
         try? launchHostAppAdvancedSettings()
     }
@@ -151,11 +179,13 @@ class NESMenuController: ObservableObject {
         )
         goToAcceptItem.target = self
         
-        if let arrowImage = createImage("arrow.right.to.line", description: "Go To or Accept") {
+        let imageSymbolName = "arrow.right.to.line"
+        
+        if let arrowImage = createImage(imageSymbolName, description: "Go To or Accept") {
             goToAcceptItem.image = arrowImage
         }
         
-        let attributedTitle = createParagraphAttributedTitle("Go To / Accept", helpText: "􀅂")
+        let attributedTitle = createParagraphAttributedTitle("Go To / Accept", systemSymbolName: imageSymbolName)
         goToAcceptItem.attributedTitle = attributedTitle
         
         return goToAcceptItem

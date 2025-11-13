@@ -64,13 +64,13 @@ struct Badge: View {
                     .font(.caption2)
                     .padding(.vertical, 1)
             }
-            if let attributedText = attributedText {
+            if let attributedText = attributedText, attributedText.characters.count > 0 {
                 Text(attributedText)
                     .fontWeight(.semibold)
                     .font(.caption2)
                     .lineLimit(1)
                     .truncationMode(.middle)
-            } else {
+            } else if !text.isEmpty {
                 Text(text)
                     .fontWeight(.semibold)
                     .font(.caption2)

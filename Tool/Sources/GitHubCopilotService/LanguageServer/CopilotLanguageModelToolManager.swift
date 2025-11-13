@@ -5,6 +5,8 @@ import Logger
 public extension Notification.Name {
     static let gitHubCopilotToolsDidChange = Notification
         .Name("com.github.CopilotForXcode.CopilotToolsDidChange")
+    static let gitHubCopilotCustomAgentToolsDidChange = Notification
+        .Name("com.github.CopilotForXcode.CustomAgentToolsDidChange")
 }
 
 public class CopilotLanguageModelToolManager {

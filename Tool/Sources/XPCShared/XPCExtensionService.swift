@@ -555,6 +555,26 @@ extension XPCExtensionService {
     }
     
     @XPCServiceActor
+    public func refreshClientTools() async throws -> [LanguageModelTool]? {
+        return try await withXPCServiceConnected {
+            service, continuation in
+            service.refreshClientTools { data in
+                guard let data else {
+                    continuation.resume(nil)
+                    return
+                }
+
+                do {
+                    let tools = try JSONDecoder().decode([LanguageModelTool].self, from: data)
+                    continuation.resume(tools)
+                } catch {
+                    continuation.reject(error)
+                }
+            }
+        }
+    }
+    
+    @XPCServiceActor
     public func updateToolsStatus(
         _ update: [ToolStatusUpdate],
         chatAgentMode: ChatMode? = nil,

@@ -65,6 +65,7 @@ public struct CreateCustomCopilotFileView: View {
                     Button("Create") { Task { await createPromptFile() } }
                     .buttonStyle(.borderedProminent)
                     .disabled(disableCreateButton)
+                    .keyboardShortcut(.defaultAction)
                 }
             }
             .textFieldStyle(.plain)
@@ -99,8 +100,8 @@ public struct CreateCustomCopilotFileView: View {
                     .foregroundColor(.red)
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
+                    .truncationMode(.middle)
                     .fixedSize(horizontal: false, vertical: true)
-                    .layoutPriority(1)
             } else if trimmedFileName.isEmpty {
                 Image(systemName: "info.circle")
                     .foregroundColor(.secondary)
@@ -111,17 +112,17 @@ public struct CreateCustomCopilotFileView: View {
                 Text("Location:")
                     .foregroundColor(.primary)
                     .padding(.leading, 10)
+                    .layoutPriority(1)
                 Text(".github/\(promptType.directoryName)/\(trimmedFileName)\(promptType.fileExtension)")
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
+                    .truncationMode(.middle)
                     .fixedSize(horizontal: false, vertical: true)
-                    .layoutPriority(1)
             }
         }
         .padding(.horizontal, 2)
-        .transition(.opacity)
     }
 
     // MARK: - Actions / Helpers

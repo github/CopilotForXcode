@@ -38,6 +38,7 @@ public protocol XPCServiceProtocol {
     func getMCPRegistryServer(_ params: Data, withReply reply: @escaping (Data?, Error?) -> Void)
     func getMCPRegistryAllowlist(withReply reply: @escaping (Data?, Error?) -> Void)
     func getAvailableLanguageModelTools(withReply reply: @escaping (Data?) -> Void)
+    func refreshClientTools(withReply reply: @escaping (Data?) -> Void)
     func updateToolsStatus(
         tools: Data,
         chatAgentMode: Data?,

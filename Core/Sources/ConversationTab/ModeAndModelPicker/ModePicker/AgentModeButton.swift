@@ -4,6 +4,18 @@ import Persist
 import SharedUIComponents
 import SwiftUI
 
+// MARK: - Custom NSButton that accepts clicks anywhere within its bounds
+class ClickThroughButton: NSButton {
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        // If the point is within our bounds, return self (the button)
+        // This ensures clicks on subviews are handled by the button
+        if self.bounds.contains(point) {
+            return self
+        }
+        return super.hitTest(point)
+    }
+}
+
 // MARK: - Agent Mode Button
 
 struct AgentModeButton: NSViewRepresentable {
@@ -33,7 +45,7 @@ struct AgentModeButton: NSViewRepresentable {
         let containerView = NSView()
         containerView.translatesAutoresizingMaskIntoConstraints = false
 
-        let button = NSButton()
+        let button = ClickThroughButton()
         button.title = ""
         button.bezelStyle = .inline
         button.setButtonType(.momentaryPushIn)

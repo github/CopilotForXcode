@@ -464,6 +464,19 @@ public class XPCService: NSObject, XPCServiceProtocol {
         }
     }
     
+    public func refreshClientTools(withReply reply: @escaping (Data?) -> Void) {
+        Task { @MainActor in
+            await GitHubCopilotService.refreshClientTools()
+            let availableLanguageModelTools = CopilotLanguageModelToolManager.getAvailableLanguageModelTools()
+            if let availableLanguageModelTools = availableLanguageModelTools {
+                let data = try? JSONEncoder().encode(availableLanguageModelTools)
+                reply(data)
+            } else {
+                reply(nil)
+            }
+        }
+    }
+    
     public func updateToolsStatus(
         tools: Data,
         chatAgentMode: Data?,

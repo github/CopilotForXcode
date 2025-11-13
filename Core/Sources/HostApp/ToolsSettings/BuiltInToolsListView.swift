@@ -25,6 +25,15 @@ struct BuiltInToolsListView: View {
         }
         .onAppear {
             initializeToolStates()
+            // Refresh client tools to get any late-arriving server tools
+            Task {
+                do {
+                    let service = try getService()
+                    _ = try await service.refreshClientTools()
+                } catch {
+                    Logger.client.error("Failed to refresh client tools: \(error)")
+                }
+            }
         }
         .onChange(of: builtInToolManager.availableLanguageModelTools) { _ in
             initializeToolStates()
@@ -32,6 +41,14 @@ struct BuiltInToolsListView: View {
         .onChange(of: selectedMode) { _ in
             toolEnabledStates = [:] // Clear state immediately
             initializeToolStates()
+        }
+        .onReceive(DistributedNotificationCenter.default().publisher(for: .gitHubCopilotCustomAgentToolsDidChange)) { _ in
+            Logger.client.info("Custom agent tools change notification received in BuiltInToolsListView")
+            if !selectedMode.isDefaultAgent {
+                Task {
+                    await reloadModesAndUpdateStates()
+                }
+            }
         }
     }
 

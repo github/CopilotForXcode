@@ -46,8 +46,8 @@ struct ChatSection: View {
 
                     // SubAgent toggle
                     SettingsToggle(
-                        title: "Automatically run subagents for specialized tasks",
-                        subtitle: "Quit and restart GitHub Copilot for Xcode to apply the change",
+                        title: "Enable Subagent",
+                        subtitle: "Allows Copilot Agent mode to call custom agents as subagent. Requires GitHub Copilot for Xcode restart to take effect.",
                         isOn: Binding(
                             get: { enableSubagent && copilotPolicy.isSubagentEnabled },
                             set: { if copilotPolicy.isSubagentEnabled { enableSubagent = $0 } }

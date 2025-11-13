@@ -45,6 +45,7 @@ struct AgentModeDropdown: View {
             Text("Applied for").fontWeight(.bold)
         }
         .pickerStyle(.menu)
+        .frame(maxWidth: 300, alignment: .leading)
         .padding(.leading, -4)
         .onAppear {
             loadModes()

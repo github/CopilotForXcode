@@ -42,7 +42,9 @@ struct ResponseToolBar: View {
             if let modelNameAndMultiplierText = modelNameAndMultiplierText {
                 Text(modelNameAndMultiplierText)
                     .scaledFont(size: chatFontSize - 1)
+                    .lineLimit(1)
                     .foregroundColor(.secondary)
+                    .help(modelNameAndMultiplierText)
             }
             
             UpvoteButton { rating in

@@ -61,9 +61,9 @@ struct MCPServerToolsSection: View {
     
     private func createErrorMessage(_ baseMessage: String) -> AttributedString {
         if hasServerConfigPlaceholders() {
-            var attributedString = AttributedString(baseMessage)
-            attributedString.append(AttributedString(". You may need to update placeholders in "))
-            
+            let prefix = baseMessage.isEmpty ? "" : baseMessage + ". "
+            var attributedString = AttributedString(prefix + "You may need to update placeholders in ")
+
             var mcpLink = AttributedString("mcp.json")
             mcpLink.link = URL(string: "mcp://open-config")
             mcpLink.underlineStyle = .single
@@ -175,6 +175,14 @@ struct MCPServerToolsSection: View {
                 .onChange(of: selectedMode.customTools) { _ in
                     Task {
                         await reloadModesAndUpdateStates()
+                    }
+                }
+                .onReceive(DistributedNotificationCenter.default().publisher(for: .gitHubCopilotCustomAgentToolsDidChange)) { _ in
+                    Logger.client.info("Custom agent tools change notification received in MCPServerToolsSection")
+                    if !selectedMode.isDefaultAgent {
+                        Task {
+                            await reloadModesAndUpdateStates()
+                        }
                     }
                 }
 

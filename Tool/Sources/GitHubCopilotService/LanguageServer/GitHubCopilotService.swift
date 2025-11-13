@@ -1332,6 +1332,53 @@ public final class GitHubCopilotService:
         return updatedTools
     }
     
+    /// Refresh client tools by registering an empty list to get the latest tools from the server.
+    /// This is a workaround for the issue where server-side tools may not be ready when client tools are initially registered.
+    public static func refreshClientTools() async {
+        // Use the first available service since CopilotLanguageModelToolManager is shared
+        guard let service = services.first(where: { $0.projectRootURL.path != "/" }) else {
+            Logger.gitHubCopilot.error("No available service to refresh client tools")
+            return
+        }
+
+        do {
+            // Capture previous snapshot to detect newly added tools only
+            let previousNames = Set((CopilotLanguageModelToolManager.getAvailableLanguageModelTools() ?? []).map { $0.name })
+
+            // Register empty list to get the complete updated tool list from server
+            let refreshedTools = try await service.registerTools(tools: [])
+            CopilotLanguageModelToolManager.updateToolsStatus(refreshedTools)
+            Logger.gitHubCopilot.info("Refreshed client tools: \(refreshedTools.count) tools available (previous: \(previousNames.count))")
+
+            // Restore status ONLY for newly added tools whose saved status differs.
+            if let savedJSON = AppState.shared.get(key: "languageModelToolsStatus"),
+                let data = try? JSONEncoder().encode(savedJSON),
+                let savedStatusList = try? JSONDecoder().decode([ToolStatusUpdate].self, from: data),
+                !savedStatusList.isEmpty {
+                let refreshedByName = Dictionary(uniqueKeysWithValues: (CopilotLanguageModelToolManager.getAvailableLanguageModelTools() ?? []).map { ($0.name, $0) })
+                let newlyAddedNames = refreshedTools.map { $0.name }.filter { !previousNames.contains($0) }
+                if !newlyAddedNames.isEmpty {
+                    let neededUpdates: [ToolStatusUpdate] = newlyAddedNames.compactMap { newName in
+                        guard let saved = savedStatusList.first(where: { $0.name == newName }),
+                              let current = refreshedByName[newName], current.status != saved.status else { return nil }
+                        return saved
+                    }
+                    if !neededUpdates.isEmpty {
+                        do {
+                            let finalTools = try await service.updateToolsStatus(params: .init(tools: neededUpdates))
+                            CopilotLanguageModelToolManager.updateToolsStatus(finalTools)
+                            Logger.gitHubCopilot.info("Restored statuses for newly added tools: \(neededUpdates.map{ $0.name }.joined(separator: ", "))")
+                        } catch {
+                            Logger.gitHubCopilot.error("Failed to restore newly added tool statuses: \(error)")
+                        }
+                    }
+                }
+            }
+        } catch {
+            Logger.gitHubCopilot.error("Failed to refresh client tools: \(error)")
+        }
+    }
+    
     private func loadUnrestoredLanguageModelTools() -> [ToolStatusUpdate] {
         if let savedJSON = AppState.shared.get(key: "languageModelToolsStatus"),
            let data = try? JSONEncoder().encode(savedJSON),

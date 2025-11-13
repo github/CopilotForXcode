@@ -102,13 +102,6 @@ struct PseudoCommandHandler {
                 cleanupNESSuggestion(filespace: filespace, presenter: presenter)
             }
             
-            if filespace.presentingSuggestion != nil || filespace.presentingNESSuggestion != nil {
-                let snapshot = FilespaceSuggestionSnapshot(content: editor)
-                filespace.suggestionSourceSnapshot = snapshot
-            } else {
-                filespace.resetSnapshot()
-            }
-            
         } catch {
             cleanupAllSuggestions(filespace: filespace, presenter: presenter)
         }
@@ -140,6 +133,7 @@ struct PseudoCommandHandler {
         cleanupCodeCompletionSuggestion(filespace: filespace, presenter: presenter)
         cleanupNESSuggestion(filespace: filespace, presenter: presenter)
         filespace.resetSnapshot()
+        filespace.resetNESSnapshot()
     }
     
     @WorkspaceActor
@@ -248,6 +242,24 @@ struct PseudoCommandHandler {
             cursorPosition: content.cursorPosition
         ) {
             PresentInWindowSuggestionPresenter().discardSuggestion(fileURL: fileURL)
+        }
+    }
+    
+    @WorkspaceActor
+    func invalidateRealtimeNESSuggestionsIfNeeded(fileURL: URL, sourceEditor: SourceEditor) async {
+        guard let (_, filespace) = try? await Service.shared.workspacePool
+            .fetchOrCreateWorkspaceAndFilespace(fileURL: fileURL) else { return }
+        
+        if filespace.presentingNESSuggestion == nil {
+            return // skip if there's no NES suggestion presented.
+        }
+        
+        let content = sourceEditor.getContent()
+        if !filespace.validateNESSuggestions(
+            lines: content.lines,
+            cursorPosition: content.cursorPosition
+        ) {
+            PresentInWindowSuggestionPresenter().discardNESSuggestion(fileURL: fileURL)
         }
     }
 

@@ -18,23 +18,69 @@ struct AgentModeMenu {
         
         let menuHasSelection = true // Always show checkmarks for clarity
         
+        // Calculate the maximum width needed across all items
+        let maxWidth = calculateMaxMenuItemWidth(menuHasSelection: menuHasSelection)
+        
         // Add built-in agent modes
-        addBuiltInModes(to: menu, menuHasSelection: menuHasSelection)
+        addBuiltInModes(to: menu, menuHasSelection: menuHasSelection, width: maxWidth)
         
         // Add custom agents if any
         if !customAgents.isEmpty {
             menu.addItem(.separator())
-            addCustomAgents(to: menu, menuHasSelection: menuHasSelection)
+            addCustomAgents(to: menu, menuHasSelection: menuHasSelection, width: maxWidth)
         }
         
         // Add create option
         menu.addItem(.separator())
-        addCreateOption(to: menu, menuHasSelection: menuHasSelection)
+        addCreateOption(to: menu, menuHasSelection: menuHasSelection, width: maxWidth)
         
         return menu
     }
     
-    private func addBuiltInModes(to menu: NSMenu, menuHasSelection: Bool) {
+    private func calculateMaxMenuItemWidth(menuHasSelection: Bool) -> CGFloat {
+        var maxWidth: CGFloat = 0
+        
+        // Check built-in modes
+        for mode in builtInAgentModes {
+            let width = AgentModeButtonMenuItem.calculateMenuItemWidth(
+                name: mode.name,
+                hasIcon: true,
+                isSelected: selectedAgent.id == mode.id,
+                menuHasSelection: menuHasSelection,
+                hasEditDelete: false,
+                fontScale: fontScale
+            )
+            maxWidth = max(maxWidth, width)
+        }
+        
+        // Check custom agents
+        for agent in customAgents {
+            let width = AgentModeButtonMenuItem.calculateMenuItemWidth(
+                name: agent.name,
+                hasIcon: false,
+                isSelected: selectedAgent.id == agent.id,
+                menuHasSelection: menuHasSelection,
+                hasEditDelete: true,
+                fontScale: fontScale
+            )
+            maxWidth = max(maxWidth, width)
+        }
+        
+        // Check create option
+        let createWidth = AgentModeButtonMenuItem.calculateMenuItemWidth(
+            name: "Create an agent",
+            hasIcon: true,
+            isSelected: false,
+            menuHasSelection: menuHasSelection,
+            hasEditDelete: false,
+            fontScale: fontScale
+        )
+        maxWidth = max(maxWidth, createWidth)
+        
+        return maxWidth
+    }
+    
+    private func addBuiltInModes(to menu: NSMenu, menuHasSelection: Bool, width: CGFloat) {
         for mode in builtInAgentModes {
             let agentItem = NSMenuItem()
             // Determine icon: use checklist for Plan, Agent icon for others
@@ -45,6 +91,7 @@ struct AgentModeMenu {
                 isSelected: selectedAgent.id == mode.id,
                 menuHasSelection: menuHasSelection,
                 fontScale: fontScale,
+                fixedWidth: width,
                 onSelect: { [onSelectAgent] in
                     onSelectAgent(mode)
                     menu.cancelTracking()
@@ -56,7 +103,7 @@ struct AgentModeMenu {
         }
     }
     
-    private func addCustomAgents(to menu: NSMenu, menuHasSelection: Bool) {
+    private func addCustomAgents(to menu: NSMenu, menuHasSelection: Bool, width: CGFloat) {
         for agent in customAgents {
             let agentItem = NSMenuItem()
             agentItem.representedObject = agent
@@ -68,6 +115,7 @@ struct AgentModeMenu {
                 isSelected: selectedAgent.id == agent.id,
                 menuHasSelection: menuHasSelection,
                 fontScale: fontScale,
+                fixedWidth: width,
                 onSelect: { [onSelectAgent] in
                     onSelectAgent(agent)
                     menu.cancelTracking()
@@ -88,7 +136,7 @@ struct AgentModeMenu {
         }
     }
     
-    private func addCreateOption(to menu: NSMenu, menuHasSelection: Bool) {
+    private func addCreateOption(to menu: NSMenu, menuHasSelection: Bool, width: CGFloat) {
         let createItem = NSMenuItem()
         let createView = AgentModeButtonMenuItem(
             name: "Create an agent",
@@ -96,6 +144,7 @@ struct AgentModeMenu {
             isSelected: false,
             menuHasSelection: menuHasSelection,
             fontScale: fontScale,
+            fixedWidth: width,
             onSelect: { [onCreateAgent] in
                 onCreateAgent()
                 menu.cancelTracking()

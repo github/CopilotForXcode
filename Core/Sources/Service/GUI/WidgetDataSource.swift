@@ -105,5 +105,5 @@ extension WidgetDataSource: SuggestionWidgetDataSource {
 
 @WorkspaceActor
 private func getSourceSnapshot(from filespace: Filespace) -> FilespaceSuggestionSnapshot {
-    return filespace.suggestionSourceSnapshot
+    return filespace.nesSuggestionSourceSnapshot
 }
