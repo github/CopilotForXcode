@@ -1,23 +1,19 @@
-### GitHub Copilot for Xcode 0.44.0
+### GitHub Copilot for Xcode 0.45.0
 
 **🚀 Highlights**
 
-* Added support for new models in Chat: Grok Code Fast 1, Claude Sonnet 4.5, Claude Opus 4, Claude Opus 4.1 and GPT-5 mini.
-* Added support for restoring to a saved checkpoint snapshot.
-* Added support for tool selection in agent mode.
-* Added the ability to adjust the chat panel font size.
-* Added the ability to edit a previous chat message and resend it.
-* Introduced a new setting to disable the Copilot “Fix Error” button.
-* Added support for custom instructions in the Code Review feature.
+- Added new models: GPT-5.1, GPT-5.1-Codex, GPT-5.1-Codex-Mini, Claude Haiku 4.5, and Auto (preview).
+- Added support for custom agents (preview).
+- Introduced the built-in Plan agent (preview).
+- Added support for subagent execution (preview).
+- Added support for Next Edit Suggestions (preview).
 
 **💪 Improvements**
 
-* Switched authentication to a new OAuth app "GitHub Copilot IDE Plugin".
-* Updated the chat layout to a messenger-style conversation view (user messages on the right, responses on the left).
-* Now shows a clearer, more user-friendly message when Copilot finishes responding.
-* Added support for skipping a tool call without ending the conversation.
+- MCP servers now support dynamic OAuth setup for third-party authentication providers.
+- Added a setting to configure the maximum number of tool requests allowed.
 
 **🛠️ Bug Fixes**
 
-* Fixed a command injection vulnerability when opening referenced chat files.
-* Resolved display issues in the chat view on macOS 26.
+- Fixed an issue that the terminal view in Agent conversation was clipped
+- Fixed an issue that the Chat panel failed to recognize newly created workspaces.

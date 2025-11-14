@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.45.0 - November 14, 2025
+### Added
+- New models: GPT-5.1, GPT-5.1-Codex, GPT-5.1-Codex-Mini, Claude Haiku 4.5, and Auto (preview).
+- Added support for custom agents (preview).
+- Introduced the built-in Plan agent (preview).
+- Added support for subagent execution (preview).
+- Added support for Next Edit Suggestions (preview).
+
+### Changed
+- MCP servers now support dynamic OAuth setup for third-party authentication providers.
+- Added a setting to configure the maximum number of tool requests allowed.
+
+### Fixed
+- Fixed an issue that the terminal view in Agent conversation was clipped
+- Fixed an issue that the Chat panel failed to recognize newly created workspaces.
+
 ## 0.44.0 - October 15, 2025
 ### Added
 - Added support for new models in Chat: Grok Code Fast 1, Claude Sonnet 4.5, Claude Opus 4, Claude Opus 4.1 and GPT-5 mini.

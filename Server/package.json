@@ -7,9 +7,9 @@
     "build": "webpack"
   },
   "dependencies": {
-    "@github/copilot-language-server": "1.394.0",
-    "@github/copilot-language-server-darwin-arm64": "1.394.0",
-    "@github/copilot-language-server-darwin-x64": "1.394.0",
+    "@github/copilot-language-server": "1.395.0",
+    "@github/copilot-language-server-darwin-arm64": "1.395.0",
+    "@github/copilot-language-server-darwin-x64": "1.395.0",
     "@xterm/addon-fit": "^0.10.0",
     "@xterm/xterm": "^5.5.0",
     "monaco-editor": "0.52.2"
