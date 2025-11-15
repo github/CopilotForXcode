@@ -243,7 +243,7 @@ public final class ChatService: ChatServiceType, ObservableObject {
         return ChatService(provider: provider, chatTabInfo: chatTabInfo)
     }
     
-    // this will be triggerred in conversation tab if needed
+    // this will be triggered in conversation tab if needed
     public func restoreIfNeeded() {
         guard self.isRestored == false else { return }
         

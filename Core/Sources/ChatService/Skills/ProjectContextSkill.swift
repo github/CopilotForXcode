@@ -22,7 +22,7 @@ public class ProjectContextSkill {
     public init() { }
     
     /*
-     * The request from CLS only contain the projectPath (a initialization paramter for CLS)
+     * The request from CLS only contain the projectPath (a initialization parameter for CLS)
      * whereas to get files for xcode workspace, the workspacePath is needed.
      */
     public static func resolveSkill(
