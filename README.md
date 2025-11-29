@@ -1,4 +1,4 @@
-# <img align="center" height="70" src="./Docs/Images/AppIcon.png"/> GitHub Copilot for Xcode
+# <img align="center" height="70" src="./Docs/Images/AppIcon.png"/> GitHub Copilot for Xcode/Android 16
 
 [GitHub Copilot](https://github.com/features/copilot) for Xcode is the leading AI coding assistant for Xcode developers, helping you code faster and smarter. Stay in flow with **inline completions** and get instant help through **chat support**—explaining code, answering questions, and suggesting improvements. When you need more, Copilot scales with advanced features like **Agent Mode, MCP Registry, Copilot Vision, Code Review, Custom Instructions, and more**, making your Xcode workflow more efficient and intelligent.
 
