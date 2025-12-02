@@ -2,16 +2,18 @@ import Foundation
 import System
 
 public final class MCPRuntimeFileLogger {
-    private let timestampFormat = Date.ISO8601FormatStyle.iso8601
-        .year()
-        .month()
-        .day()
-        .timeZone(separator: .omitted).time(includingFractionalSeconds: true)
+    private lazy var dateFormatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
+
     private let implementation = MCPRuntimeFileLoggerImplementation()
-    
+
     /// Converts a timestamp in milliseconds since the Unix epoch to a formatted date string.
     private func timestamp(timeStamp: Double) -> String {
-        return Date(timeIntervalSince1970: timeStamp/1000).formatted(timestampFormat)
+        let date = Date(timeIntervalSince1970: timeStamp/1000)
+        return dateFormatter.string(from: date)
     }
     
     public func log(
@@ -22,11 +24,16 @@ public final class MCPRuntimeFileLogger {
         tool: String? = nil,
         time: Double
     ) {
-        let toolSuffix = tool.map { "-\($0)" } ?? ""
-        let log = "[\(timestamp(timeStamp: time))] [\(level)] [\(server)\(toolSuffix)] \(message)\(message.hasSuffix("\n") ? "" : "\n")"
+        guard time.isFinite, time >= 0 else {
+            return
+        }
         
-        Task {
-            await self.implementation.logToFile(logFileName: logFileName, log: log)
+        let toolSuffix = tool.map { "-\($0)" } ?? ""
+        let timestampStr = timestamp(timeStamp: time)
+        let log = "[\(timestampStr)] [\(level)] [\(server)\(toolSuffix)] \(message)\(message.hasSuffix("\n") ? "" : "\n")"
+        
+        Task { [implementation] in
+            await implementation.logToFile(logFileName: logFileName, log: log)
         }
     }
 }

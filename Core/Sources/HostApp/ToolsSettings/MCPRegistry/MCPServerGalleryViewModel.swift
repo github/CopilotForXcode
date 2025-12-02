@@ -14,7 +14,7 @@ final class MCPServerGalleryViewModel: ObservableObject {
     @Published var searchText: String = ""
 
     // Data
-    @Published private(set) var servers: [MCPRegistryServerDetail]
+    @Published private(set) var servers: [MCPRegistryServerResponse]
     @Published private(set) var installedServers: Set<String> = []
     @Published private(set) var registryMetadata: MCPRegistryServerListMetadata?
 
@@ -24,13 +24,13 @@ final class MCPServerGalleryViewModel: ObservableObject {
     @Published private(set) var isRefreshing: Bool = false
 
     // Transient presentation state
-    @Published var pendingServer: MCPRegistryServerDetail?
-    @Published var infoSheetServer: MCPRegistryServerDetail?
+    @Published var pendingServer: MCPRegistryServerResponse?
+    @Published var infoSheetServer: MCPRegistryServerResponse?
     @Published var mcpRegistryEntry: MCPRegistryEntry?
     @Published private(set) var lastError: Error?
 
-    @AppStorage(\.mcpRegistryURL) var mcpRegistryURL
-    @AppStorage(\.mcpRegistryURLHistory) private var mcpRegistryURLHistory
+    @AppStorage(\.mcpRegistryBaseURL) var mcpRegistryBaseURL
+    @AppStorage(\.mcpRegistryBaseURLHistory) private var mcpRegistryBaseURLHistory
 
     // Service integration
     private let registryService = MCPRegistryService.shared
@@ -48,19 +48,15 @@ final class MCPServerGalleryViewModel: ObservableObject {
 
     // MARK: - Derived Data
 
-    var filteredServers: [MCPRegistryServerDetail] {
-        // First filter for only latest official servers
-        let latestServers = servers.filter { server in
-            server.meta?.official?.isLatest == true
-        }
-
-        // Then apply search filter if search text is present
-        let key = searchText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        guard !key.isEmpty else { return latestServers }
-
-        return latestServers.filter {
-            $0.name.lowercased().contains(key) ||
-                $0.description.lowercased().contains(key)
+    var filteredServers: [MCPRegistryServerResponse] {
+        // Only filter for latest official servers; search is handled server-side.
+        // Also ensure we don't surface duplicate stable IDs, which can confuse SwiftUI's diffing.
+        var seen = Set<String>()
+        return servers.compactMap { server in
+            let id = server.stableID
+            if seen.contains(id) { return nil }
+            seen.insert(id)
+            return server
         }
     }
 
@@ -75,11 +71,11 @@ final class MCPServerGalleryViewModel: ObservableObject {
     func isServerInstalled(serverId: String) -> Bool {
         // Find the server by ID and check installation status using the service
         if let server = servers.first(where: { $0.stableID == serverId }) {
-            return registryService.isServerInstalled(server)
+            return registryService.isServerInstalled(server.server)
         }
 
         // Fallback to the existing key-based check for backwards compatibility
-        let key = createRegistryServerKey(registryURL: mcpRegistryURL, serverId: serverId)
+        let key = createRegistryServerKey(registryBaseURL: mcpRegistryBaseURL, serverName: serverId)
         return installedServers.contains(key)
     }
 
@@ -149,12 +145,12 @@ final class MCPServerGalleryViewModel: ObservableObject {
             isRefreshing = true
             defer { isRefreshing = false }
             
-            // Clear the current server list
+            // Clear the current server list and search text
             servers = []
             registryMetadata = nil
             searchText = ""
 
-            // Load servers from the base URL
+            // Load servers from the base URL with empty query
             _ = await loadServerList(resetToFirstPage: true)
         }
     }
@@ -164,7 +160,7 @@ final class MCPServerGalleryViewModel: ObservableObject {
         isRefreshing = true
         defer { isRefreshing = false }
         
-        // Clear the current server list immediately
+        // Clear the current server list and reset search text when URL changes
         servers = []
         registryMetadata = nil
         searchText = ""
@@ -196,7 +192,22 @@ final class MCPServerGalleryViewModel: ObservableObject {
         Logger.client.info("Cleared gallery view model data")
     }
 
-    func showInfo(_ server: MCPRegistryServerDetail) {
+    /// Refresh the server list in response to a search query change without
+    /// resetting the search text. This is used by the debounced searchable field.
+    func refreshForSearch() {
+        Task {
+            isRefreshing = true
+            defer { isRefreshing = false }
+
+            // Clear current data but keep the active search query
+            servers = []
+            registryMetadata = nil
+
+            _ = await loadServerList(resetToFirstPage: true)
+        }
+    }
+
+    func showInfo(_ server: MCPRegistryServerResponse) {
         infoSheetServer = server
     }
 
@@ -236,11 +247,15 @@ final class MCPServerGalleryViewModel: ObservableObject {
             let service = try getService()
             let cursor = resetToFirstPage ? nil : registryMetadata?.nextCursor
 
+            let trimmedQuery = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+
             let serverList = try await service.listMCPRegistryServers(
                 .init(
-                    baseUrl: mcpRegistryURL,
+                    baseUrl: registryService.getRegistryURL(),
                     cursor: cursor,
-                    limit: pageSize
+                    limit: pageSize,
+                    search: trimmedQuery.isEmpty ? nil : trimmedQuery,
+                    version: "latest"
                 )
             )
 
@@ -254,7 +269,7 @@ final class MCPServerGalleryViewModel: ObservableObject {
                 registryMetadata = serverList?.metadata
             }
 
-            mcpRegistryURLHistory.addToHistory(mcpRegistryURL)
+            mcpRegistryBaseURLHistory.addToHistory(mcpRegistryBaseURL)
             
             return nil
         } catch {
@@ -281,18 +296,20 @@ final class MCPServerGalleryViewModel: ObservableObject {
                 let serverConfigDict = serverConfig as? [String: Any],
                 let metadata = serverConfigDict["x-metadata"] as? [String: Any],
                 let registry = metadata["registry"] as? [String: Any],
-                let registryUrl = registry["url"] as? String,
-                let serverId = registry["serverId"] as? String
+                let api = registry["api"] as? [String: Any],
+                let baseUrl = api["baseUrl"] as? String,
+                let mcpServer = registry["mcpServer"] as? [String: Any],
+                let name = mcpServer["name"] as? String
             else { continue }
 
             installedServers.insert(
-                createRegistryServerKey(registryURL: registryUrl, serverId: serverId)
+                createRegistryServerKey(registryBaseURL: baseUrl, serverName: name)
             )
         }
     }
 
-    private func createRegistryServerKey(registryURL: String, serverId: String) -> String {
-        return registryService.createRegistryServerKey(registryURL: registryURL, serverId: serverId)
+    private func createRegistryServerKey(registryBaseURL: String, serverName: String) -> String {
+        return registryService.createRegistryServerKey(registryBaseURL: registryBaseURL, serverName: serverName)
     }
 
     // MARK: - Installation Options Helper

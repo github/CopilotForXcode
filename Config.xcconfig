@@ -10,6 +10,6 @@ EXTENSION_BUNDLE_NAME = GitHub Copilot
 EXTENSION_BUNDLE_DISPLAY_NAME = GitHub Copilot
 EXTENSION_SERVICE_NAME = GitHub Copilot for Xcode Extension
 COPILOT_DOCS_URL = https:$(SLASH)$(SLASH)docs.github.com/en/copilot
-COPILOT_FORUM_URL = https:$(SLASH)$(SLASH)github.com/orgs/community/discussions/categories/copilot
+COPILOT_FORUM_URL = https:$(SLASH)$(SLASH)github.com/github/CopilotForXcode/discussions
 
 // see also target Configs

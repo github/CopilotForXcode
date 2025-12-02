@@ -47,7 +47,7 @@ public protocol CopilotForXcodeExtensionCapability {
     ///
     /// - note: Copilot for Xcode doesn't know that a document is opened. It use
     /// some mechanism to detect if the document is opened which is inaccurate and could be delayed.
-    func workspace(_ workspace: WorkspaceInfo, didOpenDocumentAt documentURL: URL)
+    func workspace(_ workspace: WorkspaceInfo, didOpenDocumentAt documentURL: URL) async
     
     /// Called when a document is changed.
     ///
@@ -65,7 +65,7 @@ public protocol CopilotForXcodeExtensionCapability {
         didUpdateDocumentAt documentURL: URL,
         content: String?,
         contentChanges: [TextDocumentContentChangeEvent]?
-    )
+    ) async
     
     /// Called occasionally to inform the extension how it is used in the app.
     ///
@@ -92,14 +92,14 @@ public extension CopilotForXcodeExtensionCapability {
     
     func workspace(_: WorkspaceInfo, didCloseDocumentAt _: URL) {}
     
-    func workspace(_: WorkspaceInfo, didOpenDocumentAt _: URL) {}
+    func workspace(_: WorkspaceInfo, didOpenDocumentAt _: URL) async {}
     
     func workspace(
         _ workspace: WorkspaceInfo,
         didUpdateDocumentAt documentURL: URL,
         content: String?,
         contentChanges: [TextDocumentContentChangeEvent]? = nil
-    ) {}
+    ) async {}
     
     func extensionUsageDidChange(_: ExtensionUsage) {}
 }

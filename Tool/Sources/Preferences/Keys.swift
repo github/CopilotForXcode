@@ -616,11 +616,11 @@ public extension UserDefaultPreferenceKeys {
         .init(defaultValue: "", key: "CurrentUserName")
     }
     
-    var mcpRegistryURL: PreferenceKey<String> {
-        .init(defaultValue: "https://api.mcp.github.com/2025-09-15/v0/servers", key: "MCPRegistryURL")
+    var mcpRegistryBaseURL: PreferenceKey<String> {
+        .init(defaultValue: "https://api.mcp.github.com", key: "MCPRegistryBaseURL")
     }
     
-    var mcpRegistryURLHistory: PreferenceKey<[String]> {
-        .init(defaultValue: [], key: "MCPRegistryURLHistory")
+    var mcpRegistryBaseURLHistory: PreferenceKey<[String]> {
+        .init(defaultValue: [], key: "MCPRegistryBaseURLHistory")
     }
 }

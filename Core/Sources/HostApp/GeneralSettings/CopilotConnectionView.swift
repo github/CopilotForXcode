@@ -120,7 +120,7 @@ struct CopilotConnectionView: View {
             )
             Divider()
             SettingsLink(
-                url: "https://github.com/orgs/community/discussions/categories/copilot",
+                url: "https://github.com/github/CopilotForXcode/discussions",
                 title: "View Copilot Feedback Forum"
             )
         }

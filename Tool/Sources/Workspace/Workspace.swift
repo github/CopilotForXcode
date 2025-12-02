@@ -44,9 +44,9 @@ open class WorkspacePlugin {
         self.workspace = workspace
     }
 
-    open func didOpenFilespace(_: Filespace) {}
+    open func didOpenFilespace(_: Filespace) async {}
     open func didSaveFilespace(_: Filespace) {}
-    open func didUpdateFilespace(_: Filespace, content: String, contentChanges: [TextDocumentContentChangeEvent]?) {}
+    open func didUpdateFilespace(_: Filespace, content: String, contentChanges: [TextDocumentContentChangeEvent]?) async {}
     open func didCloseFilespace(_: URL) {}
 }
 
@@ -116,7 +116,7 @@ public final class Workspace {
         Task { @WorkspaceActor in
             for fileURL in openedFiles {
                 do {
-                    _ = try createFilespaceIfNeeded(fileURL: fileURL)
+                    _ = try await createFilespaceIfNeeded(fileURL: fileURL)
                 } catch _ as WorkspaceFileError {
                     openedFileRecoverableStorage.closeFile(fileURL: fileURL)
                 } catch {
@@ -131,7 +131,7 @@ public final class Workspace {
     }
 
     @WorkspaceActor
-    public func createFilespaceIfNeeded(fileURL: URL) throws -> Filespace {
+    public func createFilespaceIfNeeded(fileURL: URL) async throws -> Filespace {
         let extensionName = fileURL.pathExtension
         
         if ["xcworkspace", "xcodeproj"].contains(
@@ -169,7 +169,7 @@ public final class Workspace {
             filespaces[fileURL] = filespace
         }
         if existedFilespace == nil {
-            didOpenFilespace(filespace)
+            await didOpenFilespace(filespace)
         } else {
             filespace.refreshUpdateTime()
         }
@@ -182,7 +182,7 @@ public final class Workspace {
     }
 
     @WorkspaceActor
-    public func didUpdateFilespace(fileURL: URL, content: String) {
+    public func didUpdateFilespace(fileURL: URL, content: String) async {
         refreshUpdateTime()
         guard let filespace = filespaces[fileURL] else { return }
         filespace.bumpVersion()
@@ -198,10 +198,10 @@ public final class Workspace {
         
         for plugin in plugins.values {
             if let changes, let oldContent {
-                plugin.didUpdateFilespace(filespace, content: oldContent, contentChanges: changes)
+                await plugin.didUpdateFilespace(filespace, content: oldContent, contentChanges: changes)
             } else {
                 // fallback to full content sync
-                plugin.didUpdateFilespace(filespace, content: content, contentChanges: nil)
+                await plugin.didUpdateFilespace(filespace, content: content, contentChanges: nil)
             }
         }
         
@@ -209,11 +209,11 @@ public final class Workspace {
     }
 
     @WorkspaceActor
-    public func didOpenFilespace(_ filespace: Filespace) {
+    public func didOpenFilespace(_ filespace: Filespace) async {
         refreshUpdateTime()
         openedFileRecoverableStorage.openFile(fileURL: filespace.fileURL)
         for plugin in plugins.values {
-            plugin.didOpenFilespace(filespace)
+            await plugin.didOpenFilespace(filespace)
         }
     }
 

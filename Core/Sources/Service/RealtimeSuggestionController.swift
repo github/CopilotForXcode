@@ -132,10 +132,6 @@ public actor RealtimeSuggestionController {
                     }
                 }
             }
-            
-            // The `valueChange` event may be missed when the source editor changes focus and
-            // a file is opened with immediate edits (e.g., `insertEditIntoFile` tool in Agent mode).
-            await self.onFocusElementChanged(editor: sourceEditor)
         }
     }
 
@@ -195,25 +191,6 @@ public actor RealtimeSuggestionController {
               .fetchOrCreateWorkspaceAndFilespace(fileURL: fileURL)
         else { return }
         await workspace.didUpdateFilespace(fileURL: fileURL, content: editor.value)
-    }
-    
-    func onFocusElementChanged(editor: SourceEditor) async {
-        guard let fileURL = await XcodeInspector.shared.safe.activeDocumentURL else {
-            return
-        }
-        
-        if let (workspace, _) = await Service.shared.workspacePool
-            .fetchWorkspaceAndFilespace(fileURL: fileURL) {
-            await workspace.didUpdateFilespace(fileURL: fileURL, content: editor.element.value)
-        } else if let (workspace, filespace) = try? await Service.shared.workspacePool
-            .fetchOrCreateWorkspaceAndFilespace(fileURL: fileURL) {
-            await workspace.didOpenFilespace(filespace)
-        }
-        
-        await PseudoCommandHandler()
-            .invalidateRealtimeNESSuggestionsIfNeeded(
-                fileURL: fileURL, sourceEditor: editor
-            )
     }
 }
 

@@ -42,7 +42,7 @@ public final class GitHubCopilotExtension: BuiltinExtension {
 
     public func workspaceDidClose(_: WorkspaceInfo) {}
 
-    public func workspace(_ workspace: WorkspaceInfo, didOpenDocumentAt documentURL: URL) {
+    public func workspace(_ workspace: WorkspaceInfo, didOpenDocumentAt documentURL: URL) async {
         guard isLanguageServerInUse else { return }
         // check if file size is larger than 15MB, if so, return immediately
         if let attrs = try? FileManager.default
@@ -51,21 +51,19 @@ public final class GitHubCopilotExtension: BuiltinExtension {
             fileSize > 15 * 1024 * 1024
         { return }
 
-        Task {
-            let content: String
-            do {
-                content = try String(contentsOf: documentURL, encoding: .utf8)
-            } catch {
-                Logger.extension.info("Failed to read \(documentURL.lastPathComponent): \(error)")
-                return
-            }
-            
-            do {
-                guard let service = await serviceLocator.getService(from: workspace) else { return }
-                try await service.notifyOpenTextDocument(fileURL: documentURL, content: content)
-            } catch {
-                Logger.gitHubCopilot.info(error.localizedDescription)
-            }
+        let content: String
+        do {
+            content = try String(contentsOf: documentURL, encoding: .utf8)
+        } catch {
+            Logger.extension.info("Failed to read \(documentURL.lastPathComponent): \(error)")
+            return
+        }
+        
+        do {
+            guard let service = await serviceLocator.getService(from: workspace) else { return }
+            try await service.notifyOpenTextDocument(fileURL: documentURL, content: content)
+        } catch {
+            Logger.gitHubCopilot.info(error.localizedDescription)
         }
     }
 
@@ -98,7 +96,7 @@ public final class GitHubCopilotExtension: BuiltinExtension {
         didUpdateDocumentAt documentURL: URL,
         content: String?,
         contentChanges: [TextDocumentContentChangeEvent]? = nil
-    ) {
+    ) async {
         guard isLanguageServerInUse else { return }
         // check if file size is larger than 15MB, if so, return immediately
         if let attrs = try? FileManager.default
@@ -107,28 +105,26 @@ public final class GitHubCopilotExtension: BuiltinExtension {
             fileSize > 15 * 1024 * 1024
         { return }
 
-        Task {
-            guard let content else { return }
-            guard let service = await serviceLocator.getService(from: workspace) else { return }
-            do {
-                try await service.notifyChangeTextDocument(
-                    fileURL: documentURL,
-                    content: content,
-                    version: 0,
-                    contentChanges: contentChanges
-                )
-            } catch let error as ServerError {
-                switch error {
-                case .serverError(-32602, _, _): // parameter incorrect
-                    Logger.gitHubCopilot.error(error.localizedDescription)
-                    // Reopen document if it's not found in the language server
-                    self.workspace(workspace, didOpenDocumentAt: documentURL)
-                default:
-                    Logger.gitHubCopilot.info(error.localizedDescription)
-                }
-            } catch {
+        guard let content else { return }
+        guard let service = await serviceLocator.getService(from: workspace) else { return }
+        do {
+            try await service.notifyChangeTextDocument(
+                fileURL: documentURL,
+                content: content,
+                version: 0,
+                contentChanges: contentChanges
+            )
+        } catch let error as ServerError {
+            switch error {
+            case .serverError(-32602, _, _): // parameter incorrect
+                Logger.gitHubCopilot.error(error.localizedDescription)
+                // Reopen document if it's not found in the language server
+                await self.workspace(workspace, didOpenDocumentAt: documentURL)
+            default:
                 Logger.gitHubCopilot.info(error.localizedDescription)
             }
+        } catch {
+            Logger.gitHubCopilot.info(error.localizedDescription)
         }
     }
 

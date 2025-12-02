@@ -27,7 +27,7 @@ private struct RegistryType {
     let commandName: String
     
     func buildArguments(for package: Package) -> [String] {
-        let identifier = package.identifier ?? ""
+        let identifier = package.identifier
         let version = package.version ?? ""
         
         switch package.registryType {
@@ -54,25 +54,59 @@ private let registryTypes: [String: RegistryType] = [
     "nuget": RegistryType(displayName: "NuGet", commandName: "dnx")
 ]
 
+public extension Remote {
+    var transportType: TransportType {
+        switch self {
+        case .streamableHTTP(let transport):
+            return transport.type
+        case .sse(let transport):
+            return transport.type
+        }
+    }
+
+    var url: String {
+        switch self {
+        case .streamableHTTP(let transport):
+            return transport.url
+        case .sse(let transport):
+            return transport.url
+        }
+    }
+
+    var headers: [KeyValueInput]? {
+        switch self {
+        case .streamableHTTP(let transport):
+            return transport.headers
+        case .sse(let transport):
+            return transport.headers
+        }
+    }
+}
+
 // MARK: - MCP Registry Service
 
 @MainActor
 public class MCPRegistryService: ObservableObject {
     public static let shared = MCPRegistryService()
-    @AppStorage(\.mcpRegistryURL) var mcpRegistryURL
+    public static let apiVersion = "v0.1"
+    @AppStorage(\.mcpRegistryBaseURL) var mcpRegistryBaseURL
     
     private init() {}
 
-    public static func getServerId(from serverDetail: MCPRegistryServerDetail) -> String? {
-        return serverDetail.meta?.official?.id
+    public static func getServerName(from serverDetail: MCPRegistryServerDetail) -> String {
+        return serverDetail.name
     }
 
-    public func getRegistryURL() throws -> String {
-        let url = mcpRegistryURL.trimmingCharacters(in: .whitespacesAndNewlines)
+    public func getRegistryBaseURL() throws -> String {
+        let url = mcpRegistryBaseURL.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !url.isEmpty else {
             throw MCPRegistryError.registryURLNotConfigured
         }
-        return url
+        return url.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+    }
+
+    public func getRegistryURL() throws -> String {
+        return try getRegistryBaseURL() + "/\(MCPRegistryService.apiVersion)/servers"
     }
 
     // MARK: - Installation Options
@@ -94,12 +128,11 @@ public class MCPRegistryService: ObservableObject {
         // Add package options
         serverDetail.packages?.enumerated().forEach { index, package in
             let config = createServerConfig(for: serverDetail, package: package)
-            let registryDisplay = package.registryType?.registryDisplayText ?? "Unknown"
-            let identifier = package.identifier.map { " : \($0)" } ?? ""
-            
+            let registryDisplay = package.registryType.registryDisplayText
+
             options.append(InstallationOption(
-                displayName: "\(registryDisplay)\(identifier)",
-                description: "Install \(package.identifier ?? "") from \(registryDisplay)",
+                displayName: "\(registryDisplay) : \(package.identifier)",
+                description: "Install \(package.identifier) from \(registryDisplay)",
                 config: config,
                 isDefault: index == 0 && options.isEmpty
             ))
@@ -182,9 +215,9 @@ public class MCPRegistryService: ObservableObject {
     }
 
     public func createServerConfig(for serverDetail: MCPRegistryServerDetail, package: Package) -> [String: Any] {
-        let registryType = registryTypes[package.registryType ?? ""]
-        let command = package.runtimeHint ?? registryType?.commandName ?? (package.registryType ?? "unknown")
-        
+        let registryType = registryTypes[package.registryType]
+        let command = package.runtimeHint ?? registryType?.commandName ?? package.registryType
+
         var config: [String: Any] = [
             "type": "stdio",
             "command": command
@@ -198,7 +231,10 @@ public class MCPRegistryService: ObservableObject {
         
         // Default arguments if no runtime arguments
         if package.runtimeArguments?.isEmpty != false {
-            args.append(contentsOf: registryType?.buildArguments(for: package) ?? [package.identifier ?? ""])
+            args
+                .append(
+                    contentsOf: registryType?.buildArguments(for: package) ?? [package.identifier]
+                )
         }
         
         // Package arguments
@@ -216,17 +252,24 @@ public class MCPRegistryService: ObservableObject {
     }
 
     private func addMetadata(to config: inout [String: Any], serverDetail: MCPRegistryServerDetail) {
-        var registry: [String: Any] = [:]
-        
-        if let url = try? getRegistryURL() {
-            registry["url"] = url
-        }
-        
-        if let serverId = Self.getServerId(from: serverDetail) {
-            registry["serverId"] = serverId
-        }
+        guard let baseURL = try? getRegistryBaseURL() else { return }
 
-        config["x-metadata"] = ["registry": registry]
+        let api: [String: Any] = [
+            "baseUrl": baseURL,
+            "version": MCPRegistryService.apiVersion
+        ]
+
+        let mcpServer: [String: Any] = [
+            "name": Self.getServerName(from: serverDetail),
+            "version": serverDetail.version
+        ]
+
+        config["x-metadata"] = [
+            "registry": [
+                "api": api,
+                "mcpServer": mcpServer
+            ]
+        ]
     }
 
     private func extractArgumentValues(from argument: Argument) -> [String] {
@@ -234,7 +277,7 @@ public class MCPRegistryService: ObservableObject {
         case let .positional(positionalArg):
             return (positionalArg.value ?? positionalArg.valueHint).map { [$0] } ?? []
         case let .named(namedArg):
-            return [namedArg.name ?? ""] + (namedArg.value.map { [$0] } ?? [])
+            return [namedArg.name] + (namedArg.value.map { [$0] } ?? [])
         }
     }
 
@@ -288,12 +331,16 @@ public class MCPRegistryService: ObservableObject {
               let serversDict = config["servers"] as? [String: Any],
               let expectedKey = expectedRegistryKey(for: serverDetail) else { return false }
 
-        let command = package.runtimeHint ?? registryTypes[package.registryType ?? ""]?.commandName ?? (package.registryType ?? "unknown")
+        let command = package.runtimeHint ?? registryTypes[package.registryType]?.commandName ?? (
+            package.registryType
+        )
         let expectedArgsFirst: String? = {
             var args: [String] = []
             package.runtimeArguments?.forEach { args.append(contentsOf: extractArgumentValues(from: $0)) }
             if package.runtimeArguments?.isEmpty != false {
-                args.append(contentsOf: registryTypes[package.registryType ?? ""]?.buildArguments(for: package) ?? [package.identifier ?? ""])
+                args.append(
+                    contentsOf: registryTypes[package.registryType]?.buildArguments(for: package) ?? [package.identifier]
+                )
             }
             package.packageArguments?.forEach { args.append(contentsOf: extractArgumentValues(from: $0)) }
             return args.first
@@ -326,35 +373,31 @@ public class MCPRegistryService: ObservableObject {
       }
     }
 
-    public func createRegistryServerKey(registryURL: String, serverId: String) -> String {
-        let baseURL = normalizeRegistryURL(registryURL)
-        return "\(baseURL)|\(serverId)"
+    public func createRegistryServerKey(registryBaseURL: String, serverName: String) -> String {
+        let trimmedBaseURL = registryBaseURL
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        return "\(trimmedBaseURL)|\(serverName)"
     }
 
     // MARK: - Registry Key Helpers
     
-    private func normalizeRegistryURL(_ url: String) -> String {
-        // Remove trailing /v0/servers, /v0.1/servers or similar version paths
-        var normalized = url.trimmingCharacters(in: .whitespacesAndNewlines)
-        if let range = normalized.range(of: "/v\\d+(\\.\\d+)?/servers$", options: .regularExpression) {
-            normalized = String(normalized[..<range.lowerBound])
-        }
-        // Remove trailing slash
-        return normalized.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-    }
-    
     private func expectedRegistryKey(for serverDetail: MCPRegistryServerDetail) -> String? {
-        guard let serverId = Self.getServerId(from: serverDetail),
-              let registryURL = try? getRegistryURL() else { return nil }
-        return createRegistryServerKey(registryURL: registryURL, serverId: serverId)
+        guard let registryBaseURL = try? getRegistryBaseURL() else { return nil }
+        return createRegistryServerKey(
+            registryBaseURL: registryBaseURL,
+            serverName: Self.getServerName(from: serverDetail)
+        )
     }
 
     private func registryKey(from serverConfig: [String: Any]) -> String? {
         guard let metadata = serverConfig["x-metadata"] as? [String: Any],
               let registry = metadata["registry"] as? [String: Any],
-              let url = registry["url"] as? String,
-              let serverId = registry["serverId"] as? String else { return nil }
-        return createRegistryServerKey(registryURL: url, serverId: serverId)
+              let api = registry["api"] as? [String: Any],
+              let baseUrl = api["baseUrl"] as? String,
+              let mcpServer = registry["mcpServer"] as? [String: Any],
+              let name = mcpServer["name"] as? String else { return nil }
+          return createRegistryServerKey(registryBaseURL: baseUrl, serverName: name)
     }
 }
 
@@ -370,7 +413,7 @@ public enum MCPRegistryError: LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .registryURLNotConfigured:
-            return "MCP Registry URL is not configured. Please configure the registry URL in Settings > Tools > GitHub Copilot > MCP to browse and install servers from the registry."
+            return "MCP Registry base URL is not configured. Please configure the registry URL in Settings > Tools > GitHub Copilot > MCP to browse and install servers from the registry."
         case let .noInstallationOptionsAvailable(serverName):
             return "Cannot create server configuration for '\(serverName)' - no installation options available"
         case .invalidConfigurationStructure:

@@ -460,39 +460,3 @@ public struct DidChangeWatchedFilesEvent: Codable {
         self.changes = changes
     }
 }
-
-public struct AgentRound: Codable, Equatable {
-    public let roundId: Int
-    public var reply: String
-    public var toolCalls: [AgentToolCall]?
-    public var subAgentRounds: [AgentRound]?
-    
-    public init(roundId: Int, reply: String, toolCalls: [AgentToolCall]? = [], subAgentRounds: [AgentRound]? = []) {
-        self.roundId = roundId
-        self.reply = reply
-        self.toolCalls = toolCalls
-        self.subAgentRounds = subAgentRounds
-    }
-}
-
-public struct AgentToolCall: Codable, Equatable, Identifiable {
-    public let id: String
-    public let name: String
-    public var progressMessage: String?
-    public var status: ToolCallStatus
-    public var error: String?
-    public var invokeParams: InvokeClientToolParams?
-    
-    public enum ToolCallStatus: String, Codable {
-        case waitForConfirmation, accepted, running, completed, error, cancelled
-    }
-
-    public init(id: String, name: String, progressMessage: String? = nil, status: ToolCallStatus, error: String? = nil, invokeParams: InvokeClientToolParams? = nil) {
-        self.id = id
-        self.name = name
-        self.progressMessage = progressMessage
-        self.status = status
-        self.error = error
-        self.invokeParams = invokeParams
-    }
-}

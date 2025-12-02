@@ -53,7 +53,7 @@ public extension Workspace {
         throw EditorCursorOutOfScopeError()
     }
     
-    let filespace = try createFilespaceIfNeeded(fileURL: fileURL)
+    let filespace = try await createFilespaceIfNeeded(fileURL: fileURL)
     
     if !editor.uti.isEmpty {
         filespace.updateCodeMetadata(
@@ -99,7 +99,7 @@ public extension Workspace {
             throw EditorCursorOutOfScopeError()
         }
 
-        let filespace = try createFilespaceIfNeeded(fileURL: fileURL)
+        let filespace = try await createFilespaceIfNeeded(fileURL: fileURL)
 
         if !editor.uti.isEmpty {
             filespace.updateCodeMetadata(

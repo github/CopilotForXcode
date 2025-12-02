@@ -7,6 +7,7 @@ import Foundation
 @available(macOS 13.0, *)
 struct MCPServerDetailSheet: View {
     let server: MCPRegistryServerDetail
+    let meta: ServerMeta
     @State private var selectedTab = TabType.Packages
     @State private var expandedPackages: Set<Int> = []
     @State private var expandedRemotes: Set<Int> = []
@@ -28,8 +29,9 @@ struct MCPServerDetailSheet: View {
         var id: Self { self }
     }
 
-    init(server: MCPRegistryServerDetail) {
-        self.server = server
+    init(response: MCPRegistryServerResponse) {
+        self.server = response.server
+        self.meta = response.meta
         // Determine installed status using registry service (same logic as gallery view)
         _isInstalled = State(initialValue: MCPRegistryService.shared.isServerInstalled(server))
     }
@@ -96,11 +98,11 @@ struct MCPServerDetailSheet: View {
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .center) {
-                Text(server.name)
+                Text(server.title ?? server.name)
                     .font(.system(size: 18, weight: .semibold))
                 
-                if let status = server.status, status == .deprecated {
-                    statusBadge(status)
+                if meta.official.status == .deprecated {
+                    statusBadge(meta.official.status)
                 }
                 
                 Spacer()
@@ -114,14 +116,10 @@ struct MCPServerDetailSheet: View {
                 .font(.system(size: 12, design: .monospaced))
                 .foregroundColor(.secondary)
                 
-                if let publishedAt = server.createdAt ?? server.meta?.official?.publishedAt {
-                    dateMetadataTag(title: "Published ", dateString: publishedAt, image: "clock.arrow.trianglehead.counterclockwise.rotate.90")
-                }
-                
-                if let updatedAt = server.updatedAt ?? server.meta?.official?.updatedAt {
-                    dateMetadataTag(title: "Updated ", dateString: updatedAt, image: "icloud.and.arrow.up")
-                }
-                
+                dateMetadataTag(title: "Published ", dateString: meta.official.publishedAt, image: "clock.arrow.trianglehead.counterclockwise.rotate.90")
+
+                dateMetadataTag(title: "Updated ", dateString: meta.official.updatedAt, image: "icloud.and.arrow.up")
+
                 if let repo = server.repository, !repo.url.isEmpty, !repo.source.isEmpty {
                     if let repoURL = URL(string: repo.url) {  
                         HStack(spacing: 6) {  
@@ -212,17 +210,15 @@ struct MCPServerDetailSheet: View {
         let optionInstalled = MCPRegistryService.shared.isPackageOptionInstalled(serverDetail: server, package: package)
         let metadata: [ServerInstallationOptionView.Metadata] = {
             var rows: [ServerInstallationOptionView.Metadata] = []
-            if let identifier = package.identifier {
-                rows.append(.init(label: "ID", value: identifier, monospaced: true))
-            }
-            if let registryURL = package.registryBaseURL {
+            rows.append(.init(label: "ID", value: package.identifier, monospaced: true))
+            if let registryURL = package.registryBaseUrl {
                 rows.append(.init(label: "Registry", value: registryURL))
             }
             if let runtime = package.runtimeHint { rows.append(.init(label: "Runtime", value: runtime)) }
             return rows
         }()
         return ServerInstallationOptionView(
-            title: package.registryType?.registryDisplayText ?? "Package",
+            title: package.registryType.registryDisplayText,
             iconSystemName: "shippingbox",
             versionTag: package.version,
             metadata: metadata,
@@ -296,42 +292,7 @@ struct MCPServerDetailSheet: View {
     
     private var metadataTab: some View {
         VStack(alignment: .leading, spacing: 16) {
-            if let meta = server.meta {
-                if let official = meta.official {
-                    officialMetadataSection(official)
-                }
-                
-            }
-            
-            if server.meta == nil {
-                EmptyStateView(
-                    message: "No metadata available",
-                    type: .Metadata
-                )
-            }
-        }
-    }
-    
-    private func repositorySection(_ repo: Repository) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Repository")
-                .font(.system(size: 14, weight: .medium))
-            
-            VStack(alignment: .leading, spacing: 8) {
-                metadataRow(label: "Source", value: repo.source)
-                metadataRow(label: "URL", value: repo.url, isLink: true)
-                if let id = repo.id {
-                    metadataRow(label: "ID", value: id)
-                }
-                if let subfolder = repo.subfolder {
-                    metadataRow(label: "Subfolder", value: subfolder)
-                }
-            }
-            .padding(12)
-            .background(
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(Color(nsColor: .controlBackgroundColor).opacity(0.5))
-            )
+            officialMetadataSection(meta.official)
         }
     }
     
@@ -343,7 +304,6 @@ struct MCPServerDetailSheet: View {
             }
             
             VStack(alignment: .leading, spacing: 8) {
-                metadataRow(label: "Server ID", value: official.id)
                 metadataRow(
                     label: "Published",
                     value: parseDate(official.publishedAt) != nil ? formatExactDate(
@@ -368,40 +328,6 @@ struct MCPServerDetailSheet: View {
                         .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
                 )
         )
-    }
-    
-    private func publisherMetadataSection(_ publisher: PublisherProvidedMeta) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Build Information")
-                .font(.system(size: 14, weight: .medium))
-            
-            VStack(alignment: .leading, spacing: 8) {
-                if let tool = publisher.tool {
-                    metadataRow(label: "Tool", value: tool)
-                }
-                if let version = publisher.version {
-                    metadataRow(label: "Version", value: version)
-                }
-                if let buildInfo = publisher.buildInfo {
-                    if let commit = buildInfo.commit {
-                        metadataRow(label: "Commit", value: String(commit.prefix(8)))
-                    }
-                    if let timestamp = buildInfo.timestamp {
-                        metadataRow(
-                            label: "Built",
-                            value: parseDate(timestamp) != nil ? formatExactDate(
-                                parseDate(timestamp)!
-                            ) : timestamp
-                        )
-                    }
-                }
-            }
-            .padding(12)
-            .background(
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(Color(nsColor: .controlBackgroundColor).opacity(0.5))
-            )
-        }
     }
     
     private func metadataRow(label: String, value: String, isLink: Bool = false) -> some View {
@@ -483,8 +409,8 @@ struct MCPServerDetailSheet: View {
             // Cache generated config for preview if needed later
             if packageConfigs[index] == nil { packageConfigs[index] = config }
             let option = InstallationOption(
-                displayName: package.registryType?.registryDisplayText ?? "Package",
-                description: "Install \(package.identifier ?? server.name)",
+                displayName: package.registryType.registryDisplayText,
+                description: "Install \(package.identifier)",
                 config: config
             )
             do {

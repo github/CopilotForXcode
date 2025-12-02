@@ -89,8 +89,9 @@ public class InsertEditIntoFileTool: ICopilotTool {
         contextProvider: any ToolContextProvider,
         xcodeInstance: AppInstanceInspector
     ) throws -> String {
+        Thread.sleep(forTimeInterval: 0.5)
         // Get the focused element directly from the app (like XcodeInspector does)
-        guard let focusedElement: AXUIElement = try? xcodeInstance.appElement.copyValue(key: kAXFocusedUIElementAttribute)
+        guard let focusedElement: AXUIElement = xcodeInstance.appElement.focusedElement
         else {
             throw NSError(domain: "Failed to access xcode element", code: 0)
         }
@@ -113,9 +114,6 @@ public class InsertEditIntoFileTool: ICopilotTool {
         
         let lines = value.components(separatedBy: .newlines)
         
-        var isInjectedSuccess = false
-        var injectionError: Error?
-        
         do {
             try AXHelper().injectUpdatedCodeWithAccessibilityAPI(
                 .init(
@@ -128,33 +126,24 @@ public class InsertEditIntoFileTool: ICopilotTool {
                         .inserted(0, [content])
                     ]
                 ),
-                focusElement: editorElement,
-                onSuccess: {
-                    Logger.client.info("Content injection succeeded")
-                    isInjectedSuccess = true
-                },
-                onError: {
-                    Logger.client.error("Content injection failed in onError callback")
-                }
+                focusElement: editorElement
             )
         } catch {
-            Logger.client.error("Content injection threw error: \(error)")
-            if let axError = error as? AXError {
-                Logger.client.error("AX Error code during injection: \(axError.rawValue)")
-            }
-            injectionError = error
+            Logger.client.error("Failed to inject code for insert edit into file: \(error.localizedDescription)")
+            throw error
         }
         
-        if !isInjectedSuccess {
-            let errorMessage = injectionError?.localizedDescription ?? "Failed to apply edit"
-            Logger.client.error("Edit application failed: \(errorMessage)")
-            throw NSError(domain: "Failed to apply edit: \(errorMessage)", code: 0)
+        guard let refreshedFocusedElement: AXUIElement = xcodeInstance.appElement.focusedElement,
+              let refreshedEditorElement = refreshedFocusedElement.findSourceEditorElement()
+        else {
+            throw NSError(domain: "Failed to access xcode element", code: 0)
         }
         
         // Verify the content was applied by reading it back
         do {
-            let newContent: String = try editorElement.copyValue(key: kAXValueAttribute)
+            let newContent: String = try refreshedEditorElement.copyValue(key: kAXValueAttribute)
             Logger.client.info("Successfully read back new content, length: \(newContent.count)")
+            
             return newContent
         } catch {
             Logger.client.error("Failed to read back new content: \(error)")
@@ -194,6 +183,7 @@ public class InsertEditIntoFileTool: ICopilotTool {
                 )
                 
                 Task {
+                    await WorkspaceInvocationCoordinator().invokeFilespaceUpdate(fileURL: fileURL, content: newContent)
                     if let completion = completion { completion(newContent, nil) }
                 }
             } catch {

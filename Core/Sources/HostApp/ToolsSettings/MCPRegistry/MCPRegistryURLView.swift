@@ -9,23 +9,23 @@ import ComposableArchitecture
 
 struct MCPRegistryURLView: View {
     @State private var isExpanded: Bool = false
-    @AppStorage(\.mcpRegistryURL) var mcpRegistryURL
-    @AppStorage(\.mcpRegistryURLHistory) private var mcpRegistryURLHistory
+    @AppStorage(\.mcpRegistryBaseURL) var mcpRegistryBaseURL
+    @AppStorage(\.mcpRegistryBaseURLHistory) private var mcpRegistryBaseURLHistory
     @State private var isLoading: Bool = false
     @State private var tempURLText: String = ""
     @State private var errorMessage: String = ""
     @State private var mcpRegistry: [MCPRegistryEntry]? = nil
 
     private let maxURLLength = 2048
-    private let mcpRegistryUrlVersion = "/v0/servers"
+    private let mcpRegistryUrlVersion = "/v0.1/servers"
 
     var body: some View {
         WithPerceptionTracking {
             VStack(spacing: 0) {
                 DisclosureSettingsRow(
                     isExpanded: $isExpanded,
-                    accessibilityLabel: { $0 ? "Collapse mcp registry URL section" : "Expand mcp registry URL section" },
-                    title: { Text("MCP Registry URL").font(.headline) + Text(" (Optional)") },
+                    accessibilityLabel: { $0 ? "Collapse mcp registry base URL section" : "Expand mcp registry base URL section" },
+                    title: { Text("MCP Registry Base URL").font(.headline) + Text(" (Optional)") },
                     subtitle: { Text("Connect to available MCP servers for your AI workflows using the Registry URL.") },
                     actions: {
                         HStack(spacing: 8) {
@@ -47,7 +47,7 @@ struct MCPRegistryURLView: View {
                                 .conditionalFontWeight(.semibold)
                             }
                             .buttonStyle(.bordered)
-                            .help("Configure your MCP Registry URL")
+                            .help("Configure your MCP Registry Base URL")
                             .disabled(mcpRegistry?.first?.registryAccess == .registryOnly)
                             
                             Button { Task{ await loadMCPServers() } } label: {
@@ -80,9 +80,11 @@ struct MCPRegistryURLView: View {
                             },
                             onCommit: {
                                 // Update mcpRegistryURL when user presses Enter
-                                tempURLText = tempURLText.trimmingCharacters(in: .whitespacesAndNewlines)
-                                if tempURLText != mcpRegistryURL {
-                                    mcpRegistryURL = tempURLText
+                                tempURLText = tempURLText
+                                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                                    .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+                                if tempURLText != mcpRegistryBaseURL {
+                                    mcpRegistryBaseURL = tempURLText
                                 }
                             }
                         )
@@ -96,7 +98,7 @@ struct MCPRegistryURLView: View {
                     .background(QuaternarySystemFillColor.opacity(0.75))
                     .transition(.opacity.combined(with: .scale(scale: 1, anchor: .top)))
                     .onAppear {
-                        tempURLText = mcpRegistryURL
+                        tempURLText = mcpRegistryBaseURL
                     }
                 }
             }
@@ -110,13 +112,13 @@ struct MCPRegistryURLView: View {
             )
             .animation(.easeInOut(duration: 0.3), value: isExpanded)
             .onAppear {
-                tempURLText = mcpRegistryURL
+                tempURLText = mcpRegistryBaseURL
                 Task { await getMCPRegistryAllowlist() }
             }
             .onReceive(DistributedNotificationCenter.default().publisher(for: .authStatusDidChange)) { _ in
                 Task { await getMCPRegistryAllowlist() }
             }
-            .onChange(of: mcpRegistryURL) { newValue in
+            .onChange(of: mcpRegistryBaseURL) { newValue in
                 // Update the temp text to reflect the new URL
                 tempURLText = newValue
                 Task { await updateGalleryWindowIfOpen() }
@@ -130,8 +132,8 @@ struct MCPRegistryURLView: View {
     private func loadMCPServers() async {
         // Update mcpRegistryURL with current tempURLText before loading
         tempURLText = tempURLText.trimmingCharacters(in: .whitespacesAndNewlines)
-        if tempURLText != mcpRegistryURL {
-            mcpRegistryURL = tempURLText
+        if tempURLText != mcpRegistryBaseURL {
+            mcpRegistryBaseURL = tempURLText
         }
         
         isLoading = true
@@ -139,16 +141,16 @@ struct MCPRegistryURLView: View {
         do {
             let service = try getService()
             let serverList = try await service.listMCPRegistryServers(
-                .init(baseUrl: mcpRegistryURL, limit: 30)
+                .init(baseUrl: mcpRegistryBaseURL + mcpRegistryUrlVersion, limit: 30, version: "latest")
             )
             
             guard let serverList = serverList, !serverList.servers.isEmpty else {
-                Logger.client.info("No MCP servers found at registry URL: \(mcpRegistryURL)")
+                Logger.client.info("No MCP servers found at registry URL: \(mcpRegistryBaseURL)")
                 return
             }
             
             // Add to history on successful load
-            mcpRegistryURLHistory.addToHistory(mcpRegistryURL)
+            mcpRegistryBaseURLHistory.addToHistory(mcpRegistryBaseURL)
             errorMessage = ""
             
             MCPServerGalleryWindow.open(serverList: serverList, mcpRegistryEntry: mcpRegistry?.first)
@@ -188,11 +190,8 @@ struct MCPRegistryURLView: View {
             }
             
             if let firstRegistry = result.mcpRegistries.first {
-                let baseUrl = firstRegistry.url.hasSuffix("/") 
-                    ? String(firstRegistry.url.dropLast()) 
-                    : firstRegistry.url
                 let entry = MCPRegistryEntry(
-                    url: baseUrl + mcpRegistryUrlVersion,
+                    url: firstRegistry.url,
                     registryAccess: firstRegistry.registryAccess,
                     owner: firstRegistry.owner
                 )
@@ -201,7 +200,7 @@ struct MCPRegistryURLView: View {
                 
                 // If registryOnly, force the URL to be the registry URL
                 if entry.registryAccess == .registryOnly {
-                    mcpRegistryURL = entry.url
+                    mcpRegistryBaseURL = entry.url
                     tempURLText = entry.url
                 }
             }

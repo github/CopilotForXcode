@@ -110,13 +110,13 @@ public class WorkspacePool {
         if let currentWorkspaceURL = await XcodeInspector.shared.safe.realtimeActiveWorkspaceURL {
             if let existed = workspaces[currentWorkspaceURL] {
                 // Reuse the existed workspace.
-                let filespace = try existed.createFilespaceIfNeeded(fileURL: fileURL)
+                let filespace = try await existed.createFilespaceIfNeeded(fileURL: fileURL)
                 return (existed, filespace)
             }
 
             let new = createNewWorkspace(workspaceURL: currentWorkspaceURL)
             workspaces[currentWorkspaceURL] = new
-            let filespace = try new.createFilespaceIfNeeded(fileURL: fileURL)
+            let filespace = try await new.createFilespaceIfNeeded(fileURL: fileURL)
             return (new, filespace)
         }
 
@@ -150,7 +150,7 @@ public class WorkspacePool {
                 return createNewWorkspace(workspaceURL: workspaceURL)
             }()
 
-            let filespace = try workspace.createFilespaceIfNeeded(fileURL: fileURL)
+            let filespace = try await workspace.createFilespaceIfNeeded(fileURL: fileURL)
             workspaces[workspaceURL] = workspace
             workspace.refreshUpdateTime()
             return (workspace, filespace)

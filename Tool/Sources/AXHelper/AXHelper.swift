@@ -2,6 +2,17 @@ import XPCShared
 import XcodeInspector
 import AppKit
 
+public enum AXHelperError: LocalizedError {
+    case failedToSetValue(AXError)
+    
+    public var errorDescription: String? {
+        switch self {
+        case .failedToSetValue(let axError):
+            return "Failed to set focus element value by AccessibilityAPI: \(axError.rawValue)"
+        }
+    }
+}
+
 public struct AXHelper {
     public init() {}
     
@@ -26,6 +37,7 @@ public struct AXHelper {
             if let onError = onError {
                 onError()
             }
+            throw AXHelperError.failedToSetValue(error)
         }
 
         // recover selection range

@@ -20,6 +20,8 @@ struct MCPServerToolsSection: View {
     @State private var checkboxMixedState: CheckboxMixedState = .off
     private var originalServerName: String { serverTools.name }
 
+    @State private var isShowingDeleteConfirmation: Bool = false
+
     private var serverToggleLabel: some View {
         HStack(spacing: 8) {
             Text("MCP Server: \(serverTools.name)")
@@ -50,7 +52,6 @@ struct MCPServerToolsSection: View {
                     .foregroundStyle(.secondary)
                     .font(.system(size: 11))
             }
-            Spacer()
         }
     }
     
@@ -95,7 +96,7 @@ struct MCPServerToolsSection: View {
                 updateMixedState()
             }
             .disabled(serverTools.status == .error || serverTools.status == .blocked || !isInteractionAllowed)
-            
+
             serverToggleLabel
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -105,6 +106,14 @@ struct MCPServerToolsSection: View {
                         }
                     }
                 }
+
+            Spacer()
+
+            Button(action: { isShowingDeleteConfirmation = true }) {
+                Image(systemName: "trash").font(.system(size: 12))
+            }
+            .buttonStyle(HoverButtonStyle())
+            .padding(-4)
         }
         .padding(.leading, 4)
     }
@@ -145,7 +154,9 @@ struct MCPServerToolsSection: View {
             if serverTools.status == .error || serverTools.status == .blocked {
                 // No disclosure group for error state
                 VStack(spacing: 0) {
-                    serverToggle.padding(.leading, 12)
+                    serverToggle
+                        .padding(.leading, 11)
+                        .padding(.trailing, 4)
                     divider.padding(.top, 4)
                 }
             } else {
@@ -190,6 +201,39 @@ struct MCPServerToolsSection: View {
                     divider
                 }
             }
+        }
+        .confirmationDialog(
+            "Do you want to delete '\(serverTools.name)'?",
+            isPresented: $isShowingDeleteConfirmation
+        ) {
+            Button("Cancel", role: .cancel) { }
+            Button("Delete", role: .destructive) { deleteServerConfig() }
+        }
+    }
+
+    private func deleteServerConfig() {
+        let fileURL = URL(fileURLWithPath: mcpConfigFilePath)
+
+        guard let data = try? Data(contentsOf: fileURL) else {
+            Logger.client.error("Failed to read mcp.json when deleting server config.")
+            return
+        }
+
+        guard var rootObject = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else {
+            Logger.client.error("Failed to parse mcp.json when deleting server config.")
+            return
+        }
+
+        if var servers = rootObject["servers"] as? [String: Any] {
+            servers.removeValue(forKey: serverTools.name)
+            rootObject["servers"] = servers
+        }
+
+        do {
+            let newData = try JSONSerialization.data(withJSONObject: rootObject, options: [.prettyPrinted, .sortedKeys])
+            try newData.write(to: fileURL)
+        } catch {
+            Logger.client.error("Failed to write updated mcp.json when deleting server config: \(error.localizedDescription)")
         }
     }
 
@@ -347,11 +391,6 @@ struct MCPServerToolsSection: View {
 
     private func updateMCPStatus(_ serverUpdates: [UpdateMCPToolsStatusServerCollection]) {
         let isDefaultAgentMode = selectedMode.isDefaultAgent
-
-        if isDefaultAgentMode {
-            AppState.shared.updateMCPToolsStatus(serverUpdates)
-        }
-
         Task {
             do {
                 let service = try getService()

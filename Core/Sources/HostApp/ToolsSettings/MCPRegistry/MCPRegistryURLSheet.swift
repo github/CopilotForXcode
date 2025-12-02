@@ -3,10 +3,10 @@ import SwiftUI
 import SharedUIComponents
 
 struct MCPRegistryURLSheet: View {
-    @AppStorage(\.mcpRegistryURL) private var mcpRegistryURL
-    @AppStorage(\.mcpRegistryURLHistory) private var mcpRegistryURLHistory
+    @AppStorage(\.mcpRegistryBaseURL) private var mcpRegistryBaseURL
+    @AppStorage(\.mcpRegistryBaseURLHistory) private var mcpRegistryBaseURLHistory
     @Environment(\.dismiss) private var dismiss
-    @State private var originalMcpRegistryURL: String = ""
+    @State private var originalMcpRegistryBaseURL: String = ""
     @State private var isFormValid: Bool = true
     
     let mcpRegistryEntry: MCPRegistryEntry?
@@ -22,14 +22,14 @@ struct MCPRegistryURLSheet: View {
             VStack(alignment: .center, spacing: 20) {
                 HStack(alignment: .center) {
                     Spacer()
-                    Text("MCP Registry URL").font(.headline)
+                    Text("MCP Registry Base URL").font(.headline)
                     Spacer()
                     AdaptiveHelpLink(action: openHelpLink)
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
                     MCPRegistryURLInputField(
-                        urlText: $originalMcpRegistryURL,
+                        urlText: $originalMcpRegistryBaseURL,
                         isSheet: true,
                         mcpRegistryEntry: mcpRegistryEntry,
                         onValidationChange: { isValid in
@@ -43,9 +43,11 @@ struct MCPRegistryURLSheet: View {
                     Button("Cancel", role: .cancel) { dismiss() }
                     Button("Update") {
                         // Check if URL changed before updating
-                        originalMcpRegistryURL = originalMcpRegistryURL.trimmingCharacters(in: .whitespacesAndNewlines)
-                        if originalMcpRegistryURL != mcpRegistryURL {
-                            mcpRegistryURL = originalMcpRegistryURL
+                        originalMcpRegistryBaseURL = originalMcpRegistryBaseURL
+                            .trimmingCharacters(in: .whitespacesAndNewlines)
+                            .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+                        if originalMcpRegistryBaseURL != mcpRegistryBaseURL {
+                            mcpRegistryBaseURL = originalMcpRegistryBaseURL
                             onURLUpdated?()
                         }
                         dismiss()
@@ -64,7 +66,7 @@ struct MCPRegistryURLSheet: View {
     }
 
     private func loadExistingURL() {
-        originalMcpRegistryURL = mcpRegistryURL
+        originalMcpRegistryBaseURL = mcpRegistryBaseURL
     }
 
     private func openHelpLink() {

@@ -440,11 +440,10 @@ public final class GitHubCopilotService:
     private var cancellables = Set<AnyCancellable>()
     private var statusWatcher: CopilotAuthStatusWatcher?
     private static var services: [GitHubCopilotService] = [] // cache all alive copilot service instances
-    private var isMCPInitialized = false
-    private var unrestoredMcpServers: [String] = []
     private var mcpRuntimeLogFileName: String = ""
     private static let toolInitializationActor = ToolInitializationActor()
     private var lastSentConfiguration: JSONValue?
+    private var mcpToolsContinuation: AsyncStream<AnyJSONRPCNotification>.Continuation?
 
     override init(designatedServer: any GitHubCopilotLSP) {
         super.init(designatedServer: designatedServer)
@@ -456,14 +455,18 @@ public final class GitHubCopilotService:
 
             self.handleSendWorkspaceDidChangeNotifications()
             
+            let (stream, continuation) = AsyncStream.makeStream(of: AnyJSONRPCNotification.self)
+            self.mcpToolsContinuation = continuation
+            
+            Task { [weak self] in
+                for await notification in stream {
+                    await self?.handleMCPToolsNotification(notification)
+                }
+            }
+
             localProcessServer?.notificationPublisher.sink(receiveValue: { [weak self] notification in
                 if notification.method == "copilot/mcpTools" && projectRootURL.path != "/" {
-                    DispatchQueue.main.async { [weak self] in
-                        guard let self else { return }
-                        Task { @MainActor in
-                            await self.handleMCPToolsNotification(notification)
-                        }
-                    }
+                    self?.mcpToolsContinuation?.yield(notification)
                 }
                 
                 if notification.method == "copilot/mcpRuntimeLogs" && projectRootURL.path != "/" {
@@ -600,7 +603,7 @@ public final class GitHubCopilotService:
             )
 
             do {
-                let maxTry: Int = UserDefaults.shared.value(for: \.realtimeNESToggle) ? 1 : 5
+                let maxTry: Int = 5
                 try Task.checkCancellation()
                 return try await sendRequest(maxTry: maxTry)
             } catch let error as CancellationError {
@@ -1405,70 +1408,9 @@ public final class GitHubCopilotService:
             Logger.gitHubCopilot.error("Failed to restore tools for service at \(projectRootURL.path): \(error)")
         }
     }
-
-    private func loadUnrestoredMCPServers() -> [String] {
-        if let savedJSON = AppState.shared.get(key: "mcpToolsStatus"),
-           let data = try? JSONEncoder().encode(savedJSON),
-           let savedStatus = try? JSONDecoder().decode([UpdateMCPToolsStatusServerCollection].self, from: data) {
-            return savedStatus
-                .filter { !$0.tools.isEmpty }
-                .map { $0.name }
-        }
-
-        return []
-    }
-
-    private func restoreMCPToolsStatus(_ mcpServers: [String]) async -> [MCPServerToolsCollection]? {
-        guard let savedJSON = AppState.shared.get(key: "mcpToolsStatus"),
-            let data = try? JSONEncoder().encode(savedJSON),
-            let savedStatus = try? JSONDecoder().decode([UpdateMCPToolsStatusServerCollection].self, from: data) else {
-            Logger.gitHubCopilot.info("Failed to get MCP Tools status")
-            return nil
-        }
-
-        do {
-            let savedServers = savedStatus.filter { mcpServers.contains($0.name) }
-            if savedServers.isEmpty {
-                return nil
-            } else {
-                return try await updateMCPToolsStatus(
-                    params: .init(servers: savedServers)
-                )
-            }
-        } catch let error as ServerError {
-            Logger.gitHubCopilot.error("Failed to update MCP Tools status: \(GitHubCopilotError.languageServerError(error))")
-        } catch {
-            Logger.gitHubCopilot.error("Failed to update MCP Tools status: \(error)")
-        }
-
-        return nil
-    }
     
     public func handleMCPToolsNotification(_ notification: AnyJSONRPCNotification) async {
-        defer {
-            self.isMCPInitialized = true
-        }
-
-        if !self.isMCPInitialized {
-            self.unrestoredMcpServers = self.loadUnrestoredMCPServers()
-        }
-
         if let payload = GetAllToolsParams.decode(fromParams: notification.params) {
-            if !self.unrestoredMcpServers.isEmpty {
-                // Find servers that need to be restored
-                let toRestore = payload.servers.filter { !$0.tools.isEmpty }
-                    .filter { self.unrestoredMcpServers.contains($0.name) }
-                    .map { $0.name }
-
-                if let tools = await self.restoreMCPToolsStatus(toRestore) {
-                    Logger.gitHubCopilot.info("Restore MCP tools status for servers: \(toRestore)")
-                    // Only remove from unrestored list after successful restoration
-                    self.unrestoredMcpServers.removeAll { toRestore.contains($0) }
-                    CopilotMCPToolManager.updateMCPTools(tools)
-                    return
-                }
-            }
-
             CopilotMCPToolManager.updateMCPTools(payload.servers)
         }
     }

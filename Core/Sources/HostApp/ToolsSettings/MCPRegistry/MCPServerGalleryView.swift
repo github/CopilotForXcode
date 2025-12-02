@@ -65,20 +65,21 @@ enum MCPServerGalleryWindow {
 
 // MARK: - Stable ID helper
 
-extension MCPRegistryServerDetail {
+extension MCPRegistryServerResponse {
     var stableID: String {
-        meta?.official?.id ?? repository?.id ?? name
+        server.name + server.version
     }
 }
 
-private struct IdentifiableServer: Identifiable {
-    let server: MCPRegistryServerDetail
-    var id: String { server.stableID }
+private struct IdentifiableServerResponse: Identifiable {
+    let response: MCPRegistryServerResponse
+    var id: String { response.stableID }
 }
 
 struct MCPServerGalleryView: View {
     @ObservedObject var viewModel: MCPServerGalleryViewModel
     @State private var isShowingURLSheet = false
+    @State private var searchTask: Task<Void, Never>?
 
     init(viewModel: MCPServerGalleryViewModel) {
         self.viewModel = viewModel
@@ -121,6 +122,16 @@ struct MCPServerGalleryView: View {
             }
         }
         .searchable(text: $viewModel.searchText, prompt: "Search")
+        .onChange(of: viewModel.searchText) { newValue in
+            // Debounce search input before triggering a new server-side query
+            searchTask?.cancel()
+            searchTask = Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 300_000_000) // 0.3s
+                if !Task.isCancelled {
+                    viewModel.refreshForSearch()
+                }
+            }
+        }
         .toolbar {
             ToolbarItem {
                 Button(action: { viewModel.refresh() }) {
@@ -133,7 +144,7 @@ struct MCPServerGalleryView: View {
                 Button(action: { isShowingURLSheet = true }) {
                     Image(systemName: "square.and.pencil")
                 }
-                .help("Configure your MCP Registry URL")
+                .help("Configure your MCP Registry Base URL")
             }
         }
     }
@@ -248,9 +259,9 @@ struct MCPServerGalleryView: View {
 
     // MARK: - Subviews
 
-    private func row(for server: MCPRegistryServerDetail, index: Int, isInstalled: Bool) -> some View {
+    private func row(for response: MCPRegistryServerResponse, index: Int, isInstalled: Bool) -> some View {
         HStack {
-            Text(server.name)
+            Text(response.server.title ?? response.server.name)
                 .fontWeight(.medium)
                 .lineLimit(1)
                 .truncationMode(.middle)
@@ -259,7 +270,7 @@ struct MCPServerGalleryView: View {
 
             Divider().frame(height: 20).foregroundColor(Color.clear)
 
-            Text(server.description)
+            Text(response.server.description)
                 .fontWeight(.medium)
                 .foregroundColor(.secondary)
                 .lineLimit(1)
@@ -270,7 +281,7 @@ struct MCPServerGalleryView: View {
                 if isInstalled {
                     Button("Uninstall") {
                         Task {
-                            await viewModel.uninstallServer(server)
+                            await viewModel.uninstallServer(response.server)
                         }
                     }
                     .buttonStyle(DestructiveButtonStyle())
@@ -279,17 +290,17 @@ struct MCPServerGalleryView: View {
                     if #available(macOS 13.0, *) {
                         SplitButton(
                             title: "Install",
-                            isDisabled: viewModel.hasNoDeployments(server),
+                            isDisabled: viewModel.hasNoDeployments(response.server),
                             primaryAction: {
                                 // Install with default configuration
                                 Task {
-                                    await viewModel.installServer(server)
+                                    await viewModel.installServer(response.server)
                                 }
                             },
-                            menuItems: viewModel.getInstallationOptions(for: server).map { option in
+                            menuItems: viewModel.getInstallationOptions(for: response.server).map { option in
                                 SplitButtonMenuItem(title: option.displayName) {
                                     Task {
-                                        await viewModel.installServer(server, configuration: option.displayName)
+                                        await viewModel.installServer(response.server, configuration: option.displayName)
                                     }
                                 }
                             }
@@ -298,16 +309,16 @@ struct MCPServerGalleryView: View {
                     } else {
                         Button("Install") {
                             Task {
-                                await viewModel.installServer(server)
+                                await viewModel.installServer(response.server)
                             }
                         }
-                        .disabled(viewModel.hasNoDeployments(server))
+                        .disabled(viewModel.hasNoDeployments(response.server))
                         .help("Install")
                     }
                 }
 
                 Button {
-                    viewModel.showInfo(server)
+                    viewModel.showInfo(response)
                 } label: {
                     Image(systemName: "info.circle")
                         .font(.system(size: 13))
@@ -324,9 +335,9 @@ struct MCPServerGalleryView: View {
         .padding(.vertical, 10)
     }
 
-    private func infoSheet(_ server: MCPRegistryServerDetail) -> some View {
+    private func infoSheet(_ response: MCPRegistryServerResponse) -> some View {
         if #available(macOS 13.0, *) {
-            return AnyView(MCPServerDetailSheet(server: server))
+            return AnyView(MCPServerDetailSheet(response: response))
         } else {
             return AnyView(EmptyView())
         }
@@ -339,7 +350,7 @@ func defaultInstallation(for server: MCPRegistryServerDetail) -> String {
         return firstRemote.transportType.rawValue
     }
     if let firstPackage = server.packages?.first {
-        return firstPackage.registryType ?? ""
+        return firstPackage.registryType
     }
     return ""
 }

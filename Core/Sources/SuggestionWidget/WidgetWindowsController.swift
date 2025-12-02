@@ -1219,7 +1219,7 @@ public final class WidgetWindows {
                 )
             ).environment(cursorPositionTracker)
         )
-        it.canBecomeKeyChecker = { true }
+        it.canBecomeKeyChecker = { false }
         it.alphaValue = 0
         it.setIsVisible(false)
         return it
