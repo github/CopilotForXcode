@@ -1,0 +1,83 @@
+import React, { useState, useEffect } from "react";
+
+export default function TodoApp() {
+  const [todos, setTodos] = useState(() =>
+    JSON.parse(localStorage.getItem("todos") || "[]")
+  );
+  const [input, setInput] = useState("");
+
+  // Save todos to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("todos", JSON.stringify(todos));
+  }, [todos]);
+
+  const addTodo = (e) => {
+    e.preventDefault();
+    if (!input.trim()) return;
+    setTodos([...todos, { id: Date.now(), text: input, done: false }]);
+    setInput("");
+  };
+
+  const toggleTodo = (id) => {
+    setTodos(todos =>
+      todos.map(todo =>
+        todo.id === id ? { ...todo, done: !todo.done } : todo
+      )
+    );
+  };
+
+  const deleteTodo = (id) => {
+    setTodos(todos => todos.filter(todo => todo.id !== id));
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md">
+        <h1 className="text-2xl font-bold mb-6 text-center">To-Do List</h1>
+        <form className="flex mb-4 gap-2" onSubmit={addTodo}>
+          <input
+            className="flex-1 border rounded-lg px-3 py-2 outline-none border-gray-300 focus:border-emerald-500"
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            placeholder="What needs to be done?"
+            autoFocus
+          />
+          <button className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700" type="submit">
+            Add
+          </button>
+        </form>
+        <ul>
+          {todos.length === 0 ? (
+            <li className="text-center text-gray-400">No tasks yet.</li>
+          ) : (
+            todos.map(todo => (
+              <li
+                key={todo.id}
+                className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0"
+              >
+                <label className="flex items-center gap-2 flex-1 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={todo.done}
+                    onChange={() => toggleTodo(todo.id)}
+                    className="w-4 h-4 accent-emerald-600"
+                  />
+                  <span className={todo.done ? "line-through text-gray-400" : ""}>
+                    {todo.text}
+                  </span>
+                </label>
+                <button
+                  className="ml-2 text-gray-400 hover:text-red-500 text-lg px-2"
+                  onClick={() => deleteTodo(todo.id)}
+                  aria-label="Delete"
+                >
+                  ×
+                </button>
+              </li>
+            ))
+          )}
+        </ul>
+      </div>
+    </div>
+  );
+}
