@@ -255,11 +255,10 @@ private struct FileSelectionRow: View {
     }
     
     var body: some View {
-        HStack {
+        HStack(alignment: .center) {
             Toggle(isOn: $isSelected) {
                 HStack(spacing: 8) {
                     drawFileIcon(fileURL)
-                        .resizable()
                         .scaledToFit()
                         .scaledFrame(width: 16, height: 16)
                     

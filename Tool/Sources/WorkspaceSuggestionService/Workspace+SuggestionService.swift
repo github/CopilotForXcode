@@ -155,6 +155,15 @@ public extension Workspace {
             }
         }
     }
+    
+    @WorkspaceActor
+    func notifyNESSuggestionShown(forFileAt fileURL: URL) {
+        if let suggestion = filespaces[fileURL]?.presentingNESSuggestion {
+            Task {
+                await gitHubCopilotService?.notifyCopilotInlineEditShown(suggestion)
+            }
+        }
+    }
 
     @WorkspaceActor
     func rejectSuggestion(forFileAt fileURL: URL, editor: EditorContent?) {
@@ -262,7 +271,7 @@ public extension Workspace {
         }
         
         Task {
-             await gitHubCopilotService?.notifyAccepted(suggestion, acceptedLength: nil)
+             await gitHubCopilotService?.notifyCopilotInlineEditAccepted(suggestion)
         }
         
         filespace.resetNESSuggestion()

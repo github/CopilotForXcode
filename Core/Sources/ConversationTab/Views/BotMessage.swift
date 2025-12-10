@@ -28,17 +28,11 @@ struct BotMessage: View {
     @Environment(\.colorScheme) var colorScheme
     @AppStorage(\.chatFontSize) var chatFontSize
 
-    @State var isReferencesPresented = false
     @State var isHovering = false
     
     struct ReferenceButton: View {
-        var r: Double { messageBubbleCornerRadius }
         let references: [ConversationReference]
         let chat: StoreOf<Chat>
-        
-        @Binding var isReferencesPresented: Bool
-        
-        @State var isReferencesHovered = false
         
         @AppStorage(\.chatFontSize) var chatFontSize
         
@@ -52,63 +46,28 @@ struct BotMessage: View {
             return title
         }
         
-        var referenceIcon: some View {
-            Group {
-                if !isReferencesPresented {
-                    HStack(alignment: .center, spacing: 0) {
-                        Image(systemName: "chevron.right")
-                    }
-                    .scaledPadding(.leading, 4)
-                    .scaledPadding(.trailing, 3)
-                    .scaledPadding(.vertical, 1.5)
-                } else {
-                    HStack(alignment: .center, spacing: 0) {
-                        Image(systemName: "chevron.down")
-                    }
-                    .scaledPadding(.top, 4)
-                    .scaledPadding(.bottom, 3)
-                    .scaledPadding(.horizontal, 1.5)
-                    
-                }
-            }
-            .scaledFont(size: chatFontSize - 1, weight: .medium)
-            .scaledFrame(width: 16, height: 16, alignment: .center)
-        }
-        
         var body: some View {
+            let files = references.map { $0.filePath }
+            let fileHelpTexts = Dictionary<String, String>(uniqueKeysWithValues: references.compactMap { reference in
+                guard reference.url != nil else { return nil }
+                return (reference.filePath, reference.getPathRelativeToHome())
+            })
+            let progressMessage = Text(MakeReferenceTitle(references: references))
+                .foregroundStyle(.secondary)
+            
             HStack(spacing: 0) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Button(action: {
-                        isReferencesPresented.toggle()
-                    }, label: {
-                        HStack(spacing: 4) {
-                            referenceIcon
-                            
-                            Text(MakeReferenceTitle(references: references))
-                                .scaledFont(size: chatFontSize - 1)
+                ExpandableFileListView(
+                    progressMessage: progressMessage,
+                    files: files,
+                    chatFontSize: chatFontSize,
+                    helpText: "View referenced files",
+                    onFileClick: { filePath in
+                        if let reference = references.first(where: { $0.filePath == filePath }) {
+                            chat.send(.referenceClicked(reference))
                         }
-                        .foregroundStyle(.secondary)
-                    })
-                    .buttonStyle(.plain)
-                    .padding(.vertical, 4)
-                    .padding(.trailing, 4)
-                    .background {
-                        RoundedRectangle(cornerRadius: r - 4)
-                            .fill(isReferencesHovered ? Color.gray.opacity(0.2) : Color.clear)
-                    }
-                    .accessibilityValue(isReferencesPresented ? "Collapse" : "Expand")
-                    
-                    if isReferencesPresented {
-                        ReferenceList(references: references, chat: chat)
-                            .background(
-                                RoundedRectangle(cornerRadius: 5)
-                                    .stroke(Color.gray, lineWidth: 0.2)
-                            )
-                    }
-                }
-                .onHover {
-                    isReferencesHovered = $0
-                }
+                    },
+                    fileHelpTexts: fileHelpTexts
+                )
                 
                 Spacer()
             }
@@ -123,8 +82,7 @@ struct BotMessage: View {
                         WithPerceptionTracking {
                             ReferenceButton(
                                 references: references,
-                                chat: chat,
-                                isReferencesPresented: $isReferencesPresented
+                                chat: chat
                             )
                         }
                     }
@@ -269,77 +227,6 @@ struct BotMessage: View {
     }
 }
 
-struct ReferenceList: View {
-    let references: [ConversationReference]
-    let chat: StoreOf<Chat>
-
-    private let maxVisibleItems: Int = 6
-    @State private var itemHeight: CGFloat = 16
-    
-    @AppStorage(\.chatFontSize) var chatFontSize
-    
-    struct ReferenceView: View {
-        let references: [ConversationReference]
-        let chat: StoreOf<Chat>
-        @AppStorage(\.chatFontSize) var chatFontSize
-        @Binding var itemHeight: CGFloat
-        
-        var body: some View {
-            VStack(alignment: .leading, spacing: 0) {
-                ForEach(0..<references.endIndex, id: \.self) { index in
-                    WithPerceptionTracking {
-                        let reference = references[index]
-
-                        Button(action: {
-                            chat.send(.referenceClicked(reference))
-                        }) {
-                            HStack(spacing: 8) {
-                                drawFileIcon(reference.url, isDirectory: reference.isDirectory)
-                                    .resizable()
-                                    .scaledToFit()
-                                    .scaledFrame(width: 14, height: 14)
-                                Text(reference.fileName)
-                                    .truncationMode(.middle)
-                                    .lineLimit(1)
-                                    .layoutPriority(1)
-                                    .scaledFont(size: chatFontSize - 1)
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                        .buttonStyle(HoverButtonStyle())
-                        .background(GeometryReader { geometry in
-                            Color.clear.onAppear {
-                                itemHeight = geometry.size.height
-                            }
-                        })
-                        .help(reference.getPathRelativeToHome())
-                    }
-                }
-            }
-        }
-    }
-
-    var body: some View {
-        WithPerceptionTracking {
-            if references.count <= maxVisibleItems {
-                ReferenceView(references: references,  chat: chat, itemHeight: $itemHeight)
-            } else {
-                HoverScrollView {
-                    ReferenceView(references: references,  chat: chat, itemHeight: $itemHeight)
-                }
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: maxViewHeight)
-
-    }
-    
-    private var maxViewHeight: CGFloat {
-        let totalHeight = CGFloat(references.count) * itemHeight
-        let maxHeight = CGFloat(maxVisibleItems) * itemHeight
-        return min(totalHeight, maxHeight)
-    }
-}
-
 private struct TurnStatusView: View {
     
     let message: DisplayedChatMessage
@@ -466,50 +353,5 @@ struct BotMessage_Previews: PreviewProvider {
         )
         .padding()
         .fixedSize(horizontal: true, vertical: true)
-    }
-}
-    
-
-struct ReferenceList_Previews: PreviewProvider {
-    static var previews: some View {
-        let chatTabInfo = ChatTabInfo(id: "id", workspacePath: "path", username: "name")
-        ReferenceList(references: [
-            .init(
-                uri: "/Core/Sources/ConversationTab/Views/BotMessage.swift",
-                status: .included,
-                kind: .class,
-                referenceType: .file
-            ),
-            .init(
-                uri: "/Core/Sources/ConversationTab/Views",
-                status: .included,
-                kind: .struct,
-                referenceType: .file
-            ),
-            .init(
-                uri: "/Core/Sources/ConversationTab/Views/BotMessage.swift",
-                status: .included,
-                kind: .function,
-                referenceType: .file
-            ),
-            .init(
-                uri: "/Core/Sources/ConversationTab/Views/BotMessage.swift",
-                status: .included,
-                kind: .case,
-                referenceType: .file
-            ),
-            .init(
-                uri: "/Core/Sources/ConversationTab/Views/BotMessage.swift",
-                status: .included,
-                kind: .extension,
-                referenceType: .file
-            ),
-            .init(
-                uri: "/Core/Sources/ConversationTab/Views/BotMessage.swift",
-                status: .included,
-                kind: .webpage,
-                referenceType: .file
-            ),
-        ], chat: .init(initialState: .init(), reducer: { Chat(service: ChatService.service(for: chatTabInfo)) }))
     }
 }

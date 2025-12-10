@@ -162,7 +162,7 @@ public final class ChatService: ChatServiceType, ObservableObject {
                 AgentRound(roundId: params.roundId,
                            reply: "",
                            toolCalls: [
-                            AgentToolCall(id: params.toolCallId, name: params.name, status: .waitForConfirmation, invokeParams: params)
+                            AgentToolCall(id: params.toolCallId, name: params.name, status: .waitForConfirmation, invokeParams: params, title: params.title)
                            ]
                           )
             ]

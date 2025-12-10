@@ -233,9 +233,8 @@ private struct CommentDetailView: View {
     }
 
     var fileNameView: some View {
-        HStack(spacing: 8) {
+        HStack(alignment: .center, spacing: 8) {
             drawFileIcon(fileURL)
-                .resizable()
                 .scaledToFit()
                 .frame(width: 16, height: 16)
 

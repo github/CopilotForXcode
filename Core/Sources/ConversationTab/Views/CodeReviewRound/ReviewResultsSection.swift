@@ -147,9 +147,8 @@ private struct ReviewResultRowContent: View {
     @AppStorage(\.chatFontSize) private var chatFontSize
     
     var body: some View {
-        HStack(spacing: 4) {
+        HStack(alignment: .center, spacing: 4) {
             drawFileIcon(fileURL)
-                .resizable()
                 .scaledToFit()
                 .scaledFrame(width: 16, height: 16)
             

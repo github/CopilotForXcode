@@ -39,7 +39,9 @@ public protocol GitHubCopilotSuggestionServiceType {
         cursorPosition: CursorPosition
     ) async throws -> [CodeSuggestion]
     func notifyShown(_ completion: CodeSuggestion) async
+    func notifyCopilotInlineEditShown(_ completion: CodeSuggestion) async
     func notifyAccepted(_ completion: CodeSuggestion, acceptedLength: Int?) async
+    func notifyCopilotInlineEditAccepted(_ completion: CodeSuggestion) async
     func notifyRejected(_ completions: [CodeSuggestion]) async
     func notifyOpenTextDocument(fileURL: URL, content: String) async throws
     func notifyChangeTextDocument(
@@ -947,11 +949,23 @@ public final class GitHubCopilotService:
             GitHubCopilotRequest.NotifyShown(completionUUID: completion.id)
         )
     }
+    
+    @GitHubCopilotSuggestionActor
+    public func notifyCopilotInlineEditShown(_ completion: CodeSuggestion) async {
+        try? await sendCopilotNotification(.textDocumentDidShowInlineEdit(.from(id: completion.id)))
+    }
 
     @GitHubCopilotSuggestionActor
     public func notifyAccepted(_ completion: CodeSuggestion, acceptedLength: Int? = nil) async {
         _ = try? await sendRequest(
             GitHubCopilotRequest.NotifyAccepted(completionUUID: completion.id, acceptedLength: acceptedLength)
+        )
+    }
+    
+    @GitHubCopilotSuggestionActor
+    public func notifyCopilotInlineEditAccepted(_ completion: CodeSuggestion) async {
+        _ = try? await sendRequest(
+            GitHubCopilotRequest.NotifyCopilotInlineEditAccepted(params: [completion.id])
         )
     }
 

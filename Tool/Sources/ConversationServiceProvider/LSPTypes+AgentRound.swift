@@ -28,6 +28,7 @@ public struct AgentToolCall: Codable, Equatable, Identifiable {
     public var result: [ToolCallResultData]?
     public var resultDetails: [ToolResultItem]?
     public var invokeParams: InvokeClientToolParams?
+    public var title: String?
     
     public enum ToolCallStatus: String, Codable {
         case waitForConfirmation, accepted, running, completed, error, cancelled
@@ -43,7 +44,8 @@ public struct AgentToolCall: Codable, Equatable, Identifiable {
         error: String? = nil,
         result: [ToolCallResultData]? = nil,
         resultDetails: [ToolResultItem]? = nil,
-        invokeParams: InvokeClientToolParams? = nil
+        invokeParams: InvokeClientToolParams? = nil,
+        title: String? = nil
     ) {
         self.id = id
         self.name = name
@@ -55,6 +57,11 @@ public struct AgentToolCall: Codable, Equatable, Identifiable {
         self.result = result
         self.resultDetails = resultDetails
         self.invokeParams = invokeParams
+        self.title = title
+    }
+
+    public var isToolcallingLoopContinueTool: Bool {
+        self.name == "internal.tool_calling_loop_continue_confirmation"
     }
 }
 

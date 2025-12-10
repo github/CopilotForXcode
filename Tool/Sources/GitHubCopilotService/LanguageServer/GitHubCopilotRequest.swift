@@ -336,6 +336,21 @@ enum GitHubCopilotRequest {
             return .custom("notifyAccepted", .hash(dict), ClientRequest.NullHandler)
         }
     }
+    
+    struct NotifyCopilotInlineEditAccepted: GitHubCopilotRequestType {
+        typealias Response = Bool
+        
+        // NES suggestion ID
+        var params: [String]
+        
+        var request: ClientRequest {
+            let args: [JSONValue] = params.map { JSONValue.string($0) }
+            return .workspaceExecuteCommand(
+                .init(command: "github.copilot.didAcceptNextEditSuggestionItem", arguments: args),
+                ClientRequest.NullHandler
+            )
+        }
+    }
 
     struct NotifyRejected: GitHubCopilotRequestType {
         struct Response: Codable {}

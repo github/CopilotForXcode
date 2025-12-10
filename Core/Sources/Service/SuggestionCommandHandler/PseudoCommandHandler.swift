@@ -221,7 +221,7 @@ struct PseudoCommandHandler {
         // TODO: handle errorMessage if any
         if filespace.presentingNESSuggestion != nil {
             presenter.presentNESSuggestion(fileURL: fileURL)
-            workspace.notifySuggestionShown(fileFileAt: fileURL)
+            workspace.notifyNESSuggestionShown(forFileAt: fileURL)
         } else {
             presenter.discardNESSuggestion(fileURL: fileURL)
         }

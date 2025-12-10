@@ -7,3 +7,16 @@ public enum ToolName: String, Codable {
     case createFile = "create_file"
     case fetchWebPage = "fetch_webpage"
 }
+
+public enum ServerToolName: String, Codable {
+    case readFile = "read_file"
+    case findFiles = "file_search"
+    case findTextInFiles = "grep_search"
+    case listDir = "list_dir"
+    case replaceString = "replace_string_in_file"
+    case codebase = "semantic_search"
+}
+
+public enum CopilotToolName: String, Codable {
+    case readFile = "copilot.read_file"
+}

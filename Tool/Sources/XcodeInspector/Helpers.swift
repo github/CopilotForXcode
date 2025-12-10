@@ -17,7 +17,7 @@ public extension FileManager {
 }
 
 extension AXUIElement {
-    var realtimeDocumentURL: URL? {
+    public var realtimeDocumentURL: URL? {
         guard let window = self.focusedWindow,
               window.identifier == "Xcode.WorkspaceWindow"
         else { return nil }

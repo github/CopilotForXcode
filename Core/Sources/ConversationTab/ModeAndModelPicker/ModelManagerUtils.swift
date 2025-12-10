@@ -26,7 +26,8 @@ public extension AppState {
         }
         
         guard let modelName = savedModel["modelName"]?.stringValue,
-              let modelFamily = savedModel["modelFamily"]?.stringValue else {
+              let modelFamily = savedModel["modelFamily"]?.stringValue,
+              let id = savedModel["id"]?.stringValue else {
             return nil
         }
         
@@ -48,6 +49,7 @@ public extension AppState {
             displayName: displayName,
             modelName: modelName,
             modelFamily: modelFamily,
+            id: id,
             billing: billing,
             providerName: providerName,
             supportVision: supportVision
@@ -149,7 +151,8 @@ public class CopilotModelManagerObservable: ObservableObject {
                     AppState.shared.setSelectedModel(
                         .init(
                             modelName: fallbackModel.modelName,
-                            modelFamily: fallbackModel.id,
+                            modelFamily: fallbackModel.modelFamily,
+                            id: fallbackModel.id,
                             billing: fallbackModel.billing,
                             supportVision: fallbackModel.capabilities.supports.vision
                         )
@@ -170,6 +173,7 @@ public extension CopilotModelManager {
             return LLMModel(
                 modelName: $0.modelName,
                 modelFamily: $0.isChatFallback ? $0.id : $0.modelFamily,
+                id: $0.id,
                 billing: $0.billing,
                 supportVision: $0.capabilities.supports.vision
             )
@@ -185,6 +189,7 @@ public extension CopilotModelManager {
             return LLMModel(
                 modelName: defaultModel.modelName,
                 modelFamily: defaultModel.modelFamily,
+                id: defaultModel.id,
                 billing: defaultModel.billing,
                 supportVision: defaultModel.capabilities.supports.vision
             )
@@ -196,6 +201,7 @@ public extension CopilotModelManager {
             return LLMModel(
                 modelName: gpt4_1.modelName,
                 modelFamily: gpt4_1.modelFamily,
+                id: gpt4_1.id,
                 billing: gpt4_1.billing,
                 supportVision: gpt4_1.capabilities.supports.vision
             )
@@ -206,6 +212,7 @@ public extension CopilotModelManager {
             return LLMModel(
                 modelName: firstModel.modelName,
                 modelFamily: firstModel.modelFamily,
+                id: firstModel.id,
                 billing: firstModel.billing,
                 supportVision: firstModel.capabilities.supports.vision
             )
@@ -229,6 +236,7 @@ public extension BYOKModelManager {
                 displayName: $0.modelCapabilities?.name,
                 modelName: $0.modelId,
                 modelFamily: $0.modelId,
+                id: $0.modelId,
                 billing: nil,
                 providerName: $0.providerName.rawValue,
                 supportVision: $0.modelCapabilities?.vision ?? false
@@ -241,6 +249,7 @@ public struct LLMModel: Codable, Hashable, Equatable {
     public let displayName: String?
     public let modelName: String
     public let modelFamily: String
+    public let id: String
     public let billing: CopilotModelBilling?
     public let providerName: String?
     public let supportVision: Bool
@@ -249,6 +258,7 @@ public struct LLMModel: Codable, Hashable, Equatable {
         displayName: String? = nil,
         modelName: String,
         modelFamily: String,
+        id: String,
         billing: CopilotModelBilling?,
         providerName: String? = nil,
         supportVision: Bool
@@ -256,6 +266,7 @@ public struct LLMModel: Codable, Hashable, Equatable {
         self.displayName = displayName
         self.modelName = modelName
         self.modelFamily = modelFamily
+        self.id = id
         self.billing = billing
         self.providerName = providerName
         self.supportVision = supportVision

@@ -38,11 +38,20 @@ public extension ChatMemory {
                                             if let progressMessage = newToolCall.progressMessage, !progressMessage.isEmpty {
                                                 mergedToolCalls[toolCallIndex].progressMessage = progressMessage
                                             }
+                                            if let result = newToolCall.result, !result.isEmpty {
+                                                mergedToolCalls[toolCallIndex].result = result
+                                            }
+                                            if let resultDetails = newToolCall.resultDetails, !resultDetails.isEmpty {
+                                                mergedToolCalls[toolCallIndex].resultDetails = resultDetails
+                                            }
                                             if let error = newToolCall.error, !error.isEmpty {
                                                 mergedToolCalls[toolCallIndex].error = error
                                             }
                                             if let invokeParams = newToolCall.invokeParams {
                                                 mergedToolCalls[toolCallIndex].invokeParams = invokeParams
+                                            }
+                                            if let title = newToolCall.title {
+                                                mergedToolCalls[toolCallIndex].title = title
                                             }
                                         } else {
                                             mergedToolCalls.append(newToolCall)
@@ -157,6 +166,12 @@ extension ChatMessage {
                             if let progressMessage = newToolCall.progressMessage, !progressMessage.isEmpty {
                                 mergedToolCalls[toolCallIndex].progressMessage = newToolCall.progressMessage
                             }
+                            if let result = newToolCall.result, !result.isEmpty {
+                                mergedToolCalls[toolCallIndex].result = result
+                            }
+                            if let resultDetails = newToolCall.resultDetails, !resultDetails.isEmpty {
+                                mergedToolCalls[toolCallIndex].resultDetails = resultDetails
+                            }
                             if let error = newToolCall.error, !error.isEmpty {
                                 mergedToolCalls[toolCallIndex].error = newToolCall.error
                             }
@@ -186,6 +201,12 @@ extension ChatMessage {
                                         }
                                         if let error = newSubToolCall.error, !error.isEmpty {
                                             mergedSubToolCalls[toolCallIndex].error = newSubToolCall.error
+                                        }
+                                        if let result = newSubToolCall.result, !result.isEmpty {
+                                            mergedSubToolCalls[toolCallIndex].result = result
+                                        }
+                                        if let resultDetails = newSubToolCall.resultDetails, !resultDetails.isEmpty {
+                                            mergedSubToolCalls[toolCallIndex].resultDetails = resultDetails
                                         }
                                         if let invokeParams = newSubToolCall.invokeParams {
                                             mergedSubToolCalls[toolCallIndex].invokeParams = invokeParams

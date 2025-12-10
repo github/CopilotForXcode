@@ -116,8 +116,8 @@ struct ModeAndModelPicker: View {
 
         for model in models {
             let multiplierText = ModelMenuItemFormatter.getMultiplierText(for: model)
-            newCache[model.modelName.appending(model.providerName ?? "")] = multiplierText
-            
+            newCache[model.id.appending(model.providerName ?? "")] = multiplierText
+
             let displayName = "✓ \(model.displayName ?? model.modelName)"
             let displayNameWidth = displayName.size(withAttributes: attributes).width
             let multiplierWidth = multiplierText.isEmpty ? 0 : multiplierText.size(withAttributes: attributes).width
@@ -328,7 +328,7 @@ struct ModeAndModelPicker: View {
             Text(createModelMenuItemAttributedString(
                 modelName: model.displayName ?? model.modelName,
                 isSelected: selectedModel == model,
-                cachedMultiplierText: currentCache.modelMultiplierCache[model.modelName.appending(model.providerName ?? "")] ?? ""
+                cachedMultiplierText: currentCache.modelMultiplierCache[model.id.appending(model.providerName ?? "")] ?? ""
             ))
         }
         .help(

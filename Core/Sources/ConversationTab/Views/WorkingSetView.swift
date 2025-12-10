@@ -189,9 +189,8 @@ struct FileEditView: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            HStack(spacing: 4) {
+            HStack(alignment: .center, spacing: 4) {
                 drawFileIcon(fileEdit.fileURL)
-                    .resizable()
                     .scaledToFit()
                     .scaledFrame(width: 16, height: 16)
                     .foregroundColor(.secondary)

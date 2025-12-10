@@ -68,6 +68,8 @@ struct ProgressToolCalls: View {
                         RunInTerminalToolView(tool: tool, chat: chat)
                     } else if tool.invokeParams != nil && tool.status == .waitForConfirmation {
                         ToolConfirmationView(tool: tool, chat: chat)
+                    } else if tool.isToolcallingLoopContinueTool {
+                        // ignore rendering for internal tool calling loop continue tool
                     } else {
                         ToolStatusItemView(tool: tool)
                     }
@@ -86,7 +88,11 @@ struct ToolConfirmationView: View {
     var body: some View {
         WithPerceptionTracking {
             VStack(alignment: .leading, spacing: 8) {
-                GenericToolTitleView(toolStatus: "Run", toolName: tool.name, fontWeight: .semibold)
+                if let title = tool.title {
+                    ToolConfirmationTitleView(title: title, fontWeight: .semibold)
+                } else {
+                    GenericToolTitleView(toolStatus: "Run", toolName: tool.name, fontWeight: .semibold)
+                }
 
                 ThemedMarkdownText(text: tool.invokeParams?.message ?? "", chat: chat)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -95,14 +101,14 @@ struct ToolConfirmationView: View {
                     Button(action: {
                         chat.send(.toolCallCancelled(tool.id))
                     }) {
-                        Text("Skip")
+                        Text(tool.isToolcallingLoopContinueTool ? "Cancel" : "Skip")
                             .scaledFont(.body)
                     }
                     
                     Button(action: {
                         chat.send(.toolCallAccepted(tool.id))
                     }) {
-                        Text("Allow")
+                        Text(tool.isToolcallingLoopContinueTool ? "Continue" : "Allow")
                             .scaledFont(.body)
                     }
                     .buttonStyle(BorderedProminentButtonStyle())
@@ -118,6 +124,24 @@ struct ToolConfirmationView: View {
                     .stroke(Color.gray.opacity(0.2), lineWidth: 1)
             )
         }
+    }
+}
+
+struct ToolConfirmationTitleView: View {
+    var title: String
+    var fontWeight: Font.Weight = .regular
+
+    @AppStorage(\.chatFontSize) var chatFontSize
+    
+    var body: some View {
+        HStack(spacing: 4) {
+            Text(title)
+                .textSelection(.enabled)
+                .scaledFont(size: chatFontSize, weight: fontWeight)
+                .foregroundStyle(.primary)
+                .background(Color.clear)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -150,87 +174,6 @@ struct GenericToolTitleView: View {
                 )
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-    }
-}
-
-struct ToolStatusItemView: View {
-    
-    let tool: AgentToolCall
-    
-    @AppStorage(\.chatFontSize) var chatFontSize
-    
-    var statusIcon: some View {
-        Group {
-            switch tool.status {
-            case .running:
-                ProgressView()
-                    .controlSize(.small)
-                    .scaledScaleEffect(0.7)
-            case .completed:
-                Image(systemName: "checkmark")
-                    .foregroundColor(Color.successLightGreen)
-            case .error:
-                Image(systemName: "xmark.circle")
-                    .foregroundColor(.red.opacity(0.5))
-            case .cancelled:
-                Image(systemName: "slash.circle")
-                    .foregroundColor(.gray.opacity(0.5))
-            case .waitForConfirmation:
-                EmptyView()
-            case .accepted:
-                EmptyView()
-            }
-        }
-        .scaledFont(size: chatFontSize - 1, weight: .medium)
-    }
-    
-    var progressTitleText: some View {
-        let message: String = {
-            var msg = tool.progressMessage ?? ""
-            if tool.name == ToolName.createFile.rawValue {
-                if let input = tool.invokeParams?.input, let filePath = input["filePath"]?.value as? String {
-                    let fileURL = URL(fileURLWithPath: filePath)
-                    msg += ": [\(fileURL.lastPathComponent)](\(fileURL.absoluteString))"
-                }
-            }
-            return msg
-        }()
-
-        return Group {
-            if message.isEmpty {
-                GenericToolTitleView(toolStatus: "Running", toolName: tool.name)
-            } else {
-                if let attributedString = try? AttributedString(markdown: message) {
-                    Text(attributedString)
-                        .environment(\.openURL, OpenURLAction { url in
-                            if url.scheme == "file" || url.isFileURL {
-                                NSWorkspace.shared.open(url)
-                                return .handled
-                            } else {
-                                return .systemAction
-                            }
-                        })
-                } else {
-                    Text(message)
-                }
-            }
-        }
-    }
-    
-    var body: some View {
-        WithPerceptionTracking {
-            HStack(spacing: 4) {
-                statusIcon
-                    .scaledFrame(width: 16, height: 16)
-
-                progressTitleText
-                    .scaledFont(size: chatFontSize)
-                    .lineLimit(1)
-                
-                Spacer()
-            }
-            .help(tool.progressMessage ?? "")
-        }
     }
 }
 

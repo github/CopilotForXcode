@@ -6,6 +6,10 @@ public extension Color {
     static var chatWindowBackgroundColor: Color { Color("ChatWindowBackgroundColor") }
     
     static var successLightGreen: Color { Color("LightGreen") }
+    
+    static var agentToolStatusDividerColor: Color { Color("AgentToolStatusDividerColor") }
+    
+    static var agentToolStatusOutlineColor: Color { Color("AgentToolStatusOutlineColor") }
 }
 
 public var QuinarySystemFillColor: Color {
