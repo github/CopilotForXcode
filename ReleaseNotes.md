@@ -1,19 +1,19 @@
-### GitHub Copilot for Xcode 0.45.0
+### GitHub Copilot for Xcode 0.46.0
 
-**🚀 Highlights**
+**🎄 Holiday Special**
 
-- Added new models: GPT-5.1, GPT-5.1-Codex, GPT-5.1-Codex-Mini, Claude Haiku 4.5, and Auto (preview).
-- Added support for custom agents (preview).
-- Introduced the built-in Plan agent (preview).
-- Added support for subagent execution (preview).
-- Added support for Next Edit Suggestions (preview).
+- As the holiday season approaches, we want to wish all our users a Merry Christmas and a Happy New Year! 🎅✨ This release focuses on refinements and bug fixes to ensure a smooth coding experience during the holidays. Stay tuned for more exciting features in the next release!
+
 
 **💪 Improvements**
 
-- MCP servers now support dynamic OAuth setup for third-party authentication providers.
-- Added a setting to configure the maximum number of tool requests allowed.
+- **Refined Tool Layout**: Enhanced the display of tool calls, including better error reporting and output details.
+- **MCP Improvements**: Added support for deleting MCP servers directly from the list.
+- **Feedback**: Updated the feedback forum link to better hear from you.
 
 **🛠️ Bug Fixes**
 
-- Fixed an issue that the terminal view in Agent conversation was clipped
-- Fixed an issue that the Chat panel failed to recognize newly created workspaces.
+- Fixed an issue where the "Fix Error" window would auto-focus unexpectedly.
+- Resolved issues with `insert_edit_into_file` where changes were sometimes not applied or applied to the incorrect file.
+- Fixed a display bug in the model picker for models with same name.
+- Fixed random failures in `read_file` and `read_directory` tools.

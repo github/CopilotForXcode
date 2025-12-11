@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.46.0 - December 11, 2025
+### Added
+- MCP: Support delete MCP server from list.
+
+### Changed
+- Refine built-in tools layout and displaying error and output details.
+- Better support toolCallingLoop continue operation for subagent turn.
+- Update feedback forum link.
+- Update client-side MCP restore and persist.
+- Adopt NES notification.
+
+### Fixed
+- Disable auto focus for fix error window.
+- Fixed an issue where no file change was made when insert_edit_into_file tool succeeds.
+- Fixed an issue where insert edit was applied to the incorrect file.
+- Fixed model picker to use model id instead of model family.
+- Fixed read_file, read_directory tool randomly failing.
+
 ## 0.45.0 - November 14, 2025
 ### Added
 - New models: GPT-5.1, GPT-5.1-Codex, GPT-5.1-Codex-Mini, Claude Haiku 4.5, and Auto (preview).

@@ -69,7 +69,7 @@ struct ExpandableFileListView<ProgressMessage: View>: View {
                         .scaledToFit()
                         .padding(4)
                         .scaledFrame(width: chevronWidth, height: chevronWidth)
-                        .scaledFont(size: 10, weight: .bold)
+                        .scaledFont(size: 10, weight: .medium)
                         .foregroundColor(.secondary)
 
                     progressMessage
@@ -88,7 +88,7 @@ struct ExpandableFileListView<ProgressMessage: View>: View {
                     // Vertical line aligned with chevron center
                     Rectangle()
                         .fill(Color.secondary.opacity(0.3))
-                        .frame(width: 1)
+                        .scaledFrame(width: 1)
                         .scaledPadding(.leading, chevronWidth / 2 - 0.5)
                     
                     // File list
@@ -168,7 +168,7 @@ struct ExpandableFileListView<ProgressMessage: View>: View {
                     .foregroundColor(.secondary)
 
                 Text(displayName)
-                    .scaledFont(size: chatFontSize - 2)
+                    .scaledFont(size: chatFontSize - 1)
                     .foregroundColor(.secondary)
                     .lineLimit(1)
 

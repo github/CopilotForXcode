@@ -89,7 +89,7 @@ struct ToolStatusItemView: View {
             HStack(spacing: 0) {
                 Text(prefix)
                 Text(query)
-                    .font(.system(size: chatFontSize - 2, weight: .regular, design: .monospaced))
+                    .scaledFont(size: chatFontSize - 1, weight: .regular, design: .monospaced)
                     .padding(.horizontal, 4)
                     .padding(.vertical, 1)
                     .background(SecondarySystemFillColor)
@@ -122,7 +122,7 @@ struct ToolStatusItemView: View {
                 let end = String(message[endRange])
                 Text(": \(start)-\(end)")
                     .foregroundColor(.secondary)
-                    .font(.system(size: chatFontSize - 1))
+                    .scaledFont(size: chatFontSize - 1)
             }
         }
     }
@@ -163,7 +163,7 @@ struct ToolStatusItemView: View {
             HStack(spacing: 0) {
                 Text("Searched \(target) for ")
                 Text(query)
-                    .font(.system(size: chatFontSize - 2, weight: .regular, design: .monospaced))
+                    .scaledFont(size: chatFontSize - 1, weight: .regular, design: .monospaced)
                     .padding(.horizontal, 4)
                     .padding(.vertical, 1)
                     .background(SecondarySystemFillColor)
@@ -240,7 +240,7 @@ struct ToolStatusItemView: View {
                 }
 
                 extraContent(match)
-                    .scaledPadding(.leading, -4)
+                    .padding(.leading, -4)
             }
         } else {
             markdownView(text: message)
@@ -268,16 +268,19 @@ struct ToolStatusItemView: View {
     }
 
     func markdownView(text: String) -> some View {
-        Markdown(text)
-            .markdownTheme(.functionCall(fontSize: chatFontSize))
-            .environment(\.openURL, OpenURLAction { url in
-                if url.scheme == "file" || url.isFileURL {
-                    NSWorkspace.shared.open(url)
-                    return .handled
-                } else {
-                    return .systemAction
-                }
-            })
+        ThemedMarkdownText(
+            text: text,
+            context: .init(supportInsert: false),
+            foregroundColor: .secondary
+        )
+        .environment(\.openURL, OpenURLAction { url in
+            if url.scheme == "file" || url.isFileURL {
+                NSWorkspace.shared.open(url)
+                return .handled
+            } else {
+                return .systemAction
+            }
+        })
     }
 
     var progressErrorText: some View {
@@ -473,6 +476,7 @@ private struct ToolStatusDetailsView<Title: View, Content: View>: View {
     var content: Content
 
     @State private var isExpanded = false
+    @AppStorage(\.fontScale) var fontScale
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -490,13 +494,13 @@ private struct ToolStatusDetailsView<Title: View, Content: View>: View {
                         .scaledToFit()
                         .padding(4)
                         .scaledFrame(width: 16, height: 16)
-                        .scaledFont(size: 10, weight: .bold)
+                        .scaledFont(size: 10, weight: .medium)
                 }
                 .contentShape(RoundedRectangle(cornerRadius: 6))
             }
             .buttonStyle(.plain)
             .scaledPadding(.horizontal, 6)
-            .toolStatusStyle(withBackground: !isExpanded)
+            .toolStatusStyle(withBackground: !isExpanded, fontScale: fontScale)
 
             if isExpanded {
                 Divider()
@@ -506,12 +510,12 @@ private struct ToolStatusDetailsView<Title: View, Content: View>: View {
                     .scaledPadding(.horizontal, 8)
             }
         }
-        .toolStatusStyle(withBackground: isExpanded)
+        .toolStatusStyle(withBackground: isExpanded, fontScale: fontScale)
     }
 }
 
 private extension View {
-    func toolStatusStyle(withBackground: Bool) -> some View {
+    func toolStatusStyle(withBackground: Bool, fontScale: CGFloat) -> some View {
         /// Leverage the `modify` extension to avoid refreshing of chat panel `List` view
         self.modify { view in
             if withBackground {
@@ -519,7 +523,7 @@ private extension View {
                     .scaledPadding(.vertical, 6)
                     .background(
                         RoundedRectangle(cornerRadius: 6)
-                            .stroke(Color.agentToolStatusOutlineColor, lineWidth: 1)
+                            .stroke(Color.agentToolStatusOutlineColor, lineWidth: 1 * fontScale)
                     )
             } else {
                 view
