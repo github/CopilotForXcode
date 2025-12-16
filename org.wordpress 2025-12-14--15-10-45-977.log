@@ -1,0 +1,278 @@
+2025-12-14 18:10:45:976 🚩 Updating Remote Feature Flags with Device ID: AE9ED998-CBE6-4503-B63C-4F8A12397458
+2025-12-14 18:10:46:004 WPAnalytics session started
+2025-12-14 18:10:46:008 ===========================================================================
+2025-12-14 18:10:46:008 Launching WordPress for iOS 26.4.1 (26.4.1.1)...
+2025-12-14 18:10:46:008 Crash count: 0
+2025-12-14 18:10:46:008 Debug mode:  Production
+2025-12-14 18:10:46:008 Extra debug: YES
+2025-12-14 18:10:46:008 Device model: iPhone 14 Pro (iPhone15,2)
+2025-12-14 18:10:46:008 OS:        iOS, 26.2
+2025-12-14 18:10:46:008 Language:  en-US
+2025-12-14 18:10:46:008 UDID:      D335DD5E-14E6-4A0B-83C6-203659A4B898
+2025-12-14 18:10:46:008 APN token: 622f678552a97d9c104c81f70cbaa644226abb521262edf6475febbec6a53f92
+2025-12-14 18:10:46:008 Launch options: [:]
+2025-12-14 18:10:46:010 wp.com account: <Account username: 2sfq86g2mh ID: 274402049, Email: verified ObjectID: x-coredata://5FBF997F-557F-4548-902C-0D72B5D3714D/Account/p1>
+All accounts and blogs:
+<Account username: 2sfq86g2mh ID: 274402049, Email: verified ObjectID: x-coredata://5FBF997F-557F-4548-902C-0D72B5D3714D/Account/p1> (default)
+└─ <Blog Name: Site Title URL: https://2sfq86g2mh-donuz.wordpress.com XML-RPC: https://2sfq86g2mh-donuz.wordpress.com/xmlrpc.php wp.com account: 2sfq86g2mh blogId: 250567695 plan: Free (1) ObjectID: x-coredata://5FBF997F-557F-4548-902C-0D72B5D3714D/Blog/p1>
+└─ <Blog Name: Site Title URL: https://2sfq86g2mh-ixwct.wordpress.com XML-RPC: https://2sfq86g2mh-ixwct.wordpress.com/xmlrpc.php wp.com account: 2sfq86g2mh blogId: 250587861 plan: Free (1) ObjectID: x-coredata://5FBF997F-557F-4548-902C-0D72B5D3714D/Blog/p3>
+└─ <Blog Name: Site Title URL: https://2sfq86g2mh-vukmj.wordpress.com XML-RPC: https://2sfq86g2mh-vukmj.wordpress.com/xmlrpc.php wp.com account: 2sfq86g2mh blogId: 250587819 plan: Free (1) ObjectID: x-coredata://5FBF997F-557F-4548-902C-0D72B5D3714D/Blog/p4>
+└─ <Blog Name: عنوان الموقع URL: https://x8nd9nb9f5privaterelayappleid.wordpress.com XML-RPC: https://x8nd9nb9f5privaterelayappleid.wordpress.com/xmlrpc.php wp.com account: 2sfq86g2mh blogId: 250563467 plan: Free (1) ObjectID: x-coredata://5FBF997F-557F-4548-902C-0D72B5D3714D/Blog/p2>
+2025-12-14 18:10:46:010 ===========================================================================
+2025-12-14 18:10:46:015 Zendesk - Using defaultAccount for suggested identity.
+2025-12-14 18:10:46:018 Zendesk identity created with email '2sfq86g2mh@privaterelay.appleid.com' and name 'Ibrahim Ash'.
+2025-12-14 18:10:46:018 Zendesk Enabled: 1
+2025-12-14 18:10:46:049 didFinishLaunchingWithOptions state: UIApplicationState
+2025-12-14 18:10:46:052 PingHub connecting
+2025-12-14 18:10:46:057 BlogService syncBlogsForAccount
+2025-12-14 18:10:46:075 🚩 Unable to resolve remote feature flag: Jetpack Social Improvements v1. Returning compile-time default.
+2025-12-14 18:10:46:120 🚩 Unable to resolve remote feature flag: Jetpack Social Improvements v1. Returning compile-time default.
+2025-12-14 18:10:46:210 🔵 Tracked: my_site_site_menu_shown
+2025-12-14 18:10:46:234 <WordPress.WordPressAppDelegate: 0x10da049c0> applicationDidBecomeActive(_:)
+2025-12-14 18:10:46:234 🔵 Tracked: application_opened <>
+2025-12-14 18:10:46:238 checkAppleIDCredentialState: No Apple ID found.
+2025-12-14 18:10:47:301 Pre-fetching 0 posts...
+2025-12-14 18:10:47:439 PingHub connected
+2025-12-14 18:10:47:464 🚩 Successfully updated remote config values: ["sync_publishing_post_fetch_rate": 20, "phase_four_blog_post": https://jetpack.com/support/switch-to-the-jetpack-app/, "wp_android_performance_monitoring_sample_rate": 0.0, "in_app_update_flexible_interval_in_days_ios": 90, "open_web_links_with_jetpack_flow_frequency": 0, "blaze_non_dismissable_hash": step-4, "phase_two_blog_post": https://jetpack.com/support/switch-to-the-jetpack-app/, "in_app_update_flexible_interval_in_days_android": 5, "phase_new_users_blog_post": https://jetpack.com/support/switch-to-the-jetpack-app/, "jp_in_app_update_blocking_version_ios": 80.0, "phase_self_hosted_blog_post": https://jetpack.com/support/switch-to-the-jetpack-app/, "codeable_get_free_estimate_url": https://codeable.io/partners/jetpack-scan/, "phase_three_blog_post": https://jetpack.com/support/switch-to-the-jetpack-app/, "blaze_completed_step_hash": step-5, "phase_four_overlay_frequency_in_days": 7, "wp_in_app_update_blocking_version_android": 80000, "jp_in_app_update_blocking_version_android": 80000, "wp_in_app_update_blocking_version_ios": 80.0]
+2025-12-14 18:10:47:472 🚩 Successfully updated local feature flags: ["manage_categories": true, "in_app_rating_and_feedback": true, "prevent_duplicate_notifs_remote_field": true, "google_signin_without_sdk": true, "contact_support_chatbot": true, "plans_in_site_creation": true, "jp_removal_self_hosted": false, "stats_traffic_subscribers_tabs": true, "dashboard_card_domain": false, "site_monitoring": true, "jetpack_powered_bottom_sheet_remote_field": false, "wordpress_support_forum_remote_field": true, "woo_blaze": true, "dashboard_personalization": false, "gutenberg_kit": false, "wp_sotw_2023_nudge": false, "jp_removal_one": true, "woo_pos": true, "woo_notification_1d_after_free_trial_expires": true, "dashboard_card_free_to_paid_plans": true, "site_switcher_redesign": false, "dynamic_dashboard_cards": true, "dashboard_card_activity_log": true, "open_web_links_with_jetpack_flow": true, "mp4_composer_video_optimization_enabled": true, "woo_notification_store_creation_ready": true, "domain_management": true, "woo_hardcoded_plan_upgrade_details_milestone_1_are_accurate": true, "in_app_updates": true, "reader_floating_button": false, "blaze_manage_campaigns": true, "jetpack_shared_login_remote_field": false, "jp_removal_three": true, "woo_pos_local_catalog_m1": true, "blaze": true, "bloganuary_dashboard_nudge": false, "gutenberg_kit_plugins": false, "jp_removal_two": true, "woo_app_passwords_for_jetpack_sites": true, "sync_publishing": false, "feature-flags-enabled": true, "jp_removal_four": false, "my_site_dashboard_todays_stats_card": true, "dashboard_card_pages": true, "jp_wpcom_web_login": true, "woo_notification_1d_before_free_trial_expires": true, "in_app_reviews": true, "voice_to_content": true, "gravatar_quick_editor": true, "qrcode_auth_flow_remote_field": true, "jp_removal_new_users": true, "wordpress_ios_unified_login_and_signup": true, "jp_removal_static_posters": true]
+2025-12-14 18:10:47:917 🔵 Tracked: support_opened <>
+2025-12-14 18:10:50:855 All archived log files erased.
+2025-12-14 18:10:51:767 <WordPress.WordPressAppDelegate: 0x10da049c0> applicationWillResignActive(_:)
+2025-12-14 18:10:53:293 <WordPress.WordPressAppDelegate: 0x10da049c0> applicationDidEnterBackground(_:)
+2025-12-14 18:10:53:295 🔵 Tracked: application_closed <last_visible_screen: Blog List, time_in_app: 7>
+2025-12-14 18:10:53:306 BackgroundTask: beginBackgroundTask for bgTask = 35
+2025-12-14 18:10:53:322 PingHub disconnecting
+2025-12-14 18:10:53:425 PingHub disconnected
+2025-12-14 18:10:54:557 TracksService sendQueuedEvents completed. Sent 4 events.
+2025-12-14 18:11:18:690 BackgroundTask: executing expirationHandler for bgTask = 35
+2025-12-15 08:09:21:652 🚩 Updating Remote Feature Flags with Device ID: AE9ED998-CBE6-4503-B63C-4F8A12397458
+2025-12-15 08:09:21:675 WPAnalytics session started
+2025-12-15 08:09:21:678 ===========================================================================
+2025-12-15 08:09:21:678 Launching WordPress for iOS 26.5.1 (26.5.1.0)...
+2025-12-15 08:09:21:678 Crash count: 0
+2025-12-15 08:09:21:678 Debug mode:  Production
+2025-12-15 08:09:21:678 Extra debug: YES
+2025-12-15 08:09:21:678 Device model: iPhone 14 Pro (iPhone15,2)
+2025-12-15 08:09:21:678 OS:        iOS, 26.2
+2025-12-15 08:09:21:678 Language:  en-US
+2025-12-15 08:09:21:678 UDID:      D335DD5E-14E6-4A0B-83C6-203659A4B898
+2025-12-15 08:09:21:679 APN token: 622f678552a97d9c104c81f70cbaa644226abb521262edf6475febbec6a53f92
+2025-12-15 08:09:21:679 Launch options: [:]
+2025-12-15 08:09:21:680 wp.com account: <Account username: 2sfq86g2mh ID: 274402049, Email: verified ObjectID: x-coredata://5FBF997F-557F-4548-902C-0D72B5D3714D/Account/p1>
+All accounts and blogs:
+<Account username: 2sfq86g2mh ID: 274402049, Email: verified ObjectID: x-coredata://5FBF997F-557F-4548-902C-0D72B5D3714D/Account/p1> (default)
+└─ <Blog Name: Site Title URL: https://2sfq86g2mh-donuz.wordpress.com XML-RPC: https://2sfq86g2mh-donuz.wordpress.com/xmlrpc.php wp.com account: 2sfq86g2mh blogId: 250567695 plan: Free (1) ObjectID: x-coredata://5FBF997F-557F-4548-902C-0D72B5D3714D/Blog/p1>
+└─ <Blog Name: Site Title URL: https://2sfq86g2mh-ixwct.wordpress.com XML-RPC: https://2sfq86g2mh-ixwct.wordpress.com/xmlrpc.php wp.com account: 2sfq86g2mh blogId: 250587861 plan: Free (1) ObjectID: x-coredata://5FBF997F-557F-4548-902C-0D72B5D3714D/Blog/p3>
+└─ <Blog Name: Site Title URL: https://2sfq86g2mh-vukmj.wordpress.com XML-RPC: https://2sfq86g2mh-vukmj.wordpress.com/xmlrpc.php wp.com account: 2sfq86g2mh blogId: 250587819 plan: Free (1) ObjectID: x-coredata://5FBF997F-557F-4548-902C-0D72B5D3714D/Blog/p4>
+└─ <Blog Name: عنوان الموقع URL: https://x8nd9nb9f5privaterelayappleid.wordpress.com XML-RPC: https://x8nd9nb9f5privaterelayappleid.wordpress.com/xmlrpc.php wp.com account: 2sfq86g2mh blogId: 250563467 plan: Free (1) ObjectID: x-coredata://5FBF997F-557F-4548-902C-0D72B5D3714D/Blog/p2>
+2025-12-15 08:09:21:680 ===========================================================================
+2025-12-15 08:09:21:685 Zendesk - Using defaultAccount for suggested identity.
+2025-12-15 08:09:21:687 Zendesk identity created with email '2sfq86g2mh@privaterelay.appleid.com' and name 'Ibrahim Ash'.
+2025-12-15 08:09:21:687 Zendesk Enabled: 1
+2025-12-15 08:09:21:717 didFinishLaunchingWithOptions state: UIApplicationState
+2025-12-15 08:09:21:720 PingHub connecting
+2025-12-15 08:09:21:726 BlogService syncBlogsForAccount
+2025-12-15 08:09:21:742 🚩 Unable to resolve remote feature flag: Jetpack Social Improvements v1. Returning compile-time default.
+2025-12-15 08:09:21:885 🔵 Tracked: my_site_site_menu_shown
+2025-12-15 08:09:21:916 <WordPress.WordPressAppDelegate: 0x10e624900> applicationDidEnterBackground(_:)
+2025-12-15 08:09:21:918 🔵 Tracked: application_closed <last_visible_screen: Blog List>
+2025-12-15 08:09:21:925 BackgroundTask: beginBackgroundTask for bgTask = 31
+2025-12-15 08:09:21:930 PingHub disconnecting
+2025-12-15 08:09:23:892 TracksService sendQueuedEvents completed. Sent 2 events.
+2025-12-15 08:09:24:152 PingHub connected
+2025-12-15 08:09:24:152 PingHub disconnecting
+2025-12-15 08:09:24:158 PingHub disconnected
+2025-12-15 08:09:24:391 🚩 Successfully updated local feature flags: ["woo_app_passwords_for_jetpack_sites": true, "contact_support_chatbot": true, "jp_removal_four": false, "jp_removal_two": true, "stats_traffic_subscribers_tabs": true, "jp_removal_static_posters": true, "jetpack_shared_login_remote_field": false, "google_signin_without_sdk": true, "dashboard_personalization": false, "woo_notification_1d_before_free_trial_expires": true, "wp_sotw_2023_nudge": false, "woo_hardcoded_plan_upgrade_details_milestone_1_are_accurate": true, "dynamic_dashboard_cards": true, "reader_floating_button": false, "jp_removal_three": true, "domain_management": true, "dashboard_card_activity_log": true, "in_app_updates": true, "bloganuary_dashboard_nudge": false, "open_web_links_with_jetpack_flow": true, "blaze": true, "jp_wpcom_web_login": true, "woo_blaze": true, "jetpack_powered_bottom_sheet_remote_field": false, "in_app_reviews": true, "gutenberg_kit_plugins": false, "qrcode_auth_flow_remote_field": true, "wordpress_ios_unified_login_and_signup": true, "my_site_dashboard_todays_stats_card": true, "sync_publishing": false, "site_monitoring": true, "manage_categories": true, "dashboard_card_domain": false, "woo_notification_1d_after_free_trial_expires": true, "site_switcher_redesign": false, "gravatar_quick_editor": true, "wordpress_support_forum_remote_field": true, "jp_removal_new_users": true, "feature-flags-enabled": true, "in_app_rating_and_feedback": true, "mp4_composer_video_optimization_enabled": true, "dashboard_card_pages": true, "dashboard_card_free_to_paid_plans": true, "woo_pos_local_catalog_m1": true, "voice_to_content": true, "woo_notification_store_creation_ready": true, "jp_removal_one": true, "woo_pos": true, "blaze_manage_campaigns": true, "gutenberg_kit": false, "jp_removal_self_hosted": false, "plans_in_site_creation": true, "prevent_duplicate_notifs_remote_field": true]
+2025-12-15 08:09:24:422 🚩 Successfully updated remote config values: ["blaze_completed_step_hash": step-5, "jp_in_app_update_blocking_version_android": 80000, "in_app_update_flexible_interval_in_days_android": 5, "phase_four_overlay_frequency_in_days": 7, "wp_android_performance_monitoring_sample_rate": 0.0, "phase_self_hosted_blog_post": https://jetpack.com/support/switch-to-the-jetpack-app/, "phase_new_users_blog_post": https://jetpack.com/support/switch-to-the-jetpack-app/, "phase_three_blog_post": https://jetpack.com/support/switch-to-the-jetpack-app/, "wp_in_app_update_blocking_version_android": 80000, "jp_in_app_update_blocking_version_ios": 80.0, "open_web_links_with_jetpack_flow_frequency": 0, "blaze_non_dismissable_hash": step-4, "sync_publishing_post_fetch_rate": 20, "phase_four_blog_post": https://jetpack.com/support/switch-to-the-jetpack-app/, "phase_two_blog_post": https://jetpack.com/support/switch-to-the-jetpack-app/, "in_app_update_flexible_interval_in_days_ios": 90, "codeable_get_free_estimate_url": https://codeable.io/partners/jetpack-scan/, "wp_in_app_update_blocking_version_ios": 80.0]
+2025-12-15 08:09:48:190 BackgroundTask: executing expirationHandler for bgTask = 31
+2025-12-15 09:44:07:070 🚩 Updating Remote Feature Flags with Device ID: AE9ED998-CBE6-4503-B63C-4F8A12397458
+2025-12-15 09:44:07:093 WPAnalytics session started
+2025-12-15 09:44:07:098 ===========================================================================
+2025-12-15 09:44:07:098 Launching WordPress for iOS 26.5.1 (26.5.1.0)...
+2025-12-15 09:44:07:098 Crash count: 0
+2025-12-15 09:44:07:098 Debug mode:  Production
+2025-12-15 09:44:07:098 Extra debug: YES
+2025-12-15 09:44:07:098 Device model: iPhone 14 Pro (iPhone15,2)
+2025-12-15 09:44:07:098 OS:        iOS, 26.2
+2025-12-15 09:44:07:098 Language:  en-US
+2025-12-15 09:44:07:098 UDID:      D335DD5E-14E6-4A0B-83C6-203659A4B898
+2025-12-15 09:44:07:098 APN token: 622f678552a97d9c104c81f70cbaa644226abb521262edf6475febbec6a53f92
+2025-12-15 09:44:07:099 Launch options: [__C.UIApplicationLaunchOptionsKey(_rawValue: UIApplicationLaunchOptionsURLSessionKey): group.org.wordpress.9B800DBF-79BB-4864-948D-16A838CE1EB0]
+2025-12-15 09:44:07:101 wp.com account: <Account username: 2sfq86g2mh ID: 274402049, Email: verified ObjectID: x-coredata://5FBF997F-557F-4548-902C-0D72B5D3714D/Account/p1>
+All accounts and blogs:
+<Account username: 2sfq86g2mh ID: 274402049, Email: verified ObjectID: x-coredata://5FBF997F-557F-4548-902C-0D72B5D3714D/Account/p1> (default)
+└─ <Blog Name: Site Title URL: https://2sfq86g2mh-donuz.wordpress.com XML-RPC: https://2sfq86g2mh-donuz.wordpress.com/xmlrpc.php wp.com account: 2sfq86g2mh blogId: 250567695 plan: Free (1) ObjectID: x-coredata://5FBF997F-557F-4548-902C-0D72B5D3714D/Blog/p1>
+└─ <Blog Name: Site Title URL: https://2sfq86g2mh-ixwct.wordpress.com XML-RPC: https://2sfq86g2mh-ixwct.wordpress.com/xmlrpc.php wp.com account: 2sfq86g2mh blogId: 250587861 plan: Free (1) ObjectID: x-coredata://5FBF997F-557F-4548-902C-0D72B5D3714D/Blog/p3>
+└─ <Blog Name: Site Title URL: https://2sfq86g2mh-vukmj.wordpress.com XML-RPC: https://2sfq86g2mh-vukmj.wordpress.com/xmlrpc.php wp.com account: 2sfq86g2mh blogId: 250587819 plan: Free (1) ObjectID: x-coredata://5FBF997F-557F-4548-902C-0D72B5D3714D/Blog/p4>
+└─ <Blog Name: عنوان الموقع URL: https://x8nd9nb9f5privaterelayappleid.wordpress.com XML-RPC: https://x8nd9nb9f5privaterelayappleid.wordpress.com/xmlrpc.php wp.com account: 2sfq86g2mh blogId: 250563467 plan: Free (1) ObjectID: x-coredata://5FBF997F-557F-4548-902C-0D72B5D3714D/Blog/p2>
+2025-12-15 09:44:07:101 ===========================================================================
+2025-12-15 09:44:07:107 Zendesk - Using defaultAccount for suggested identity.
+2025-12-15 09:44:07:109 Zendesk identity created with email '2sfq86g2mh@privaterelay.appleid.com' and name 'Ibrahim Ash'.
+2025-12-15 09:44:07:109 Zendesk Enabled: 1
+2025-12-15 09:44:07:141 didFinishLaunchingWithOptions state: UIApplicationState
+2025-12-15 09:44:07:149 BlogService syncBlogsForAccount
+2025-12-15 09:44:07:156 Initializing background session: <__NSURLBackgroundSession: 0x126ff1cc0>
+2025-12-15 09:44:07:174 🚩 Unable to resolve remote feature flag: Jetpack Social Improvements v1. Returning compile-time default.
+2025-12-15 09:44:07:312 Background session task completed. Session:<__NSURLBackgroundSession: 0x126ff1cc0> Task:BackgroundDownloadTask <0C71D79F-7AA7-4E18-8A04-89A61C2DD892>.<1>.
+2025-12-15 09:44:07:312 Unable to find the Group ID for session with ID group.org.wordpress.9B800DBF-79BB-4864-948D-16A838CE1EB0.
+2025-12-15 09:44:07:342 🔵 Tracked: my_site_site_menu_shown
+2025-12-15 09:44:09:071 🚩 Successfully updated remote config values: ["jp_in_app_update_blocking_version_ios": 80.0, "sync_publishing_post_fetch_rate": 20, "phase_four_overlay_frequency_in_days": 7, "jp_in_app_update_blocking_version_android": 80000, "phase_four_blog_post": https://jetpack.com/support/switch-to-the-jetpack-app/, "wp_android_performance_monitoring_sample_rate": 0.0, "blaze_completed_step_hash": step-5, "phase_new_users_blog_post": https://jetpack.com/support/switch-to-the-jetpack-app/, "phase_self_hosted_blog_post": https://jetpack.com/support/switch-to-the-jetpack-app/, "blaze_non_dismissable_hash": step-4, "open_web_links_with_jetpack_flow_frequency": 0, "phase_two_blog_post": https://jetpack.com/support/switch-to-the-jetpack-app/, "wp_in_app_update_blocking_version_ios": 80.0, "phase_three_blog_post": https://jetpack.com/support/switch-to-the-jetpack-app/, "in_app_update_flexible_interval_in_days_ios": 90, "in_app_update_flexible_interval_in_days_android": 5, "codeable_get_free_estimate_url": https://codeable.io/partners/jetpack-scan/, "wp_in_app_update_blocking_version_android": 80000]
+2025-12-15 09:44:09:353 🚩 Successfully updated local feature flags: ["blaze_manage_campaigns": true, "plans_in_site_creation": true, "dashboard_personalization": false, "feature-flags-enabled": true, "jp_wpcom_web_login": true, "reader_floating_button": false, "jp_removal_four": false, "woo_notification_1d_after_free_trial_expires": true, "jetpack_shared_login_remote_field": false, "open_web_links_with_jetpack_flow": true, "in_app_rating_and_feedback": true, "google_signin_without_sdk": true, "woo_pos_local_catalog_m1": true, "jp_removal_new_users": true, "qrcode_auth_flow_remote_field": true, "voice_to_content": true, "my_site_dashboard_todays_stats_card": true, "woo_notification_1d_before_free_trial_expires": true, "dashboard_card_pages": true, "contact_support_chatbot": true, "jp_removal_three": true, "stats_traffic_subscribers_tabs": true, "gutenberg_kit": false, "jetpack_powered_bottom_sheet_remote_field": false, "domain_management": true, "jp_removal_one": true, "woo_app_passwords_for_jetpack_sites": true, "site_monitoring": true, "woo_hardcoded_plan_upgrade_details_milestone_1_are_accurate": true, "jp_removal_self_hosted": false, "wordpress_support_forum_remote_field": true, "blaze": true, "sync_publishing": false, "dashboard_card_free_to_paid_plans": true, "mp4_composer_video_optimization_enabled": true, "dashboard_card_activity_log": true, "wp_sotw_2023_nudge": false, "dashboard_card_domain": false, "jp_removal_static_posters": true, "woo_notification_store_creation_ready": true, "woo_blaze": true, "in_app_updates": true, "dynamic_dashboard_cards": true, "bloganuary_dashboard_nudge": false, "site_switcher_redesign": false, "in_app_reviews": true, "manage_categories": true, "wordpress_ios_unified_login_and_signup": true, "prevent_duplicate_notifs_remote_field": true, "jp_removal_two": true, "gravatar_quick_editor": true, "woo_pos": true, "gutenberg_kit_plugins": false]
+2025-12-15 09:44:23:888 TracksService sendQueuedEvents completed. Sent 1 events.
+2025-12-15 11:34:49:076 🚩 Updating Remote Feature Flags with Device ID: AE9ED998-CBE6-4503-B63C-4F8A12397458
+2025-12-15 11:34:49:099 WPAnalytics session started
+2025-12-15 11:34:49:103 ===========================================================================
+2025-12-15 11:34:49:103 Launching WordPress for iOS 26.5.1 (26.5.1.0)...
+2025-12-15 11:34:49:103 Crash count: 0
+2025-12-15 11:34:49:103 Debug mode:  Production
+2025-12-15 11:34:49:103 Extra debug: YES
+2025-12-15 11:34:49:103 Device model: iPhone 14 Pro (iPhone15,2)
+2025-12-15 11:34:49:103 OS:        iOS, 26.2
+2025-12-15 11:34:49:103 Language:  en-US
+2025-12-15 11:34:49:103 UDID:      D335DD5E-14E6-4A0B-83C6-203659A4B898
+2025-12-15 11:34:49:103 APN token: 622f678552a97d9c104c81f70cbaa644226abb521262edf6475febbec6a53f92
+2025-12-15 11:34:49:103 Launch options: [:]
+2025-12-15 11:34:49:105 wp.com account: <Account username: 2sfq86g2mh ID: 274402049, Email: verified ObjectID: x-coredata://5FBF997F-557F-4548-902C-0D72B5D3714D/Account/p1>
+All accounts and blogs:
+<Account username: 2sfq86g2mh ID: 274402049, Email: verified ObjectID: x-coredata://5FBF997F-557F-4548-902C-0D72B5D3714D/Account/p1> (default)
+└─ <Blog Name: Site Title URL: https://2sfq86g2mh-donuz.wordpress.com XML-RPC: https://2sfq86g2mh-donuz.wordpress.com/xmlrpc.php wp.com account: 2sfq86g2mh blogId: 250567695 plan: Free (1) ObjectID: x-coredata://5FBF997F-557F-4548-902C-0D72B5D3714D/Blog/p1>
+└─ <Blog Name: Site Title URL: https://2sfq86g2mh-ixwct.wordpress.com XML-RPC: https://2sfq86g2mh-ixwct.wordpress.com/xmlrpc.php wp.com account: 2sfq86g2mh blogId: 250587861 plan: Free (1) ObjectID: x-coredata://5FBF997F-557F-4548-902C-0D72B5D3714D/Blog/p3>
+└─ <Blog Name: Site Title URL: https://2sfq86g2mh-vukmj.wordpress.com XML-RPC: https://2sfq86g2mh-vukmj.wordpress.com/xmlrpc.php wp.com account: 2sfq86g2mh blogId: 250587819 plan: Free (1) ObjectID: x-coredata://5FBF997F-557F-4548-902C-0D72B5D3714D/Blog/p4>
+└─ <Blog Name: عنوان الموقع URL: https://x8nd9nb9f5privaterelayappleid.wordpress.com XML-RPC: https://x8nd9nb9f5privaterelayappleid.wordpress.com/xmlrpc.php wp.com account: 2sfq86g2mh blogId: 250563467 plan: Free (1) ObjectID: x-coredata://5FBF997F-557F-4548-902C-0D72B5D3714D/Blog/p2>
+2025-12-15 11:34:49:105 ===========================================================================
+2025-12-15 11:34:49:111 Zendesk - Using defaultAccount for suggested identity.
+2025-12-15 11:34:49:113 Zendesk identity created with email '2sfq86g2mh@privaterelay.appleid.com' and name 'Ibrahim Ash'.
+2025-12-15 11:34:49:113 Zendesk Enabled: 1
+2025-12-15 11:34:49:143 didFinishLaunchingWithOptions state: UIApplicationState
+2025-12-15 11:34:49:146 PingHub connecting
+2025-12-15 11:34:49:149 BlogService syncBlogsForAccount
+2025-12-15 11:34:49:166 🚩 Unable to resolve remote feature flag: Jetpack Social Improvements v1. Returning compile-time default.
+2025-12-15 11:34:49:299 <WordPress.WordPressAppDelegate: 0x110200900> applicationDidBecomeActive(_:)
+2025-12-15 11:34:49:299 🔵 Tracked: application_opened <>
+2025-12-15 11:34:49:305 checkAppleIDCredentialState: No Apple ID found.
+2025-12-15 11:34:49:323 🔵 Tracked: my_site_site_menu_shown
+2025-12-15 11:34:51:621 PingHub connected
+2025-12-15 11:34:51:935 🚩 Successfully updated remote config values: ["blaze_completed_step_hash": step-5, "codeable_get_free_estimate_url": https://codeable.io/partners/jetpack-scan/, "jp_in_app_update_blocking_version_android": 80000, "phase_four_overlay_frequency_in_days": 7, "phase_two_blog_post": https://jetpack.com/support/switch-to-the-jetpack-app/, "wp_in_app_update_blocking_version_android": 80000, "phase_new_users_blog_post": https://jetpack.com/support/switch-to-the-jetpack-app/, "in_app_update_flexible_interval_in_days_ios": 90, "wp_android_performance_monitoring_sample_rate": 0.0, "open_web_links_with_jetpack_flow_frequency": 0, "phase_four_blog_post": https://jetpack.com/support/switch-to-the-jetpack-app/, "in_app_update_flexible_interval_in_days_android": 5, "phase_three_blog_post": https://jetpack.com/support/switch-to-the-jetpack-app/, "sync_publishing_post_fetch_rate": 20, "phase_self_hosted_blog_post": https://jetpack.com/support/switch-to-the-jetpack-app/, "blaze_non_dismissable_hash": step-4, "jp_in_app_update_blocking_version_ios": 80.0, "wp_in_app_update_blocking_version_ios": 80.0]
+2025-12-15 11:34:51:997 🚩 Successfully updated local feature flags: ["woo_notification_1d_before_free_trial_expires": true, "gutenberg_kit": false, "woo_notification_store_creation_ready": true, "jetpack_shared_login_remote_field": false, "manage_categories": true, "dashboard_card_activity_log": true, "dashboard_card_pages": true, "woo_hardcoded_plan_upgrade_details_milestone_1_are_accurate": true, "jp_removal_three": true, "google_signin_without_sdk": true, "jp_removal_static_posters": true, "blaze": true, "sync_publishing": false, "wp_sotw_2023_nudge": false, "jp_removal_two": true, "woo_notification_1d_after_free_trial_expires": true, "dashboard_personalization": false, "jp_removal_new_users": true, "woo_app_passwords_for_jetpack_sites": true, "gutenberg_kit_plugins": false, "wordpress_ios_unified_login_and_signup": true, "site_switcher_redesign": false, "open_web_links_with_jetpack_flow": true, "plans_in_site_creation": true, "my_site_dashboard_todays_stats_card": true, "dashboard_card_domain": false, "site_monitoring": true, "jp_removal_four": false, "dashboard_card_free_to_paid_plans": true, "in_app_rating_and_feedback": true, "jp_wpcom_web_login": true, "dynamic_dashboard_cards": true, "jetpack_powered_bottom_sheet_remote_field": false, "gravatar_quick_editor": true, "qrcode_auth_flow_remote_field": true, "reader_floating_button": false, "contact_support_chatbot": true, "feature-flags-enabled": true, "blaze_manage_campaigns": true, "stats_traffic_subscribers_tabs": true, "in_app_updates": true, "bloganuary_dashboard_nudge": false, "wordpress_support_forum_remote_field": true, "in_app_reviews": true, "woo_blaze": true, "mp4_composer_video_optimization_enabled": true, "woo_pos": true, "voice_to_content": true, "prevent_duplicate_notifs_remote_field": true, "domain_management": true, "jp_removal_one": true, "jp_removal_self_hosted": false, "woo_pos_local_catalog_m1": true]
+2025-12-15 11:34:52:798 🔵 Tracked: site_menu_opened <blog_id: 250563467, menu_item: settings, site_type: blog, tab_source: site_menu, tap_source: row>
+2025-12-15 11:34:52:817 SiteSettingsViewController viewDidLoad
+2025-12-15 11:34:55:493 🔵 Tracked: site_settings_start_over_accessed <blog_id: 250563467, site_type: blog>
+2025-12-15 11:34:55:535 🔵 Tracked: webkitview_displayed <source: site_settings_start_over>
+2025-12-15 11:34:56:571 🔵 Tracked: webkitview_dismissed <source: site_settings_start_over>
+2025-12-15 11:34:57:309 🔵 Tracked: site_settings_export_site_accessed <blog_id: 250563467, site_type: blog>
+2025-12-15 11:34:58:829 🔵 Tracked: site_settings_export_site_requested <blog_id: 250563467, site_type: blog>
+2025-12-15 11:35:01:236 🔵 Tracked: site_settings_export_site_response_ok <blog_id: 250563467, site_type: blog>
+2025-12-15 11:35:05:318 🔵 Tracked: my_site_site_menu_shown
+2025-12-15 11:35:06:632 🔵 Tracked: site_menu_view_site_opened <blog_id: 250563467, site_type: blog, tab_source: site_menu, tap_source: row>
+2025-12-15 11:35:06:670 🔵 Tracked: webkitview_displayed <source: my_site_view_site>
+2025-12-15 11:35:06:727 TracksService sendQueuedEvents completed. Sent 9 events.
+2025-12-15 11:35:07:652 🔵 Tracked: webkitview_dismissed <source: my_site_view_site>
+2025-12-15 11:35:09:332 🔵 Tracked: create_sheet_shown <source: my_site>
+2025-12-15 11:35:09:614 🔵 Tracked: create_sheet_action_tapped <action: create_new_page, source: my_site>
+2025-12-15 11:35:10:450 🔵 Tracked: editor_page_created <blog_id: 250563467, site_type: blog, tap_source: create_button>
+2025-12-15 11:35:10:552 Authentication cookies loaded into shared cookie store for GutenbergKit
+2025-12-15 11:35:11:231 [Rest API] ! Something went wrong, please try again later.
+2025-12-15 11:35:12:039 gutenbergkit-measure_get-latest-content: 0.007527
+2025-12-15 11:35:13:411 🔵 Tracked: post_settings_shown <>
+2025-12-15 11:35:13:563 🔵 Tracked: intelligence_suggested_tags_generated <count: 0, via: post_settings>
+2025-12-15 11:35:14:172 🔵 Tracked: editor_session_start <blog_id: 250563467, blog_type: wpcom, content_type: new, editor: gutenberg_kit, entry_point: unknown, has_unsupported_blocks: 0, post_type: page, session_id: 813B9B0D-4554-423B-BED3-F91780924EAB, startup_time_ms: 3687, unsupported_blocks: []>
+2025-12-15 11:35:16:341 gutenbergkit-measure_get-latest-content: 0.006061
+2025-12-15 11:35:18:683 gutenbergkit-measure_get-latest-content: 0.004138
+2025-12-15 11:35:19:226 gutenbergkit-measure_get-latest-content: 0.021218
+2025-12-15 11:35:19:235 🔵 Tracked: editor_session_end <blog_id: 250563467, blog_type: wpcom, content_type: new, editor: gutenberg_kit, entry_point: unknown, has_unsupported_blocks: 0, outcome: cancel, post_type: page, session_id: 813B9B0D-4554-423B-BED3-F91780924EAB>
+2025-12-15 11:35:19:242 🔵 Tracked: editor_discarded_changes <blog_id: 250563467, editor_source: new-gutenberg, has_gutenberg_blocks: true, site_type: blog>
+2025-12-15 11:35:19:265 🔵 Tracked: editor_closed <editor_source: new-gutenberg, has_gutenberg_blocks: false>
+2025-12-15 11:35:20:428 gutenbergkit-measure_get-latest-content: 0.016360
+2025-12-15 11:35:21:035 🔵 Tracked: my_site_icon_tapped <>
+2025-12-15 11:35:22:885 TracksService sendQueuedEvents completed. Sent 14 events.
+2025-12-15 11:35:24:755 🔵 Tracked: support_opened <>
+2025-12-15 11:35:26:418 🔵 Tracked: recommend_app_engaged <source: me>
+2025-12-15 11:35:33:012 🔵 Tracked: app_settings_opened <>
+2025-12-15 11:35:35:393 🔵 Tracked: app_settings_max_image_size_changed <size: 2900>
+2025-12-15 11:35:36:874 🔵 Tracked: app_settings_max_image_size_changed <size: 3000>
+2025-12-15 11:35:39:050 TracksService sendQueuedEvents completed. Sent 5 events.
+2025-12-15 11:35:44:335 🔵 Tracked: app_settings_clear_media_cache_tapped <>
+2025-12-15 11:35:46:625 🔵 Tracked: app_settings_clear_spotlight_index_tapped <>
+2025-12-15 11:35:48:477 🔵 Tracked: app_settings_clear_siri_suggestions_tapped <>
+2025-12-15 11:35:48:905 🔵 Tracked: app_settings_clear_spotlight_index_tapped <>
+2025-12-15 11:35:49:039 🔵 Tracked: app_settings_clear_siri_suggestions_tapped <>
+2025-12-15 11:35:49:239 🔵 Tracked: app_settings_clear_siri_suggestions_tapped <>
+2025-12-15 11:35:49:589 🔵 Tracked: app_settings_clear_siri_suggestions_tapped <>
+2025-12-15 11:35:49:793 🔵 Tracked: privacy_settings_opened <>
+2025-12-15 11:35:52:501 🔵 Tracked: webkitview_displayed <source: privacy_settings>
+2025-12-15 11:35:53:301 🔵 Tracked: webkitview_dismissed <source: privacy_settings>
+2025-12-15 11:35:54:753 TracksService sendQueuedEvents completed. Sent 10 events.
+2025-12-15 11:35:56:302 🔵 Tracked: privacy_settings_opened <>
+2025-12-15 11:36:07:893 🔵 Tracked: app_settings_open_device_settings_tapped <>
+2025-12-15 11:36:07:929 <WordPress.WordPressAppDelegate: 0x110200900> applicationWillResignActive(_:)
+2025-12-15 11:36:08:755 <WordPress.WordPressAppDelegate: 0x110200900> applicationDidEnterBackground(_:)
+2025-12-15 11:36:08:756 🔵 Tracked: application_closed <last_visible_screen: Blog List, time_in_app: 79>
+2025-12-15 11:36:08:765 BackgroundTask: beginBackgroundTask for bgTask = 77
+2025-12-15 11:36:08:782 PingHub disconnecting
+2025-12-15 11:36:08:945 PingHub disconnected
+2025-12-15 11:36:09:433 TracksService sendQueuedEvents completed. Sent 3 events.
+2025-12-15 11:36:10:835 <WordPress.WordPressAppDelegate: 0x110200900> applicationWillEnterForeground(_:)
+2025-12-15 11:36:10:841 📜 Resumed encrypted log upload queue due to app entering foreground
+2025-12-15 11:36:10:841 PingHub connecting
+2025-12-15 11:36:10:842 🚩 Updating Remote Feature Flags with Device ID: AE9ED998-CBE6-4503-B63C-4F8A12397458
+2025-12-15 11:36:11:140 <WordPress.WordPressAppDelegate: 0x110200900> applicationDidBecomeActive(_:)
+2025-12-15 11:36:11:141 🔵 Tracked: application_opened <>
+2025-12-15 11:36:11:160 checkAppleIDCredentialState: No Apple ID found.
+2025-12-15 11:36:12:737 <WordPress.WordPressAppDelegate: 0x110200900> applicationWillResignActive(_:)
+2025-12-15 11:36:12:920 PingHub connected
+2025-12-15 11:36:13:120 🚩 Successfully updated local feature flags: ["woo_hardcoded_plan_upgrade_details_milestone_1_are_accurate": true, "voice_to_content": true, "google_signin_without_sdk": true, "jp_removal_two": true, "qrcode_auth_flow_remote_field": true, "manage_categories": true, "blaze_manage_campaigns": true, "gravatar_quick_editor": true, "jp_removal_four": false, "mp4_composer_video_optimization_enabled": true, "site_monitoring": true, "woo_notification_1d_before_free_trial_expires": true, "wordpress_ios_unified_login_and_signup": true, "in_app_updates": true, "dashboard_card_domain": false, "jp_removal_one": true, "site_switcher_redesign": false, "prevent_duplicate_notifs_remote_field": true, "woo_notification_1d_after_free_trial_expires": true, "wordpress_support_forum_remote_field": true, "dynamic_dashboard_cards": true, "dashboard_personalization": false, "reader_floating_button": false, "jp_removal_new_users": true, "jp_removal_static_posters": true, "dashboard_card_pages": true, "woo_blaze": true, "wp_sotw_2023_nudge": false, "woo_notification_store_creation_ready": true, "blaze": true, "jp_removal_self_hosted": false, "woo_app_passwords_for_jetpack_sites": true, "stats_traffic_subscribers_tabs": true, "contact_support_chatbot": true, "bloganuary_dashboard_nudge": false, "jp_wpcom_web_login": true, "plans_in_site_creation": true, "dashboard_card_free_to_paid_plans": true, "jetpack_powered_bottom_sheet_remote_field": false, "gutenberg_kit": false, "jp_removal_three": true, "in_app_rating_and_feedback": true, "woo_pos_local_catalog_m1": true, "in_app_reviews": true, "woo_pos": true, "gutenberg_kit_plugins": false, "domain_management": true, "open_web_links_with_jetpack_flow": true, "sync_publishing": false, "my_site_dashboard_todays_stats_card": true, "feature-flags-enabled": true, "jetpack_shared_login_remote_field": false, "dashboard_card_activity_log": true]
+2025-12-15 11:36:13:244 🚩 Successfully updated remote config values: ["open_web_links_with_jetpack_flow_frequency": 0, "in_app_update_flexible_interval_in_days_android": 5, "wp_in_app_update_blocking_version_ios": 80.0, "phase_self_hosted_blog_post": https://jetpack.com/support/switch-to-the-jetpack-app/, "in_app_update_flexible_interval_in_days_ios": 90, "sync_publishing_post_fetch_rate": 20, "blaze_non_dismissable_hash": step-4, "jp_in_app_update_blocking_version_ios": 80.0, "blaze_completed_step_hash": step-5, "jp_in_app_update_blocking_version_android": 80000, "wp_android_performance_monitoring_sample_rate": 0.0, "wp_in_app_update_blocking_version_android": 80000, "phase_three_blog_post": https://jetpack.com/support/switch-to-the-jetpack-app/, "phase_four_blog_post": https://jetpack.com/support/switch-to-the-jetpack-app/, "codeable_get_free_estimate_url": https://codeable.io/partners/jetpack-scan/, "phase_new_users_blog_post": https://jetpack.com/support/switch-to-the-jetpack-app/, "phase_four_overlay_frequency_in_days": 7, "phase_two_blog_post": https://jetpack.com/support/switch-to-the-jetpack-app/]
+2025-12-15 11:36:13:934 <WordPress.WordPressAppDelegate: 0x110200900> applicationDidBecomeActive(_:)
+2025-12-15 11:36:13:937 checkAppleIDCredentialState: No Apple ID found.
+2025-12-15 11:36:15:225 🔵 Tracked: app_settings_appearance_changed <style: Light>
+2025-12-15 11:36:16:308 🔵 Tracked: app_settings_appearance_changed <style: Dark>
+2025-12-15 11:36:16:863 🔵 Tracked: app_settings_appearance_changed <style: System default>
+2025-12-15 11:36:20:501 🔵 Tracked: app_settings_media_remove_location_changed <enabled: 0>
+2025-12-15 11:36:21:098 🔵 Tracked: app_settings_media_remove_location_changed <enabled: 1>
+2025-12-15 11:36:21:763 🔵 Tracked: privacy_settings_opened <>
+2025-12-15 11:36:29:223 🔵 Tracked: app_reviews_feedback_screen_opened <source: experimental_features>
+2025-12-15 11:36:29:997 TracksService sendQueuedEvents completed. Sent 7 events.
+2025-12-15 11:36:46:117 TracksService sendQueuedEvents completed. Sent 1 events.
+2025-12-15 11:36:54:819 🔵 Tracked: app_settings_image_quality_changed <quality: MaximumQuality100>
+2025-12-15 11:36:55:833 🔵 Tracked: app_settings_image_quality_changed <quality: HighQuality90>
+2025-12-15 11:36:56:868 🔵 Tracked: app_settings_image_quality_changed <quality: HighQuality90>
+2025-12-15 11:36:57:320 🔵 Tracked: app_settings_image_quality_changed <quality: HighQuality90>
+2025-12-15 11:36:59:100 🔵 Tracked: app_settings_optimize_images_changed <enabled: false>
+2025-12-15 11:36:59:988 🔵 Tracked: app_settings_optimize_images_changed <enabled: true>
+2025-12-15 11:37:02:284 TracksService sendQueuedEvents completed. Sent 6 events.
+2025-12-15 11:37:02:724 🔵 Tracked: app_settings_max_image_size_changed <size: 2100>
+2025-12-15 11:37:04:254 🔵 Tracked: app_settings_max_image_size_changed <size: 3000>
+2025-12-15 11:37:06:241 <WordPress.WordPressAppDelegate: 0x110200900> applicationWillResignActive(_:)
+2025-12-15 11:37:06:976 <WordPress.WordPressAppDelegate: 0x110200900> applicationDidEnterBackground(_:)
+2025-12-15 11:37:06:976 🔵 Tracked: application_closed <last_visible_screen: Blog List, time_in_app: 56>
+2025-12-15 11:37:06:982 BackgroundTask: ending existing backgroundTask for bgTask = 77
+2025-12-15 11:37:06:983 BackgroundTask: beginBackgroundTask for bgTask = 118
+2025-12-15 11:37:06:991 PingHub disconnecting
+2025-12-15 11:37:07:177 PingHub disconnected
+2025-12-15 11:37:07:609 TracksService sendQueuedEvents completed. Sent 3 events.
+2025-12-15 11:37:33:390 BackgroundTask: executing expirationHandler for bgTask = 118
+2025-12-15 11:50:47:844 <WordPress.WordPressAppDelegate: 0x110200900> applicationWillEnterForeground(_:)
+2025-12-15 11:50:47:859 🚩 Updating Remote Feature Flags with Device ID: AE9ED998-CBE6-4503-B63C-4F8A12397458
+2025-12-15 11:50:47:860 📜 Resumed encrypted log upload queue due to app entering foreground
+2025-12-15 11:50:47:862 PingHub connecting
+2025-12-15 11:50:48:087 <WordPress.WordPressAppDelegate: 0x110200900> applicationDidBecomeActive(_:)
+2025-12-15 11:50:48:088 🔵 Tracked: application_opened <>
+2025-12-15 11:50:48:123 checkAppleIDCredentialState: No Apple ID found.
+2025-12-15 11:50:48:408 PingHub connected
+2025-12-15 11:50:48:472 🚩 Successfully updated remote config values: ["wp_in_app_update_blocking_version_android": 80000, "blaze_completed_step_hash": step-5, "jp_in_app_update_blocking_version_android": 80000, "phase_three_blog_post": https://jetpack.com/support/switch-to-the-jetpack-app/, "phase_four_overlay_frequency_in_days": 7, "phase_self_hosted_blog_post": https://jetpack.com/support/switch-to-the-jetpack-app/, "phase_new_users_blog_post": https://jetpack.com/support/switch-to-the-jetpack-app/, "blaze_non_dismissable_hash": step-4, "wp_in_app_update_blocking_version_ios": 80.0, "jp_in_app_update_blocking_version_ios": 80.0, "codeable_get_free_estimate_url": https://codeable.io/partners/jetpack-scan/, "sync_publishing_post_fetch_rate": 20, "in_app_update_flexible_interval_in_days_android": 5, "phase_two_blog_post": https://jetpack.com/support/switch-to-the-jetpack-app/, "open_web_links_with_jetpack_flow_frequency": 0, "wp_android_performance_monitoring_sample_rate": 0.0, "in_app_update_flexible_interval_in_days_ios": 90, "phase_four_blog_post": https://jetpack.com/support/switch-to-the-jetpack-app/]
+2025-12-15 11:50:48:510 🚩 Successfully updated local feature flags: ["blaze": true, "domain_management": true, "jp_removal_static_posters": true, "google_signin_without_sdk": true, "manage_categories": true, "jp_removal_three": true, "woo_pos_local_catalog_m1": true, "jp_removal_self_hosted": false, "dashboard_card_activity_log": true, "wordpress_support_forum_remote_field": true, "gutenberg_kit": false, "my_site_dashboard_todays_stats_card": true, "woo_pos": true, "contact_support_chatbot": true, "gravatar_quick_editor": true, "wordpress_ios_unified_login_and_signup": true, "jp_wpcom_web_login": true, "jetpack_shared_login_remote_field": false, "woo_notification_1d_after_free_trial_expires": true, "jetpack_powered_bottom_sheet_remote_field": false, "plans_in_site_creation": true, "feature-flags-enabled": true, "stats_traffic_subscribers_tabs": true, "jp_removal_one": true, "prevent_duplicate_notifs_remote_field": true, "bloganuary_dashboard_nudge": false, "woo_blaze": true, "in_app_rating_and_feedback": true, "dashboard_card_pages": true, "jp_removal_new_users": true, "in_app_updates": true, "woo_notification_1d_before_free_trial_expires": true, "wp_sotw_2023_nudge": false, "dashboard_card_domain": false, "dynamic_dashboard_cards": true, "woo_notification_store_creation_ready": true, "jp_removal_four": false, "voice_to_content": true, "woo_app_passwords_for_jetpack_sites": true, "qrcode_auth_flow_remote_field": true, "site_monitoring": true, "in_app_reviews": true, "woo_hardcoded_plan_upgrade_details_milestone_1_are_accurate": true, "site_switcher_redesign": false, "reader_floating_button": false, "jp_removal_two": true, "dashboard_personalization": false, "mp4_composer_video_optimization_enabled": true, "dashboard_card_free_to_paid_plans": true, "blaze_manage_campaigns": true, "sync_publishing": false, "gutenberg_kit_plugins": false, "open_web_links_with_jetpack_flow": true]
+2025-12-15 11:50:51:071 🔵 Tracked: privacy_settings_opened <>
+2025-12-15 11:50:51:901 🔵 Tracked: webkitview_displayed <source: privacy_settings>
+2025-12-15 11:50:54:848 WordPress.WebKitViewController Error Loading [Error Domain=NSURLErrorDomain Code=-999 "(null)" UserInfo={NSErrorFailingURLKey=https://timeline.automattic.com/, _WKRecoveryAttempterErrorKey=<WKReloadFrameErrorRecoveryAttempter: 0x144641d80>}]
+2025-12-15 11:50:54:851 WebView <WKWebView: 0x110349800; frame = (0 1.66667; 393 635.333); gestureRecognizers = <NSArray: 0x14443deb0>; layer = <CALayer: 0x13b2ba3a0>> didFailProvisionalNavigation: The operation couldn’t be completed. (NSURLErrorDomain error -999.)
+2025-12-15 11:50:55:024 WordPress.WebKitViewController Error Loading [Error Domain=NSURLErrorDomain Code=-999 "(null)" UserInfo={NSErrorFailingURLKey=https://wordpress.com/, _WKRecoveryAttempterErrorKey=<WKReloadFrameErrorRecoveryAttempter: 0x144640540>}]
+2025-12-15 11:50:55:024 WebView <WKWebView: 0x110349800; frame = (0 1.66667; 393 635.333); gestureRecognizers = <NSArray: 0x14443deb0>; layer = <CALayer: 0x13b2ba3a0>> didFailProvisionalNavigation: The operation couldn’t be completed. (NSURLErrorDomain error -999.)
+2025-12-15 11:50:58:837 🔵 Tracked: webkitview_share_tapped <source: privacy_settings>
+2025-12-15 11:50:59:305 <WordPress.WordPressAppDelegate: 0x110200900> applicationWillResignActive(_:)
+2025-12-15 11:51:00:697 <WordPress.WordPressAppDelegate: 0x110200900> applicationDidEnterBackground(_:)
+2025-12-15 11:51:00:699 🔵 Tracked: application_closed <last_visible_screen: Blog List, time_in_app: 13>
+2025-12-15 11:51:00:704 BackgroundTask: beginBackgroundTask for bgTask = 141
+2025-12-15 11:51:00:713 PingHub disconnecting
+2025-12-15 11:51:00:956 PingHub disconnected
+2025-12-15 11:51:01:244 TracksService sendQueuedEvents completed. Sent 5 events.
+2025-12-15 11:51:27:155 BackgroundTask: executing expirationHandler for bgTask = 141
