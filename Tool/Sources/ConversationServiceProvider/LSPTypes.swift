@@ -540,7 +540,7 @@ public struct ReviewChangesParams: Codable, Equatable {
 
 public struct ReviewComment: Codable, Equatable, Hashable {
     // Self-defined `id` for using in comment operation. Add an init value to bypass decoding
-    public let id: String = UUID().uuidString
+	public var id: String = UUID().uuidString
     public let uri: DocumentUri
     public let range: LSPRange
     public let message: String

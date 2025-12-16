@@ -53,7 +53,7 @@
 		C8738B7F2BE5363900609E7F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C8738B7E2BE5363900609E7F /* Assets.xcassets */; };
 		C8738B822BE5363900609E7F /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C8738B812BE5363900609E7F /* Preview Assets.xcassets */; };
 		C8738B882BE5365000609E7F /* Client in Frameworks */ = {isa = PBXBuildFile; productRef = C8738B872BE5365000609E7F /* Client */; };
-		C8738B8A2BE540D000609E7F /* bridgeLaunchAgent.plist in Copy Launch Agent */ = {isa = PBXBuildFile; fileRef = C8738B6D2BE4F3E800609E7F /* bridgeLaunchAgent.plist */; };
+		C8738B8A2BE540D000609E7F /* bridgeLaunchAgent.plist in Copy Launch Agent */ = {isa = PBXBuildFile; fileRef = C8738B6D2BE4F3E800609E7F /* bridgeLaunchAgent.plist */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		C8738B8B2BE540DD00609E7F /* CommunicationBridge in Embed XPCService */ = {isa = PBXBuildFile; fileRef = C8738B632BE4D4B900609E7F /* CommunicationBridge */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		C8758E7029F04BFF00D29C1C /* CustomCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8758E6F29F04BFF00D29C1C /* CustomCommand.swift */; };
 		C8758E7229F04CF100D29C1C /* SeparatorCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8758E7129F04CF100D29C1C /* SeparatorCommand.swift */; };
@@ -69,6 +69,21 @@
 		C8DCF00029CE11D500FDDDD7 /* OpenChat.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8DCEFFF29CE11D500FDDDD7 /* OpenChat.swift */; };
 		C8DD9CB12BC673F80036641C /* CloseIdleTabsCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8DD9CB02BC673F80036641C /* CloseIdleTabsCommand.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXBuildRule section */
+		1034711F2E9E620100577B9C /* PBXBuildRule */ = {
+			isa = PBXBuildRule;
+			compilerSpec = com.apple.compilers.proxy.script;
+			dependencyFile = "$(DERIVED_FILES_DIR)/$(INPUT_FILE_PATH).d";
+			fileType = pattern.proxy;
+			inputFiles = (
+			);
+			isEditable = 1;
+			outputFiles = (
+			);
+			script = "# Type a script or drag a script file from your workspace to insert its path.\n";
+		};
+/* End PBXBuildRule section */
 
 /* Begin PBXContainerItemProxy section */
 		C81291AF2994F92700196E12 /* PBXContainerItemProxy */ = {
@@ -580,6 +595,7 @@
 				C8738B612BE4D4B900609E7F /* CopyFiles */,
 			);
 			buildRules = (
+				1034711F2E9E620100577B9C /* PBXBuildRule */,
 			);
 			dependencies = (
 			);
@@ -652,6 +668,10 @@
 			mainGroup = C8189B0D2938972F00C9DCDA;
 			packageReferences = (
 				C8216B792980373800AD38C7 /* XCRemoteSwiftPackageReference "swift-argument-parser" */,
+				103471212E9E633300577B9C /* XCRemoteSwiftPackageReference "swift-algorithms" */,
+				103471222E9E663000577B9C /* XCRemoteSwiftPackageReference "swift-system" */,
+				103471232E9E752700577B9C /* XCRemoteSwiftPackageReference "swift-async-algorithms" */,
+				103471242E9E756B00577B9C /* XCRemoteSwiftPackageReference "claude-agent-sdk-python" */,
 			);
 			productRefGroup = C8189B172938972F00C9DCDA /* Products */;
 			projectDirPath = "";
@@ -838,6 +858,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = EditorExtension/EditorExtension.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = "$(APP_BUILD)";
@@ -928,6 +949,8 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_ENTITLEMENTS[sdk=*]" = "";
+				CODE_SIGN_IDENTITY = "-";
 				COPY_PHASE_STRIP = NO;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
@@ -991,11 +1014,14 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_ENTITLEMENTS[sdk=*]" = "";
+				CODE_SIGN_IDENTITY = "-";
 				COPY_PHASE_STRIP = NO;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -1007,6 +1033,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -1021,7 +1048,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				AUTOMATION_APPLE_EVENTS = YES;
 				CODE_SIGN_ENTITLEMENTS = "Copilot for Xcode/Copilot_for_Xcode.entitlements";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = "$(APP_BUILD)";
@@ -1122,6 +1149,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				AUTOMATION_APPLE_EVENTS = NO;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 85XJ3N6338;
@@ -1182,7 +1210,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				AUTOMATION_APPLE_EVENTS = NO;
 				CODE_SIGN_ENTITLEMENTS = ExtensionService/ExtensionService.entitlements;
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = "$(APP_BUILD)";
@@ -1277,9 +1305,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = VEKTX9H2N7;
+				DEVELOPMENT_TEAM = 85XJ3N6338;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
@@ -1322,12 +1351,13 @@
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = SandboxedClientTester/SandboxedClientTester.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"SandboxedClientTester/Preview Content\"";
-				DEVELOPMENT_TEAM = VEKTX9H2N7;
+				DEVELOPMENT_TEAM = 85XJ3N6338;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
@@ -1458,6 +1488,38 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		103471212E9E633300577B9C /* XCRemoteSwiftPackageReference "swift-algorithms" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-algorithms.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.2.1;
+			};
+		};
+		103471222E9E663000577B9C /* XCRemoteSwiftPackageReference "swift-system" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-system.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.6.3;
+			};
+		};
+		103471232E9E752700577B9C /* XCRemoteSwiftPackageReference "swift-async-algorithms" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-async-algorithms.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.4;
+			};
+		};
+		103471242E9E756B00577B9C /* XCRemoteSwiftPackageReference "claude-agent-sdk-python" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/anthropics/claude-agent-sdk-python";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
 		C8216B792980373800AD38C7 /* XCRemoteSwiftPackageReference "swift-argument-parser" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/apple/swift-argument-parser.git";

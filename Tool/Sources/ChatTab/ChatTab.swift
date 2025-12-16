@@ -126,10 +126,6 @@ open class BaseChatTab {
     public init(store: StoreOf<ChatTabItem>) {
         chatTabStore = store
         
-        storeObserver.observe { [weak self] in
-            guard let self else { return }
-            self.title = store.title ?? ""
-            self.id = store.id
         }
     }
 
@@ -205,7 +201,7 @@ open class BaseChatTab {
             tab.start()
         }
     }
-}
+
 
 /// A factory of a chat tab.
 public protocol ChatTabBuilder {

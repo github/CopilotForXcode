@@ -373,6 +373,8 @@ public extension AXUIElement {
 }
 
 #if hasFeature(RetroactiveAttribute)
+extension AXError: @retroactive _BridgedNSError {}
+extension AXError: @retroactive _ObjectiveCBridgeableError {}
 extension AXError: @retroactive Error {}
 #else
 extension AXError: Error {}

@@ -5,9 +5,7 @@
 	<key>com.apple.security.app-sandbox</key>
 	<true/>
 	<key>com.apple.security.application-groups</key>
-	<array>
-		<string>$(TeamIdentifierPrefix)group.$(BUNDLE_IDENTIFIER_BASE)</string>
-	</array>
+	<array/>
 	<key>com.apple.security.temporary-exception.mach-lookup.global-name</key>
 	<array>
 		<string>$(BUNDLE_IDENTIFIER_BASE).CommunicationBridge</string>
