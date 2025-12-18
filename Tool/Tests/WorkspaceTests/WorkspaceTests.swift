@@ -185,12 +185,12 @@ class WorkspaceTests: XCTestCase {
     
     func testCalculateIncrementalChanges_VeryLargeContent() {
         let workspace = Workspace(workspaceURL: URL(fileURLWithPath: "/test"))
-        let oldContent = String(repeating: "a", count: 20000)
-        let newContent = String(repeating: "b", count: 20000)
+        let oldContent = String(repeating: "a", count: 220_000)
+        let newContent = String(repeating: "b", count: 220_000)
         
         let changes = workspace.calculateIncrementalChanges(oldContent: oldContent, newContent: newContent)
         
-        // Should fallback to nil for very large contents (> 10000 characters)
+        // Should fallback to nil for very large contents (> 200_000 characters)
         XCTAssertNil(changes, "Very large content should return nil for fallback")
     }
     

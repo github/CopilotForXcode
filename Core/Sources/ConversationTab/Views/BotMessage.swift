@@ -127,6 +127,14 @@ struct BotMessage: View {
                     HStack {
                         if shouldShowTurnStatus() {
                             TurnStatusView(message: message)
+                                .modify { view in
+                                    if message.turnStatus == .inProgress {
+                                        view
+                                            .scaledPadding(.leading, 6)
+                                    } else {
+                                        view
+                                    }
+                                }
                         }
 
                         Spacer()
@@ -256,8 +264,8 @@ private struct TurnStatusView: View {
         HStack(spacing: 4) {
             ProgressView()
                 .controlSize(.small)
-                .scaledFont(size: chatFontSize - 1)
-                .conditionalFontWeight(.medium)
+                .scaledScaleEffect(0.7)
+                .scaledFrame(width: 16, height: 16)
             
             Text("Generating...")
                 .scaledFont(size: chatFontSize - 1)

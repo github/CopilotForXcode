@@ -2,7 +2,6 @@ import CopilotForXcodeKit
 import Foundation
 import LanguageServerProtocol
 
-
 public struct AgentRound: Codable, Equatable {
     public let roundId: Int
     public var reply: String
@@ -20,10 +19,11 @@ public struct AgentRound: Codable, Equatable {
 public struct AgentToolCall: Codable, Equatable, Identifiable {
     public let id: String
     public let name: String
+    public var toolType: ToolType?
     public var progressMessage: String?
     public var status: ToolCallStatus
     public var input: [String: AnyCodable]?
-    public let inputMessage: String?
+    public var inputMessage: String?
     public var error: String?
     public var result: [ToolCallResultData]?
     public var resultDetails: [ToolResultItem]?
@@ -37,6 +37,7 @@ public struct AgentToolCall: Codable, Equatable, Identifiable {
     public init(
         id: String,
         name: String,
+        toolType: ToolType? = nil,
         progressMessage: String? = nil,
         status: ToolCallStatus,
         input: [String: AnyCodable]? = nil,
@@ -49,6 +50,7 @@ public struct AgentToolCall: Codable, Equatable, Identifiable {
     ) {
         self.id = id
         self.name = name
+        self.toolType = toolType
         self.progressMessage = progressMessage
         self.status = status
         self.input = input

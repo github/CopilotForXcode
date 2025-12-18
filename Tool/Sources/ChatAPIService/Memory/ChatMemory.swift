@@ -35,8 +35,17 @@ public extension ChatMemory {
                                     for newToolCall in messageToolCalls {
                                         if let toolCallIndex = mergedToolCalls.firstIndex(where: { $0.id == newToolCall.id }) {
                                             mergedToolCalls[toolCallIndex].status = newToolCall.status
+                                            if let toolType = newToolCall.toolType {
+                                                mergedToolCalls[toolCallIndex].toolType = toolType
+                                            }
                                             if let progressMessage = newToolCall.progressMessage, !progressMessage.isEmpty {
                                                 mergedToolCalls[toolCallIndex].progressMessage = progressMessage
+                                            }
+                                            if let input = newToolCall.input, !input.isEmpty {
+                                                mergedToolCalls[toolCallIndex].input = input
+                                            }
+                                            if let inputMessage = newToolCall.inputMessage, !inputMessage.isEmpty {
+                                                mergedToolCalls[toolCallIndex].inputMessage = inputMessage
                                             }
                                             if let result = newToolCall.result, !result.isEmpty {
                                                 mergedToolCalls[toolCallIndex].result = result
@@ -163,8 +172,17 @@ extension ChatMessage {
                     for newToolCall in newRound.toolCalls! {
                         if let toolCallIndex = mergedToolCalls.firstIndex(where: { $0.id == newToolCall.id }) {
                             mergedToolCalls[toolCallIndex].status = newToolCall.status
+                            if let toolType = newToolCall.toolType {
+                                mergedToolCalls[toolCallIndex].toolType = toolType
+                            }
                             if let progressMessage = newToolCall.progressMessage, !progressMessage.isEmpty {
                                 mergedToolCalls[toolCallIndex].progressMessage = newToolCall.progressMessage
+                            }
+                            if let input = newToolCall.input, !input.isEmpty {
+                                mergedToolCalls[toolCallIndex].input = input
+                            }
+                            if let inputMessage = newToolCall.inputMessage, !inputMessage.isEmpty {
+                                mergedToolCalls[toolCallIndex].inputMessage = inputMessage
                             }
                             if let result = newToolCall.result, !result.isEmpty {
                                 mergedToolCalls[toolCallIndex].result = result

@@ -7,12 +7,16 @@ import JSONRPC
 import Logger
 import XcodeInspector
 import ChatAPIService
+import SystemUtils
+import Workspace
 
 public enum InsertEditError: LocalizedError {
     case missingEditorElement(file: URL)
     case openingApplicationUnavailable
     case fileNotOpenedInXcode
     case fileURLMismatch(expected: URL, actual: URL?)
+    case fileNotAccessible(URL)
+    case fileHasUnsavedChanges(URL)
     
     public var errorDescription: String? {
         switch self {
@@ -24,6 +28,10 @@ public enum InsertEditError: LocalizedError {
             return "The file is not currently opened in Xcode."
         case .fileURLMismatch(let expected, let actual):
             return "The currently focused file URL \(actual?.lastPathComponent ?? "unknown") does not match the expected file URL \(expected.lastPathComponent)."
+        case .fileNotAccessible(let fileURL):
+            return "The file \(fileURL.lastPathComponent) is not accessible."
+        case .fileHasUnsavedChanges(let fileURL):
+            return "The file \(fileURL.lastPathComponent) seems to have unsaved changes in Xcode. Please save the file and try again."
         }
     }
 }
@@ -50,7 +58,7 @@ public class InsertEditIntoFileTool: ICopilotTool {
             let fileURL = URL(fileURLWithPath: filePath)
             let originalContent = try String(contentsOf: fileURL, encoding: .utf8)
             
-            InsertEditIntoFileTool.applyEdit(for: fileURL, content: code, contextProvider: contextProvider) { newContent, error in
+            InsertEditIntoFileTool.applyEdit(for: fileURL, content: code) { newContent, error in
                 if let error = error {
                     self.completeResponse(
                         request,
@@ -106,7 +114,6 @@ public class InsertEditIntoFileTool: ICopilotTool {
     public static func applyEdit(
         for fileURL: URL,
         content: String,
-        contextProvider: any ToolContextProvider,
         xcodeInstance: AppInstanceInspector
     ) throws -> String {
         guard let editorElement = Self.getEditorElement(by: xcodeInstance, for: fileURL)
@@ -155,39 +162,21 @@ public class InsertEditIntoFileTool: ICopilotTool {
     public static func applyEdit(
         for fileURL: URL,
         content: String,
-        contextProvider: any ToolContextProvider,
         completion: ((String?, Error?) -> Void)? = nil
     ) {
-        NSWorkspace.openFileInXcode(fileURL: fileURL) { app, error in
-            do {
-                if let error = error { throw error }
-                
-                guard let app = app
-                else {
-                    throw InsertEditError.openingApplicationUnavailable
-                }
-                
-                let appInstanceInspector = AppInstanceInspector(runningApplication: app)
-                guard appInstanceInspector.isXcode
-                else {
-                    throw InsertEditError.fileNotOpenedInXcode
-                }
-                                
-                let newContent = try applyEdit(
-                    for: fileURL,
-                    content: content,
-                    contextProvider: contextProvider,
-                    xcodeInstance: appInstanceInspector
-                )
-                
-                Task {
-                    await WorkspaceInvocationCoordinator().invokeFilespaceUpdate(fileURL: fileURL, content: newContent)
-                    if let completion = completion { completion(newContent, nil) }
-                }
-            } catch {
-                if let completion = completion { completion(nil, error) }
-                Logger.client.info("Failed to apply edit for file at \(fileURL), \(error)")
-            }
+        if SystemUtils.isDeveloperMode || SystemUtils.isPrereleaseBuild {
+            /// Experimental solution: Use file system write for better reliability. Only enable in dev mode or prerelease builds.
+            Self.applyEditWithFileSystem(
+                for: fileURL,
+                content: content,
+                completion: completion
+            )
+        } else {
+            Self.applyEditWithAccessibilityAPI(
+                for: fileURL,
+                content: content,
+                completion: completion
+            )
         }
     }
     
@@ -246,5 +235,74 @@ public class InsertEditIntoFileTool: ICopilotTool {
 private extension AppInstanceInspector {
     var realtimeDocumentURL: URL? {
         appElement.realtimeDocumentURL
+    }
+}
+
+extension InsertEditIntoFileTool {
+    static func applyEditWithFileSystem(
+        for fileURL: URL,
+        content: String,
+        completion: ((String?, Error?) -> Void)? = nil
+    ) {
+        do {
+            guard let diskFileContent = try? String(contentsOf: fileURL) else {
+                throw InsertEditError.fileNotAccessible(fileURL)
+            }
+            
+            if let focusedElement = XcodeInspector.shared.focusedElement,
+               focusedElement.isSourceEditor,
+               focusedElement.value != diskFileContent
+            {
+                throw InsertEditError.fileHasUnsavedChanges(fileURL)
+            }
+            
+            // write content to disk
+            try content.write(to: fileURL, atomically: true, encoding: .utf8)
+            
+            Task { @WorkspaceActor in
+                await WorkspaceInvocationCoordinator().invokeFilespaceUpdate(fileURL: fileURL, content: content)
+                if let completion = completion { completion(content, nil) }
+            }
+        } catch {
+            if let completion = completion { completion(nil, error) }
+            Logger.client.info("Failed to apply edit for file at \(fileURL), \(error)")
+        }
+    }
+    
+    static func applyEditWithAccessibilityAPI(
+        for fileURL: URL,
+        content: String,
+        completion: ((String?, Error?) -> Void)? = nil,
+    ) {
+        NSWorkspace.openFileInXcode(fileURL: fileURL) { app, error in
+            do {
+                if let error = error { throw error }
+                
+                guard let app = app
+                else {
+                    throw InsertEditError.openingApplicationUnavailable
+                }
+                
+                let appInstanceInspector = AppInstanceInspector(runningApplication: app)
+                guard appInstanceInspector.isXcode
+                else {
+                    throw InsertEditError.fileNotOpenedInXcode
+                }
+                
+                let newContent = try applyEdit(
+                    for: fileURL,
+                    content: content,
+                    xcodeInstance: appInstanceInspector
+                )
+                
+                Task {
+                    await WorkspaceInvocationCoordinator().invokeFilespaceUpdate(fileURL: fileURL, content: newContent)
+                    if let completion = completion { completion(newContent, nil) }
+                }
+            } catch {
+                if let completion = completion { completion(nil, error) }
+                Logger.client.info("Failed to apply edit for file at \(fileURL), \(error)")
+            }
+        }
     }
 }

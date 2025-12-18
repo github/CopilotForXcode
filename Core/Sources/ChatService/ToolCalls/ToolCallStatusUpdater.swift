@@ -39,6 +39,7 @@ struct ToolCallStatusUpdater {
                             AgentToolCall(
                                 id: toolCallId,
                                 name: toolCall.name,
+                                toolType: toolCall.toolType,
                                 status: newStatus
                             ),
                         ]
@@ -65,6 +66,7 @@ struct ToolCallStatusUpdater {
                             AgentToolCall(
                                 id: toolCallId,
                                 name: toolCall.name,
+                                toolType: toolCall.toolType,
                                 status: newStatus
                             ),
                         ]

@@ -9,6 +9,7 @@ struct ToolStatusItemView: View {
     let tool: AgentToolCall
 
     @AppStorage(\.chatFontSize) var chatFontSize
+    @AppStorage(\.fontScale) var fontScale
 
     @State private var isHoveringFileLink = false
 
@@ -291,6 +292,31 @@ struct ToolStatusItemView: View {
         )
     }
 
+    @ViewBuilder
+    func toolCallDetailSection(title: String, text: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .scaledFont(size: chatFontSize - 1, weight: .medium)
+                .foregroundColor(.secondary)
+            markdownView(text: text)
+                .toolCallDetailStyle(fontScale: fontScale)
+        }
+    }
+
+    var mcpDetailView: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if let inputMessage = tool.inputMessage, !inputMessage.isEmpty {
+                toolCallDetailSection(title: "Input", text: inputMessage)
+            }
+            if let errorMessage = tool.error, !errorMessage.isEmpty {
+                toolCallDetailSection(title: "Output", text: errorMessage)
+            }
+            if let result = tool.result, !result.isEmpty {
+                toolCallDetailSection(title: "Output", text: toolResultText ?? "")
+            }
+        }
+    }
+
     var progress: some View {
         HStack(spacing: 4) {
             statusIcon
@@ -440,6 +466,11 @@ struct ToolStatusItemView: View {
                     title: progress,
                     content: markdownView(text: extractInsertEditContent(from: resultText))
                 )
+            } else if tool.toolType == .mcp {
+                ToolStatusDetailsView(
+                    title: progress,
+                    content: mcpDetailView
+                )
             } else if tool.status == .error {
                 ToolStatusDetailsView(
                     title: progress,
@@ -528,6 +559,22 @@ private extension View {
             } else {
                 view
             }
+        }
+    }
+
+    func toolCallDetailStyle(fontScale: CGFloat) -> some View {
+        /// Leverage the `modify` extension to avoid refreshing of chat panel `List` view
+        self.modify { view in
+            view
+                .foregroundColor(.secondary)
+                .scaledPadding(4)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(SecondarySystemFillColor)
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+                .background(
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(Color.agentToolStatusOutlineColor, lineWidth: 1 * fontScale)
+                )
         }
     }
 }

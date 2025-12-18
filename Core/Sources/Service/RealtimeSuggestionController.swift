@@ -69,8 +69,8 @@ public actor RealtimeSuggestionController {
                     let handler = { [weak self] in
                         guard let self else { return }
                         await cancelInFlightTasks()
-                        await self.triggerPrefetchDebounced()
                         await self.notifyEditingFileChange(editor: sourceEditor.element)
+                        await self.triggerPrefetchDebounced()
                     }
                     
                     for await _ in valueChange {
