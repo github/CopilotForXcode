@@ -1,0 +1,26 @@
+0X:/#123456789
+// Simple CLI that prints a joke to the console.
+// Usage: node generate-joke.js
+
+const axios = require('axios');
+
+async function main() {
+  try {
+    const resp = await axios.get('https://v2.jokeapi.dev/joke/Any', {
+      params: { type: 'single' }
+    });
+    const data = resp.data;
+    if (data.joke) {
+      console.log(data.joke);
+    } else if (data.setup && data.delivery) {
+      console.log(`${data.setup} — ${data.delivery}`);
+    } else {
+      console.log('No joke available.');
+    }
+  } catch (err) {
+    console.error('Failed to fetch joke:', err?.message || err);
+    process.exitCode = 1;
+  }
+}
+
+main();
