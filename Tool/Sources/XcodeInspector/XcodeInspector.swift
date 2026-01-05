@@ -292,13 +292,13 @@ public final class XcodeInspector: ObservableObject {
 
             focusedElement = xcode.getFocusedElement(shouldRecordStatus: true)
             
-            if let editorElement = focusedElement, editorElement.isSourceEditor {
+            if let editorElement = focusedElement, editorElement.isNonNavigatorSourceEditor {
                 focusedEditor = .init(
                     runningApplication: xcode.runningApplication,
                     element: editorElement
                 )
             } else if let element = focusedElement,
-                      let editorElement = element.firstParent(where: \.isSourceEditor)
+                      let editorElement = element.firstParent(where: \.isNonNavigatorSourceEditor)
             {
                 focusedEditor = .init(
                     runningApplication: xcode.runningApplication,
@@ -374,7 +374,7 @@ public final class XcodeInspector: ObservableObject {
         guard Date().timeIntervalSince(lastRecoveryFromAccessibilityMalfunctioningTimeStamp) > 5
         else { return }
 
-        if let editor = focusedEditor, !editor.element.isSourceEditor {
+        if let editor = focusedEditor, !editor.element.isNonNavigatorSourceEditor {
             NotificationCenter.default.post(
                 name: .accessibilityAPIMalfunctioning,
                 object: "Source Editor Element Corrupted: \(source)"

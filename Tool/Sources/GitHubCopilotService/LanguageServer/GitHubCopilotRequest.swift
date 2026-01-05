@@ -98,7 +98,13 @@ public func editorConfiguration(includeMCP: Bool) -> JSONValue {
         
         let agentMaxToolCallingLoop = Double(UserDefaults.shared.value(for: \.agentMaxToolCallingLoop))
         d["maxToolCallingLoop"] = .number(agentMaxToolCallingLoop)
-        
+
+        let enableAutoApproval = UserDefaults.shared.value(for: \.enableAutoApproval)
+        d["toolConfirmAutoApprove"] = .bool(enableAutoApproval)
+
+        let trustToolAnnotations = UserDefaults.shared.value(for: \.trustToolAnnotations)
+        d["trustToolAnnotations"] = .bool(trustToolAnnotations)
+
         return .hash(d)
     }
 

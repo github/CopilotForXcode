@@ -12,7 +12,7 @@ struct LocationStrategyHelper {
         with lines: [String],
         length: Int? = nil
     ) -> CGRect? {
-        guard editor.isSourceEditor,
+        guard editor.isNonNavigatorSourceEditor,
               lineNumber < lines.count && lineNumber >= 0
         else {
             return nil

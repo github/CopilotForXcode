@@ -166,6 +166,10 @@ public extension Notification.Name {
         .Name("com.github.CopilotForXcode.GitHubCopilotShouldRefreshEditorInformation")
     static let githubCopilotAgentMaxToolCallingLoopDidChange = Notification
         .Name("com.github.CopilotForXcode.GithubCopilotAgentMaxToolCallingLoopDidChange")
+    static let githubCopilotAgentAutoApprovalDidChange = Notification
+        .Name("com.github.CopilotForXcode.GithubCopilotAgentAutoApprovalDidChange")
+    static let githubCopilotAgentTrustToolAnnotationsDidChange = Notification
+        .Name("com.github.CopilotForXcode.GithubCopilotAgentTrustToolAnnotationsDidChange")
 }
 
 public class GitHubCopilotBaseService {
@@ -1455,12 +1459,26 @@ public final class GitHubCopilotService:
             await sendConfigurationUpdate()
             
             // Combine both notification streams
-            let combinedNotifications = Publishers.Merge3(
-                NotificationCenter.default.publisher(for: .gitHubCopilotShouldRefreshEditorInformation).map { _ in "editorInfo" },
-                FeatureFlagNotifierImpl.shared.featureFlagsDidChange.map { _ in "featureFlags" },
+            let combinedNotifications = Publishers.MergeMany(
+                NotificationCenter.default
+                    .publisher(for: .gitHubCopilotShouldRefreshEditorInformation)
+                    .map { _ in "editorInfo" }
+                    .eraseToAnyPublisher(),
+                FeatureFlagNotifierImpl.shared.featureFlagsDidChange
+                    .map { _ in "featureFlags" }
+                    .eraseToAnyPublisher(),
                 DistributedNotificationCenter.default()
                     .publisher(for: .githubCopilotAgentMaxToolCallingLoopDidChange)
                     .map { _ in "agentMaxToolCallingLoop" }
+                    .eraseToAnyPublisher(),
+                DistributedNotificationCenter.default()
+                    .publisher(for: .githubCopilotAgentAutoApprovalDidChange)
+                    .map { _ in "agentAutoApproval" }
+                    .eraseToAnyPublisher(),
+                DistributedNotificationCenter.default()
+                    .publisher(for: .githubCopilotAgentTrustToolAnnotationsDidChange)
+                    .map { _ in "agentTrustToolAnnotations" }
+                    .eraseToAnyPublisher()
             )
             
             for await _ in combinedNotifications.values {

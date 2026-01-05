@@ -12,12 +12,14 @@ public struct CopilotPolicy: Hashable, Codable {
     public var customAgentEnabled: Bool = true
     public var subagentEnabled: Bool = true
     public var cveRemediatorAgentEnabled: Bool = true
+    public var agentModeAutoApprovalEnabled: Bool = false
 
     enum CodingKeys: String, CodingKey {
         case mcpContributionPointEnabled = "mcp.contributionPoint.enabled"
         case customAgentEnabled = "customAgent.enabled"
         case subagentEnabled = "subagent.enabled"
         case cveRemediatorAgentEnabled = "cveRemediatorAgent.enabled"
+        case agentModeAutoApprovalEnabled = "agentMode.autoApproval.enabled"
     }
 }
 

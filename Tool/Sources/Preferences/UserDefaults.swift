@@ -19,6 +19,8 @@ public extension UserDefaults {
         shared.setupDefaultValue(for: \.autoAttachChatToXcode)
         shared.setupDefaultValue(for: \.enableFixError)
         shared.setupDefaultValue(for: \.enableSubagent)
+        shared.setupDefaultValue(for: \.enableAutoApproval)
+        shared.setupDefaultValue(for: \.trustToolAnnotations)
         shared.setupDefaultValue(for: \.widgetColorScheme)
         shared.setupDefaultValue(for: \.customCommands)
         shared.setupDefaultValue(

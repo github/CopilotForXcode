@@ -581,6 +581,7 @@ struct Chat {
         case copyCode(MessageID)
         case insertCode(String)
         case toolCallAccepted(String)
+        case toolCallAcceptedWithApproval(String, ToolAutoApprovalManager.AutoApproval?)
         case toolCallCompleted(String, String)
         case toolCallCancelled(String)
 
@@ -760,6 +761,17 @@ struct Chat {
                 return .run { _ in
                     service.updateToolCallStatus(toolCallId: toolCallId, status: .accepted)
                 }.cancellable(id: CancelID.sendMessage(self.id))
+
+            case let .toolCallAcceptedWithApproval(toolCallId, approval):
+                guard !toolCallId.isEmpty else { return .none }
+                return .run { send in
+                    if let approval {
+                        await ToolAutoApprovalManager.shared.approve(approval)
+                    }
+
+                    await send(.toolCallAccepted(toolCallId))
+                }.cancellable(id: CancelID.sendMessage(self.id))
+
             case let .toolCallCancelled(toolCallId):
                 guard !toolCallId.isEmpty else { return .none }
                 return .run { _ in

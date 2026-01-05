@@ -19,7 +19,8 @@ public class FeatureFlagManager: ObservableObject {
     @Published public private(set) var isEditorPreviewEnabled = true
     @Published public private(set) var isChatEnabled = true
     @Published public private(set) var isCodeReviewEnabled = true
-    
+    @Published public private(set) var isAgenModeAutoApprovalEnabled = true
+
     // MARK: - Private Properties
     
     private var cancellables = Set<AnyCancellable>()
@@ -78,7 +79,8 @@ public class FeatureFlagManager: ObservableObject {
             isEditorPreviewEnabled = featureFlags.editorPreviewFeatures
             isChatEnabled = featureFlags.chat
             isCodeReviewEnabled = featureFlags.ccr
-            
+            isAgenModeAutoApprovalEnabled = featureFlags.agentModeAutoApproval
+
             Logger.client.info("Feature flags updated: agentMode=\(featureFlags.agentMode), byok=\(featureFlags.byok), mcp=\(featureFlags.mcp), editorPreview=\(featureFlags.editorPreviewFeatures)")
         } catch {
             Logger.client.error("Failed to update feature flags: \(error.localizedDescription)")

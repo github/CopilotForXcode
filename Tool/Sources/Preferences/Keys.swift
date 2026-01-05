@@ -336,6 +336,14 @@ public extension UserDefaultPreferenceKeys {
     var enableSubagent: PreferenceKey<Bool> {
         .init(defaultValue: true, key: "EnableSubagent")
     }
+
+    var enableAutoApproval: PreferenceKey<Bool> {
+        .init(defaultValue: false, key: "EnableAutoApproval")
+    }
+
+    var trustToolAnnotations: PreferenceKey<Bool> {
+        .init(defaultValue: false, key: "TrustToolAnnotations")
+    }
 }
 
 // MARK: - Theme

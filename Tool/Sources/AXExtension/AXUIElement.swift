@@ -235,16 +235,16 @@ public extension AXUIElement {
     }
     
     func retrieveSourceEditor() -> AXUIElement? {
-        if self.isSourceEditor { return self }
+        if isNonNavigatorSourceEditor { return self }
         
         if self.isXcodeWorkspaceWindow {
-            return self.firstChild(where: \.isSourceEditor)
+            return self.firstChild(where: \.isNonNavigatorSourceEditor)
         }
         
         guard let xcodeWorkspaceWindowElement = self.firstParent(where: \.isXcodeWorkspaceWindow)
         else { return nil }
         
-        return xcodeWorkspaceWindowElement.firstChild(where: \.isSourceEditor)
+        return xcodeWorkspaceWindowElement.firstChild(where: \.isNonNavigatorSourceEditor)
     }
 }
 
@@ -327,24 +327,24 @@ public extension AXUIElement {
     func findSourceEditorElement(shouldRetry: Bool = true) -> AXUIElement? {
         
         // 1. Check if the current element is a source editor
-        if isSourceEditor {
+        if isNonNavigatorSourceEditor {
             return self
         }
         
         // 2. Search for child that is a source editor
-        if let sourceEditorChild = firstChild(where: \.isSourceEditor) {
+        if let sourceEditorChild = firstChild(where: \.isNonNavigatorSourceEditor) {
             return sourceEditorChild
         }
         
         // 3. Search for parent that is a source editor (XcodeInspector's approach)
-        if let sourceEditorParent = firstParent(where: \.isSourceEditor) {
+        if let sourceEditorParent = firstParent(where: \.isNonNavigatorSourceEditor) {
             return sourceEditorParent
         }
         
         // 4. Search for parent that is an editor area
         if let editorAreaParent = firstParent(where: \.isEditorArea) {
             // 3.1 Search for child that is a source editor
-            if let sourceEditorChild = editorAreaParent.firstChild(where: \.isSourceEditor) {
+            if let sourceEditorChild = editorAreaParent.firstChild(where: \.isNonNavigatorSourceEditor) {
                 return sourceEditorChild
             }
         }
@@ -354,7 +354,7 @@ public extension AXUIElement {
             // 4.1 Search for child that is an editor area
             if let editorAreaChild = xcodeWorkspaceWindowParent.firstChild(where: \.isEditorArea) {
                 // 4.2 Search for child that is a source editor
-                if let sourceEditorChild = editorAreaChild.firstChild(where: \.isSourceEditor) {
+                if let sourceEditorChild = editorAreaChild.firstChild(where: \.isNonNavigatorSourceEditor) {
                     return sourceEditorChild
                 }
             }

@@ -13,6 +13,8 @@ struct ChatSection: View {
     @AppStorage(\.autoAttachChatToXcode) var autoAttachChatToXcode
     @AppStorage(\.enableFixError) var enableFixError
     @AppStorage(\.enableSubagent) var enableSubagent
+    @AppStorage(\.enableAutoApproval) var enableAutoApproval
+    @AppStorage(\.trustToolAnnotations) var trustToolAnnotations
     @ObservedObject private var featureFlags = FeatureFlagManager.shared
     @ObservedObject private var copilotPolicy = CopilotPolicyManager.shared
 
@@ -54,12 +56,7 @@ struct ChatSection: View {
                         ),
                         badge: copilotPolicy.isSubagentEnabled 
                             ? nil 
-                            : BadgeItem(
-                                text: "Disabled by organization policy",
-                                level: .warning,
-                                icon: "exclamationmark.triangle.fill",
-                                tooltip: "Subagents are disabled by your organization's policy. Please contact your administrator to enable them."
-                            )
+                            : .disabledByPolicy(feature: "Subagents", isPlural: true)
                     )
                     .disabled(!copilotPolicy.isSubagentEnabled)
 
@@ -99,6 +96,15 @@ struct ChatSection: View {
                 // Agent Max Tool Calling Requests
                 AgentMaxToolCallLoopSetting()
                     .padding(SettingsToggle.defaultPadding)
+
+                Divider()
+
+                // Auto Approval Toggles
+                AgentAutoApprovalSetting()
+
+                Divider()
+                    
+                AgentTrustToolAnnotationsSetting()
             }
         }
     }
@@ -559,6 +565,66 @@ struct AgentFileSetting: View {
                 }
             } catch {
                 toast("Failed to create \(promptType.directoryName) directory: \(error)", .error)
+            }
+        }
+    }
+}
+
+struct AgentAutoApprovalSetting: View {
+    @AppStorage(\.enableAutoApproval) var enableAutoApproval
+    @ObservedObject private var featureFlags = FeatureFlagManager.shared
+    @ObservedObject private var copilotPolicy = CopilotPolicyManager.shared
+
+    var autoApprovalPolicyEnabled : Bool {
+        copilotPolicy.isAgentModeAutoApprovalEnabled && featureFlags.isEditorPreviewEnabled && featureFlags.isAgenModeAutoApprovalEnabled
+    }
+
+    var body: some View {
+        WithPerceptionTracking {
+            SettingsToggle(
+                title: "Auto Approval",
+                subtitle: "Controls whether tool calls should be automatically approved.",
+                isOn: Binding(
+                    get: { enableAutoApproval && autoApprovalPolicyEnabled },
+                    set: { if autoApprovalPolicyEnabled { enableAutoApproval = $0 } }
+                ),
+                badge: autoApprovalPolicyEnabled ? nil : .disabledByPolicy(feature: "Auto approval")
+            )
+            .disabled(!autoApprovalPolicyEnabled)
+            .onChange(of: enableAutoApproval) { _ in
+                DistributedNotificationCenter
+                    .default()
+                    .post(name: .githubCopilotAgentAutoApprovalDidChange, object: nil)
+            }
+        }
+    }
+}
+
+struct AgentTrustToolAnnotationsSetting: View {
+    @AppStorage(\.trustToolAnnotations) var trustToolAnnotations
+    @ObservedObject private var featureFlags = FeatureFlagManager.shared
+    @ObservedObject private var copilotPolicy = CopilotPolicyManager.shared
+
+    var autoApprovalPolicyEnabled : Bool {
+        copilotPolicy.isAgentModeAutoApprovalEnabled && featureFlags.isEditorPreviewEnabled && featureFlags.isAgenModeAutoApprovalEnabled
+    }
+
+    var body: some View {
+        WithPerceptionTracking {
+            SettingsToggle(
+                title: "Trust MCP Tool Annotations",
+                subtitle: "If enabled, Copilot will use tool annotations to decide whether to automatically approve readonly MCP tool calls.",
+                isOn: Binding(
+                    get: { trustToolAnnotations && autoApprovalPolicyEnabled },
+                    set: { if autoApprovalPolicyEnabled { trustToolAnnotations = $0 } }
+                ),
+                badge: autoApprovalPolicyEnabled ? nil : .disabledByPolicy(feature: "Auto approval")
+            )
+            .disabled(!autoApprovalPolicyEnabled)
+            .onChange(of: trustToolAnnotations) { _ in
+                DistributedNotificationCenter
+                    .default()
+                    .post(name: .githubCopilotAgentTrustToolAnnotationsDidChange, object: nil)
             }
         }
     }

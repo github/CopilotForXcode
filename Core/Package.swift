@@ -214,6 +214,7 @@ let package = Package(
             .target(
                 name: "SuggestionWidget",
                 dependencies: [
+                    "ChatService",
                     "PromptToCodeService",
                     "ConversationTab",
                     "GitHubCopilotViewModel",

@@ -447,7 +447,7 @@ public extension AXUIElement {
             if element.identifier == "editor context" {
                 return .skipDescendantsAndSiblings
             }
-            if element.isSourceEditor {
+            if element.isNonNavigatorSourceEditor {
                 return .skipDescendantsAndSiblings
             }
             if description == "Code Coverage Ribbon" {

@@ -105,3 +105,17 @@ struct Badge: View {
         .help(tooltip ?? text)
     }
 }
+
+extension BadgeItem {
+    static func disabledByPolicy(feature: String, isPlural: Bool = false) -> BadgeItem {
+        let verb = isPlural ? "are" : "is"
+        let pronoun = isPlural ? "them" : "it"
+        return .init(
+            text: "Disabled by organization policy",
+            level: .warning,
+            icon: "exclamationmark.triangle.fill",
+            tooltip: "\(feature) \(verb) disabled by your organization's policy. Please contact your administrator to enable \(pronoun)."
+        )
+    }
+}
+
