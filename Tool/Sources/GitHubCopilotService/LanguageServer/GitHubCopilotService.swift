@@ -537,7 +537,7 @@ public final class GitHubCopilotService:
             do {
                 let completions = try await self
                     .sendRequest(GitHubCopilotRequest.InlineCompletion(doc: .init(
-                        textDocument: .init(uri: fileURL.absoluteString, version: 1),
+                        textDocument: .init(uri: fileURL.absoluteString, version: 0),
                         position: cursorPosition,
                         formattingOptions: .init(
                             tabSize: tabSize,
@@ -584,37 +584,12 @@ public final class GitHubCopilotService:
             }
         }
 
-        func recoverContent() async {
-            try? await notifyChangeTextDocument(
-                fileURL: fileURL,
-                content: originalContent,
-                version: 0
-            )
-        }
-
-        // since when the language server is no longer using the passed in content to generate
-        // suggestions, we will need to update the content to the file before we do any request.
-        //
-        // And sometimes the language server's content was not up to date and may generate
-        // weird result when the cursor position exceeds the line.
         let task = Task { @GitHubCopilotSuggestionActor in
-            try? await notifyChangeTextDocument(
-                fileURL: fileURL,
-                content: content,
-                version: 1
-            )
-
             do {
                 let maxTry: Int = 5
                 try Task.checkCancellation()
                 return try await sendRequest(maxTry: maxTry)
-            } catch let error as CancellationError {
-                if ongoingTasks.isEmpty {
-                    await recoverContent()
-                }
-                throw error
             } catch {
-                await recoverContent()
                 throw error
             }
         }
@@ -636,16 +611,10 @@ public final class GitHubCopilotService:
         await localProcessServer?.cancelOngoingTasks()
         
         do {
-            try? await notifyChangeTextDocument(
-                fileURL: fileURL,
-                content: content,
-                version: 1
-            )
-            
             let completions = try await sendRequest(
                 GitHubCopilotRequest.CopilotInlineEdit(
                     params: CopilotInlineEditsParams(
-                        textDocument: .init(uri: fileURL.absoluteString, version: 1),
+                        textDocument: .init(uri: fileURL.absoluteString, version: 0),
                         position: cursorPosition
                     )
                 ))

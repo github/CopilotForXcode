@@ -235,6 +235,8 @@ public final class Workspace {
 }
 
 extension Workspace {
+    static let maxCalculationLength = 200_000
+    
     /// Calculates incremental changes between two document states.
     /// Each change is computed on the state resulting from the previous change,
     /// as required by the LSP specification.
@@ -285,9 +287,8 @@ extension Workspace {
         // Find common prefix
         let oldUTF16 = Array(oldContent.utf16)
         let newUTF16 = Array(newContent.utf16)
-        let maxCalculationLength = 10000
-        guard oldUTF16.count <= maxCalculationLength,
-              newUTF16.count <= maxCalculationLength else {
+        guard oldUTF16.count <= Self.maxCalculationLength,
+              newUTF16.count <= Self.maxCalculationLength else {
             // Fallback to full replacement for very large contents
             return nil
         }
