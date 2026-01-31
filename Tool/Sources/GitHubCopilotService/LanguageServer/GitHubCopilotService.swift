@@ -297,6 +297,7 @@ public class GitHubCopilotBaseService {
                             "didChangeFeatureFlags": true,
                             "stateDatabase": true,
                             "subAgent": JSONValue(booleanLiteral: enableSubagent),
+                            "mcpAllowlist": true,
                         ],
                         "githubAppId": authAppId.map(JSONValue.string) ?? .null,
                     ],
@@ -1472,6 +1473,10 @@ public final class GitHubCopilotService:
                     .map { _ in "agentMaxToolCallingLoop" }
                     .eraseToAnyPublisher(),
                 DistributedNotificationCenter.default()
+                    .publisher(for: .githubCopilotAgentAutoApprovalDidChange)
+                    .map { _ in "agentAutoApproval" }
+                    .eraseToAnyPublisher(),
+                NotificationCenter.default
                     .publisher(for: .githubCopilotAgentAutoApprovalDidChange)
                     .map { _ in "agentAutoApproval" }
                     .eraseToAnyPublisher(),

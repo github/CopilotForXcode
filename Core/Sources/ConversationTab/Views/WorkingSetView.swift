@@ -14,23 +14,26 @@ struct WorkingSetView: View {
     
     private let r: Double = 8
     
+    @State private var isExpanded: Bool = false
+    
     var body: some View {
         WithPerceptionTracking {
             VStack(spacing: 4) {
                 
-                WorkingSetHeader(chat: chat)
-                    .scaledFrame(height: 24)
+                WorkingSetHeader(chat: chat, isExpanded: $isExpanded)
+                    .scaledPadding(.vertical, 2)
                     .scaledPadding(.leading, 7)
                 
-                VStack(spacing: 0) {
-                    ForEach(chat.fileEditMap.elements, id: \.key.path) { element in
-                        FileEditView(chat: chat, fileEdit: element.value)
+                if isExpanded {
+                    VStack(spacing: 0) {
+                        ForEach(chat.fileEditMap.elements, id: \.key.path) { element in
+                            FileEditView(chat: chat, fileEdit: element.value)
+                        }
                     }
                 }
             }
             .scaledPadding(.horizontal, 5)
-            .scaledPadding(.top, 8)
-            .scaledPadding(.bottom, 10)
+            .scaledPadding(.vertical, 4)
             .frame(maxWidth: .infinity)
             .background(
                 RoundedCorners(tl: r, tr: r, bl: 0, br: 0)
@@ -46,6 +49,7 @@ struct WorkingSetView: View {
 
 struct WorkingSetHeader: View {
     let chat: StoreOf<Chat>
+    @Binding var isExpanded: Bool
     
     @Environment(\.colorScheme) var colorScheme
     
@@ -58,38 +62,47 @@ struct WorkingSetHeader: View {
         text: String,
         textForegroundColor: Color = .white,
         textBackgroundColor: Color = .gray,
+        buttonStyle: some PrimitiveButtonStyle = .bordered,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
             Text(text)
-                .scaledFont(.body)
-                .foregroundColor(textForegroundColor)
-                .scaledPadding(.horizontal, 6)
-                .padding(.vertical, 2)
-                .background(textBackgroundColor)
-                .cornerRadius(2)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 2)
-                        .stroke(Color.white.opacity(0.07), lineWidth: 1)
-                )
-                .scaledFrame(width: 60, height: 15, alignment: .center)
+                .scaledFont(size: 11)
         }
-        .buttonStyle(PlainButtonStyle())
+        .buttonStyle(buttonStyle)
     }
     
     var body: some View {
         WithPerceptionTracking {
             HStack(spacing: 0) {
-                Text(getTitle())
-                    .foregroundColor(.secondary)
-                    .scaledFont(size: 13)
-                
-                Spacer()
+                HStack(spacing: 2) {
+                    Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
+                        .resizable()
+                        .scaledToFit()
+                        .padding(3)
+                        .scaledFrame(width: 16, height: 16)
+                        .foregroundColor(.secondary)
+                    
+                    Text(getTitle())
+                        .foregroundColor(.secondary)
+                        .scaledFont(size: 13)
+                    
+                    Spacer()
+                }
+                .frame(maxWidth: .infinity)
+                .overlay(
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            isExpanded.toggle()
+                        }
+                        .allowsHitTesting(true)
+                )
                 
                 if chat.fileEditMap.contains(where: {_, fileEdit in
                     return fileEdit.status == .none
                 }) {
-                    HStack(spacing: -10) {
+                    HStack(spacing: 6) {
                         /// Undo all edits
                         buildActionButton(
                             text: "Undo",
@@ -101,7 +114,11 @@ struct WorkingSetHeader: View {
                         .help("Undo All Edits")
                         
                         /// Keep all edits
-                        buildActionButton(text: "Keep", textBackgroundColor: Color("WorkingSetHeaderKeepButtonColor")) {
+                        buildActionButton(
+                            text: "Keep",
+                            textBackgroundColor: Color("WorkingSetHeaderKeepButtonColor"),
+                            buttonStyle: .borderedProminent
+                        ) {
                             chat.send(.keepEdits(fileURLs: chat.fileEditMap.values.map { $0.fileURL }))
                         }
                         .help("Keep All Edits")

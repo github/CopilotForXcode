@@ -47,6 +47,17 @@ extension ChatService {
         let mcpServerName = ToolAutoApprovalManager.extractMCPServerName(from: params.title ?? "")
         let confirmationMessage = params.message ?? ""
 
+        if ToolAutoApprovalManager.isTerminalOperation(name: params.name) {
+            let commandLine = params.input?["command"]?.value as? String
+            let allowed = await ToolAutoApprovalManager.shared.isTerminalAllowed(
+                conversationId: params.conversationId,
+                commandLine: commandLine
+            )
+            if allowed {
+                return true
+            }
+        }
+
         if let mcpServerName {
             let allowed = await ToolAutoApprovalManager.shared.isMCPAllowed(
                 conversationId: params.conversationId,
@@ -57,10 +68,19 @@ extension ChatService {
             if allowed {
                 return true
             }
+
+            let globalAllowed = await ToolAutoApprovalManager.shared.isMCPAllowedGlobally(
+                serverName: mcpServerName,
+                toolName: params.name
+            )
+            if globalAllowed {
+                return true
+            }
         }
 
         if ToolAutoApprovalManager.isSensitiveFileOperation(message: confirmationMessage) {
-            let fileKey = ToolAutoApprovalManager.sensitiveFileKey(from: confirmationMessage)
+            let info = ToolAutoApprovalManager.extractSensitiveFileConfirmationInfo(from: confirmationMessage)
+            let fileKey = info.sessionKey
             let allowed = await ToolAutoApprovalManager.shared.isSensitiveFileAllowed(
                 conversationId: params.conversationId,
                 toolName: params.name,

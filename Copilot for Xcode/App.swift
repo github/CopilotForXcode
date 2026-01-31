@@ -21,6 +21,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         case chat
         case settings
         case tools
+        case toolsAutoApprove
         case byok
     }
     
@@ -51,6 +52,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return .settings
         } else if launchArgs.contains("--tools") {
             return .tools
+        } else if launchArgs.contains("--tools-auto-approve") {
+            return .toolsAutoApprove
         } else if launchArgs.contains("--byok") {
             return .byok
         } else {
@@ -64,6 +67,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             openSettings()
         case .tools:
             openToolsSettings()
+        case .toolsAutoApprove:
+            openToolsSettingsAutoApprove()
         case .byok:
             openBYOKSettings()
         case .chat:
@@ -90,6 +95,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         DispatchQueue.main.async {
             activateAndOpenSettings()
             hostAppStore.send(.setActiveTab(.tools))
+        }
+    }
+
+    private func openToolsSettingsAutoApprove() {
+        DispatchQueue.main.async {
+            activateAndOpenSettings()
+            hostAppStore.send(.setActiveTab(.tools))
+            hostAppStore.send(.setActiveToolsSubTab(.AutoApprove))
         }
     }
     
@@ -200,6 +213,18 @@ struct CopilotForXcodeApp: App {
             DispatchQueue.main.async {
                 activateAndOpenSettings()
                 hostAppStore.send(.setActiveTab(.tools))
+            }
+        }
+
+        DistributedNotificationCenter.default().addObserver(
+            forName: .openToolsSettingsAutoApproveWindowRequest,
+            object: nil,
+            queue: .main
+        ) { _ in
+            DispatchQueue.main.async {
+                activateAndOpenSettings()
+                hostAppStore.send(.setActiveTab(.tools))
+                hostAppStore.send(.setActiveToolsSubTab(.AutoApprove))
             }
         }
         

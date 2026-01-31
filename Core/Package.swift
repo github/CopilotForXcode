@@ -53,7 +53,9 @@ let package = Package(
             .package(url: "https://github.com/devm33/KeyboardShortcuts", branch: "main"),
         .package(url: "https://github.com/devm33/CGEventOverride", branch: "devm33/fix-stale-AXIsProcessTrusted"),
         .package(url: "https://github.com/devm33/Highlightr", branch: "master"),
-        .package(url: "https://github.com/globulus/swiftui-flow-layout", from: "1.0.5")
+        .package(url: "https://github.com/globulus/swiftui-flow-layout", from: "1.0.5"),
+        .package(url: "https://github.com/tree-sitter/swift-tree-sitter.git", from: "0.25.0"),
+        .package(url: "https://github.com/tree-sitter/tree-sitter-bash", from: "0.25.1")
     ],
     targets: [
         // MARK: - Main
@@ -132,6 +134,7 @@ let package = Package(
                     .product(name: "KeyboardShortcuts", package: "KeyboardShortcuts"),
                     .product(name: "GitHubCopilotService", package: "Tool"),
                     .product(name: "Persist", package: "Tool"),
+                    .product(name: "UserDefaultsObserver", package: "Tool"),
                 ]),
         
         // MARK: - Suggestion Service
@@ -185,7 +188,10 @@ let package = Package(
                     .product(name: "AppKitExtension", package: "Tool"),
                     .product(name: "WebContentExtractor", package: "Tool"),
                     .product(name: "GitHelper", package: "Tool"),
-                    .product(name: "SuggestionBasic", package: "Tool")
+                    .product(name: "SuggestionBasic", package: "Tool"),
+                    .product(name: "SwiftTreeSitter", package: "swift-tree-sitter"),
+                    .product(name: "SwiftTreeSitterLayer", package: "swift-tree-sitter"),
+                    .product(name: "TreeSitterBash", package: "tree-sitter-bash"),
                 ]),
             .testTarget(
                 name: "ChatServiceTests",

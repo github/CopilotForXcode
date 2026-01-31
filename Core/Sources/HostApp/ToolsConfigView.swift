@@ -19,10 +19,9 @@ struct MCPConfigView: View {
     @State private var isMonitoring: Bool = false
     @State private var lastModificationDate: Date? = nil
     @State private var fileMonitorTask: Task<Void, Error>? = nil
-    @State private var selectedOption = ToolType.MCP
     @State private var selectedMode: ConversationMode = .defaultAgent
     @Environment(\.colorScheme) var colorScheme
-    
+
     private var isCustomAgentEnabled: Bool {
         featureFlags.isEditorPreviewEnabled && copilotPolicy.isCustomAgentEnabled
     }
@@ -31,21 +30,21 @@ struct MCPConfigView: View {
     @State private var debounceTimer: Timer?
     private static let refreshDebounceInterval: TimeInterval = 1.0 // 1.0 second debounce
 
-    enum ToolType: String, CaseIterable, Identifiable {
-        case MCP, BuiltIn
-        var id: Self { self }
-    }
-
     var body: some View {
         WithPerceptionTracking {
             ScrollView {
-                Picker("", selection: $selectedOption) {
+                Picker("", selection: Binding(
+                    get: { hostAppStore.state.activeToolsSubTab },
+                    set: { hostAppStore.send(.setActiveToolsSubTab($0)) }
+                )) {
                     if #available(macOS 26.0, *) {
-                        Text("MCP".padded(centerTo: 24, with: "\u{2002}")).tag(ToolType.MCP)
-                        Text("Built-In".padded(centerTo: 24, with: "\u{2002}")).tag(ToolType.BuiltIn)
+                        Text("MCP".padded(centerTo: 24, with: "\u{2002}")).tag(ToolsSubTab.MCP)
+                        Text("Built-In".padded(centerTo: 24, with: "\u{2002}")).tag(ToolsSubTab.BuiltIn)
+                        Text("Auto-Approve".padded(centerTo: 24, with: "\u{2002}")).tag(ToolsSubTab.AutoApprove)
                     } else {
-                        Text("MCP").tag(ToolType.MCP)
-                        Text("Built-In").tag(ToolType.BuiltIn)
+                        Text("MCP").tag(ToolsSubTab.MCP)
+                        Text("Built-In").tag(ToolsSubTab.BuiltIn)
+                        Text("Auto-Approve").tag(ToolsSubTab.AutoApprove)
                     }
                 }
                 .frame(width: 400)
@@ -55,13 +54,13 @@ struct MCPConfigView: View {
                 .padding(.bottom, 4)
 
                 Group {
-                    if selectedOption == .MCP {
+                    if hostAppStore.activeToolsSubTab == .MCP {
                         VStack(alignment: .leading, spacing: 8) {
                             MCPIntroView(isMCPFFEnabled: featureFlags.isMCPEnabled)
                             if featureFlags.isMCPEnabled {
                                 MCPManualInstallView()
 
-                                if featureFlags.isEditorPreviewEnabled && ( SystemUtils.isPrereleaseBuild || SystemUtils.isDeveloperMode ) {
+                                if featureFlags.isEditorPreviewEnabled {
                                     MCPRegistryURLView()
                                 }
 
@@ -100,11 +99,13 @@ struct MCPConfigView: View {
                                 selectedMode = .defaultAgent
                             }
                         }
-                    } else {
+                    } else if hostAppStore.activeToolsSubTab == .BuiltIn {
                         BuiltInToolsListView(
                             selectedMode: $selectedMode,
                             isCustomAgentEnabled: isCustomAgentEnabled
                         )
+                    } else {
+                        AutoApproveContainerView()
                     }
                 }
                 .padding(.horizontal, 20)
@@ -177,7 +178,7 @@ struct MCPConfigView: View {
     }
 
     private func startMonitoringConfigFile() {
-        stopMonitoringConfigFile()  // Stop existing monitoring if any
+        stopMonitoringConfigFile() // Stop existing monitoring if any
 
         isMonitoring = true
         Logger.client.info("Starting MCP config file monitoring")
@@ -187,9 +188,9 @@ struct MCPConfigView: View {
 
             // Check for file changes periodically
             while isMonitoring {
-                try? await Task.sleep(nanoseconds: 3_000_000_000)  // Check every 1 second for better responsiveness
+                try? await Task.sleep(nanoseconds: 3_000_000_000) // Check every 3 second for better responsiveness
 
-                guard isMonitoring else { break }  // Extra check after sleep
+                guard isMonitoring else { break } // Extra check after sleep
 
                 let currentDate = getFileModificationDate(url: configFileURL)
 

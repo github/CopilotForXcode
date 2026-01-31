@@ -12,6 +12,7 @@ import OrderedCollections
 import SwiftUI
 import GitHelper
 import SuggestionBasic
+import HostAppActivator
 
 public struct DisplayedChatMessage: Equatable {
     public enum Role: Equatable {
@@ -638,6 +639,8 @@ struct Chat {
         case undoCheckPoint // Revert the restore
         case discardCheckPoint
         case reloadWorkingset(DisplayedChatMessage)
+
+        case openAutoApproveSettings
     }
 
     let service: ChatService
@@ -1426,6 +1429,11 @@ struct Chat {
                     for fileEdit in message.fileEdits {
                         service.updateFileEdits(by: fileEdit)
                     }
+                }
+
+            case .openAutoApproveSettings:
+                return .run { _ in
+                    try launchHostAppToolsSettingsAutoApprove()
                 }
             }
         }

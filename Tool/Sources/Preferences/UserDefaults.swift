@@ -10,6 +10,12 @@ public protocol UserDefaultsType {
 public extension UserDefaults {
     static var shared = UserDefaults(suiteName: userDefaultSuiteName)!
 
+    /// Workspace-level auto-approval storage.
+    ///
+    /// Backed by the `group.<bundleIdentifierBase>.autoApproval.prefs` suite so it persists
+    /// across app restarts and is isolated from general app preferences.
+    static var autoApproval = UserDefaults(suiteName: autoApprovalUserDefaultSuiteName)!
+
     static func setupDefaultSettings() {
         shared.setupDefaultValue(for: \.quitXPCServiceOnXcodeAndAppQuit)
         shared.setupDefaultValue(for: \.realtimeSuggestionToggle)
@@ -83,8 +89,10 @@ extension Bool: UserDefaultsStorable {}
 extension String: UserDefaultsStorable {}
 extension Data: UserDefaultsStorable {}
 extension URL: UserDefaultsStorable {}
+extension Dictionary: UserDefaultsStorable {}
 
-extension Array: RawRepresentable where Element: Codable {
+
+extension Array: @retroactive RawRepresentable where Element: Codable {
     public init?(rawValue: String) {
         guard let data = rawValue.data(using: .utf8),
               let result = try? JSONDecoder().decode([Element].self, from: data)
@@ -310,6 +318,38 @@ public extension UserDefaultsType {
             return key.defaultValue
         }
         return K(rawValue: rawValue) ?? key.defaultValue
+    }
+}
+
+public extension UserDefaultsType {
+    // MARK: Dictionary Raw Representable
+
+    func value<K: UserDefaultPreferenceKey>(
+        for keyPath: KeyPath<UserDefaultPreferenceKeys, K>
+    ) -> K.Value where K.Value: RawRepresentable, K.Value.RawValue == [String: Any] {
+        let key = UserDefaultPreferenceKeys()[keyPath: keyPath]
+        guard let rawValue = value(forKey: key.key) as? [String: Any] else {
+            return key.defaultValue
+        }
+        return K.Value(rawValue: rawValue) ?? key.defaultValue
+    }
+
+    func set<K: UserDefaultPreferenceKey>(
+        _ value: K.Value,
+        for keyPath: KeyPath<UserDefaultPreferenceKeys, K>
+    ) where K.Value: RawRepresentable, K.Value.RawValue == [String: Any] {
+        let key = UserDefaultPreferenceKeys()[keyPath: keyPath]
+        set(value.rawValue, forKey: key.key)
+    }
+
+    func setupDefaultValue<K: UserDefaultPreferenceKey>(
+        for keyPath: KeyPath<UserDefaultPreferenceKeys, K>,
+        defaultValue: K.Value? = nil
+    ) where K.Value: RawRepresentable, K.Value.RawValue == [String: Any] {
+        let key = UserDefaultPreferenceKeys()[keyPath: keyPath]
+        if value(forKey: key.key) == nil {
+            set(defaultValue?.rawValue ?? key.defaultValue.rawValue, forKey: key.key)
+        }
     }
 }
 

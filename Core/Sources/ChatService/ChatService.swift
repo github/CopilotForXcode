@@ -441,8 +441,17 @@ public final class ChatService: ChatServiceType, ObservableObject {
         
         self.lastUserRequest = request
         self.skillSet = validSkillSet
-        if let response = try await sendConversationRequest(request) {
-            await handleConversationCreateResponse(response)
+        
+        do {
+            if let response = try await sendConversationRequest(request) {
+                await handleConversationCreateResponse(response)
+            }
+        } catch {
+            // Check if this is a certificate error and show helpful message
+            if isCertificateError(error) {
+                await showCertificateErrorMessage(turnId: currentTurnId)
+            }
+            throw error
         }
     }
     
@@ -1017,6 +1026,44 @@ public final class ChatService: ChatServiceType, ObservableObject {
                 Logger.client.error("Failed to delete turn: \(error)")
             }
         }
+    }
+    
+    // MARK: - Certificate Error Detection
+    
+    /// Checks if an error is related to SSL certificate issues
+    private func isCertificateError(_ error: Error) -> Bool {
+        let errorDescription = error.localizedDescription.lowercased()
+        
+        // Check for certificate error messages
+        if errorDescription.contains("unable to get local issuer certificate") ||
+           errorDescription.contains("self-signed certificate in certificate chain") ||
+           errorDescription.contains("unable_to_get_issuer_cert_locally") {
+            return true
+        }
+        
+        // Check GitHubCopilotError with ServerError
+        if let serverError = error as? ServerError,
+            case .serverError(_, let message, _) = serverError {
+                let serverMessage = message.lowercased()
+                if serverMessage.contains("unable to get local issuer certificate") ||
+                   serverMessage.contains("self-signed certificate in certificate chain") {
+                    return true
+            }
+        }
+        
+        return false
+    }
+    
+    private func showCertificateErrorMessage(turnId: String?) async {
+        let messageId = turnId ?? UUID().uuidString
+        let errorMessage = ChatMessage(
+            errorMessageWithId: messageId,
+            chatTabID: chatTabInfo.id,
+            errorMessages: [
+                SSLCertificateErrorMessage
+            ]
+        )
+        await memory.appendMessage(errorMessage)
     }
 }
 

@@ -366,10 +366,10 @@ public final class GraphicalUserInterfaceController {
 
     init() {
         @Dependency(\.workspacePool) var workspacePool
+        @Dependency(\.workspaceInvoker) var workspaceInvoker
         
         let chatTabPool = ChatTabPool()
         let suggestionDependency = SuggestionWidgetControllerDependency()
-        let workspaceInvoker = WorkspaceInvoker()
         let setupDependency: (inout DependencyValues) -> Void = { dependencies in
             dependencies.suggestionWidgetControllerDependency = suggestionDependency
             dependencies.suggestionWidgetUserDefaultsObservers = .init()
@@ -386,7 +386,6 @@ public final class GraphicalUserInterfaceController {
                     }
                 }
             }
-            dependencies.workspaceInvoker = workspaceInvoker
         }
         let store = StoreOf<GUI>(
             initialState: .init(),

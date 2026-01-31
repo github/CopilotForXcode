@@ -3,6 +3,7 @@ import ChatTab
 import Combine
 import ComposableArchitecture
 import ConversationServiceProvider
+import GitHubCopilotService
 import SharedUIComponents
 import SwiftUI
 
@@ -64,7 +65,7 @@ struct ProgressToolCalls: View {
         WithPerceptionTracking {
             VStack(alignment: .leading, spacing: 4) {
                 ForEach(tools) { tool in
-                    if tool.name == ToolName.runInTerminal.rawValue && tool.invokeParams != nil {
+                    if tool.name == ToolName.runInTerminal.rawValue && (tool.invokeParams != nil || tool.input != nil) {
                         RunInTerminalToolView(tool: tool, chat: chat)
                     } else if tool.invokeParams != nil && tool.status == .waitForConfirmation {
                         ToolConfirmationView(tool: tool, chat: chat)
@@ -91,7 +92,9 @@ struct ToolConfirmationView: View {
     private var conversationId: String { tool.invokeParams?.conversationId ?? "" }
     private var invokeMessage: String { tool.invokeParams?.message ?? "" }
     private var isSensitiveFileOperation: Bool { ToolAutoApprovalManager.isSensitiveFileOperation(message: invokeMessage) }
-    private var sensitiveFileKey: String { ToolAutoApprovalManager.sensitiveFileKey(from: invokeMessage) }
+    private var sensitiveFileInfo: ToolAutoApprovalManager.SensitiveFileConfirmationInfo {
+        ToolAutoApprovalManager.extractSensitiveFileConfirmationInfo(from: invokeMessage)
+    }
 
     private var shouldShowMCPSplitButton: Bool { mcpServerName != nil && !conversationId.isEmpty }
     private var shouldShowSensitiveFileSplitButton: Bool {
@@ -100,7 +103,9 @@ struct ToolConfirmationView: View {
 
     @ViewBuilder
     private var confirmationActionView: some View {
-        if #available(macOS 13.0, *) {
+        if #available(macOS 13.0, *),
+           FeatureFlagNotifierImpl.shared.featureFlags.agentModeAutoApproval &&
+           CopilotPolicyNotifierImpl.shared.copilotPolicy.agentModeAutoApprovalEnabled {
             if tool.isToolcallingLoopContinueTool {
                 continueButton
             } else if shouldShowSensitiveFileSplitButton {
@@ -147,20 +152,52 @@ struct ToolConfirmationView: View {
 
     @available(macOS 13.0, *)
     private var sensitiveFileMenuItems: [SplitButtonMenuItem] {
-        [
+        var items: [SplitButtonMenuItem] = []
+
+        items.append(
             SplitButtonMenuItem(title: "Allow in this Session") {
                 chat.send(
                     .toolCallAcceptedWithApproval(
                         tool.id,
                         .sensitiveFile(
-                            conversationId: conversationId,
+                            scope: .session(conversationId),
                             toolName: toolName,
-                            fileKey: sensitiveFileKey
+                            description: sensitiveFileInfo.description,
+                            pattern: sensitiveFileInfo.pattern
                         )
                     )
                 )
             }
-        ]
+        )
+
+        let defaultPatterns = ["**/.github/instructions/*", "**/github-copilot/**/*", "outside-workspace"]
+
+        if let pattern = sensitiveFileInfo.pattern, !pattern.isEmpty, !defaultPatterns.contains(pattern) {
+            items.append(
+                SplitButtonMenuItem(title: "Always Allow") {
+                    chat.send(
+                        .toolCallAcceptedWithApproval(
+                            tool.id,
+                            .sensitiveFile(
+                                scope: .global,
+                                toolName: toolName,
+                                description: sensitiveFileInfo.description,
+                                pattern: pattern
+                            )
+                        )
+                    )
+                }
+            )
+        }
+
+        items.append(.divider())
+        items.append(
+            SplitButtonMenuItem(title: "Configure Auto Approve...") {
+                chat.send(.openAutoApproveSettings)
+            }
+        )
+
+        return items
     }
 
     @available(macOS 13.0, *)
@@ -178,31 +215,77 @@ struct ToolConfirmationView: View {
 
     @available(macOS 13.0, *)
     private func mcpMenuItems(serverName: String) -> [SplitButtonMenuItem] {
-        [
-            SplitButtonMenuItem(title: "Allow \(toolName) in this session") {
+        var items: [SplitButtonMenuItem] = []
+
+        items.append(
+            SplitButtonMenuItem(title: "Allow \(toolName) in this Session") {
                 chat.send(
                     .toolCallAcceptedWithApproval(
                         tool.id,
                         .mcpTool(
-                            conversationId: conversationId,
+                            scope: .session(conversationId),
                             serverName: serverName,
                             toolName: toolName
                         )
                     )
                 )
-            },
-            SplitButtonMenuItem(title: "Allow tools from \(serverName) in this session") {
+            }
+        )
+
+        items.append(
+            SplitButtonMenuItem(title: "Always Allow \(toolName)") {
+                chat.send(
+                    .toolCallAcceptedWithApproval(
+                        tool.id,
+                        .mcpTool(
+                            scope: .global,
+                            serverName: serverName,
+                            toolName: toolName
+                        )
+                    )
+                )
+            }
+        )
+
+        items.append(.divider())
+
+        items.append(
+            SplitButtonMenuItem(title: "Allow tools from \(serverName) in this Session") {
                 chat.send(
                     .toolCallAcceptedWithApproval(
                         tool.id,
                         .mcpServer(
-                            conversationId: conversationId,
+                            scope: .session(conversationId),
                             serverName: serverName
                         )
                     )
                 )
-            },
-        ]
+            }
+        )
+
+        items.append(
+            SplitButtonMenuItem(title: "Always Allow tools from \(serverName)") {
+                chat.send(
+                    .toolCallAcceptedWithApproval(
+                        tool.id,
+                        .mcpServer(
+                            scope: .global,
+                            serverName: serverName
+                        )
+                    )
+                )
+            }
+        )
+
+        items.append(.divider())
+
+        items.append(
+            SplitButtonMenuItem(title: "Configure Auto Approve...") {
+                chat.send(.openAutoApproveSettings)
+            }
+        )
+
+        return items
     }
 
     @available(macOS 13.0, *)

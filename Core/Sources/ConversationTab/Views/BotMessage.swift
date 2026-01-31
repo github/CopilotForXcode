@@ -187,7 +187,7 @@ struct BotMessage: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(attributedString)
                             
-                            if errorMessages[index] == HardCodedToolRoundExceedErrorMessage {
+                            if isSettingsActionableError(errorMessages[index]) {
                                 Button(action: {
                                     Task {
                                         try? launchHostAppAdvancedSettings()
@@ -205,6 +205,11 @@ struct BotMessage: View {
         .scaledPadding(.vertical, 4)
     }
     
+    private func isSettingsActionableError(_ message: String) -> Bool {
+        message == HardCodedToolRoundExceedErrorMessage ||
+        message == SSLCertificateErrorMessage
+    }
+
     private func shouldShowTurnStatus() -> Bool {
         guard isLatestAssistantMessage() else {
             return false

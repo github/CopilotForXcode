@@ -58,7 +58,7 @@ public struct ChatPanel: View {
                 if chat.fileEditMap.count > 0 {
                     WorkingSetView(chat: chat)
                         .dimWithExitEditMode(chat)
-                        .scaledPadding(.horizontal, 16)
+                        .scaledPadding(.horizontal, 24)
                 }
                 
                 ChatPanelInputArea(chat: chat, r: r, editorMode: .input)

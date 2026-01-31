@@ -2,6 +2,7 @@ import ConversationServiceProvider
 import Foundation
 import JSONRPC
 import LanguageServerProtocol
+import Preferences
 import Status
 import SuggestionBasic
 
@@ -99,11 +100,66 @@ public func editorConfiguration(includeMCP: Bool) -> JSONValue {
         let agentMaxToolCallingLoop = Double(UserDefaults.shared.value(for: \.agentMaxToolCallingLoop))
         d["maxToolCallingLoop"] = .number(agentMaxToolCallingLoop)
 
-        let enableAutoApproval = UserDefaults.shared.value(for: \.enableAutoApproval)
+        // Auto Approval Settings
+        // Disable auto approval (yolo mode)
+        let enableAutoApproval = false
         d["toolConfirmAutoApprove"] = .bool(enableAutoApproval)
 
         let trustToolAnnotations = UserDefaults.shared.value(for: \.trustToolAnnotations)
         d["trustToolAnnotations"] = .bool(trustToolAnnotations)
+
+        let state = UserDefaults.autoApproval.value(for: \.sensitiveFilesGlobalApprovals)
+        var autoApproveList: [JSONValue] = []
+        for (key, rule) in state.rules {
+            let item: [String: JSONValue] = [
+                "pattern": .string(key),
+                "autoApprove": .bool(rule.autoApprove),
+                "description": .string(rule.description)
+            ]
+            autoApproveList.append(.hash(item))
+        }
+
+        var tools: [String: JSONValue] = [:]
+        
+        if !autoApproveList.isEmpty {
+            tools["edit"] = .hash([
+                "autoApprove": .array(autoApproveList)
+            ])
+        }
+
+        let mcpGlobalApprovals = UserDefaults.autoApproval.value(for: \.mcpServersGlobalApprovals)
+        var mcpAutoApproveList: [JSONValue] = []
+        
+        for (serverName, state) in mcpGlobalApprovals.servers {
+            let item: [String: JSONValue] = [
+                "serverName": .string(serverName),
+                "isServerAllowed": .bool(state.isServerAllowed),
+                "allowedTools": .array(state.allowedTools.map { .string($0) })
+            ]
+            mcpAutoApproveList.append(.hash(item))
+        }
+
+        if !mcpAutoApproveList.isEmpty {
+            tools["mcp"] = .hash([
+                "autoApprove": .array(mcpAutoApproveList)
+            ])
+        }
+
+        let terminalState = UserDefaults.autoApproval.value(for: \.terminalCommandsGlobalApprovals)
+        var terminalAutoApprove: [String: JSONValue] = [:]
+        for (command, approved) in terminalState.commands {
+            terminalAutoApprove[command] = .bool(approved)
+        }
+        
+        if !terminalAutoApprove.isEmpty {
+            tools["terminal"] = .hash([
+                "autoApprove": .hash(terminalAutoApprove)
+            ])
+        }
+
+        if !tools.isEmpty {
+            d["tools"] = .hash(tools)
+        }
 
         return .hash(d)
     }
