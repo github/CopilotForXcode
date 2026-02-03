@@ -1,4 +1,4 @@
-# <img align="center" height="70" src="./Docs/Images/AppIcon.png"/> GitHub Copilot for Xcode
+	#=# <img align="center" height="70" src="./Docs/Images/AppIcon.png"/> GitHub Copilot for Xcode
 
 [GitHub Copilot](https://github.com/features/copilot) for Xcode is the leading AI coding assistant for Swift, Objective-C and iOS/macOS development. It delivers intelligent Completions, Chat, and Code Review—plus advanced features like Agent Mode, Next Edit Suggestions, MCP Registry, and Copilot Vision to make Xcode development faster and smarter.
 
