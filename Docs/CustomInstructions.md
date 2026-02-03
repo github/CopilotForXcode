@@ -23,6 +23,7 @@ GitHub Copilot for Xcode supports two types of Markdown-based instructions files
 Whitespace between instructions is ignored, so the instructions can be written as a single paragraph, each on a new line, or separated by blank lines for legibility.
 
 Reference specific context, such as files or URLs, in your instructions by using Markdown links.
+You need to import `.github/` directory and all referenced files inside your xcode project/workspace if your instructions are pointing to extra files.
 
 ## Custom instructions examples
 
