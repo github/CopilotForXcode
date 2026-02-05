@@ -100,7 +100,7 @@ public struct AXHelper {
     }
     
     public static func scrollSourceEditorToLine(_ lineNumber: Int, content: String, focusedElement: AXUIElement) {
-        guard focusedElement.isSourceEditor,
+        guard focusedElement.isNonNavigatorSourceEditor,
               let scrollBar = focusedElement.parent?.verticalScrollBar,
               let linePosition = Self.getScrollPositionForLine(lineNumber, content: content)
         else { return }

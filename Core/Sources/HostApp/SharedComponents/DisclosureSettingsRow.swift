@@ -23,7 +23,7 @@ public struct DisclosureSettingsRow<Title: View, Subtitle: View, Actions: View>:
         onToggle: ((Bool, Bool) -> Void)? = nil,
         @ViewBuilder title: @escaping () -> Title,
         @ViewBuilder subtitle: @escaping (() -> Subtitle) = { EmptyView() },
-        @ViewBuilder actions: @escaping () -> Actions
+        @ViewBuilder actions: @escaping () -> Actions = { EmptyView() }
     ) {
         _isExpanded = isExpanded
         self.isEnabled = isEnabled

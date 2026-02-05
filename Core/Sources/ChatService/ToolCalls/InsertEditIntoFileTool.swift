@@ -250,7 +250,8 @@ extension InsertEditIntoFileTool {
             }
             
             if let focusedElement = XcodeInspector.shared.focusedElement,
-               focusedElement.isSourceEditor,
+               focusedElement.isNonNavigatorSourceEditor,
+               focusedElement.realtimeDocumentURL == fileURL,
                focusedElement.value != diskFileContent
             {
                 throw InsertEditError.fileHasUnsavedChanges(fileURL)

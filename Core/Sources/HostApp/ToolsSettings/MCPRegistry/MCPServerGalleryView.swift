@@ -297,13 +297,17 @@ struct MCPServerGalleryView: View {
                                     await viewModel.installServer(response.server)
                                 }
                             },
-                            menuItems: viewModel.getInstallationOptions(for: response.server).map { option in
-                                SplitButtonMenuItem(title: option.displayName) {
-                                    Task {
-                                        await viewModel.installServer(response.server, configuration: option.displayName)
+                            menuItems: {
+                                let options = viewModel.getInstallationOptions(for: response.server)
+                                guard !options.isEmpty else { return [] }
+                                return [SplitButtonMenuItem.header("Install Server With")] + options.map { option in
+                                    SplitButtonMenuItem(title: option.displayName) {
+                                        Task {
+                                            await viewModel.installServer(response.server, configuration: option.displayName)
+                                        }
                                     }
                                 }
-                            }
+                            }()
                         )
                         .help("Install")
                     } else {

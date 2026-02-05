@@ -506,16 +506,16 @@ public enum ServerStatus: String, Codable {
 }
 
 public struct OfficialMeta: Codable {
-    public let status: ServerStatus
-    public let publishedAt: String
-    public let updatedAt: String
-    public let isLatest: Bool
+    public let status: ServerStatus?
+    public let publishedAt: String?
+    public let updatedAt: String?
+    public let isLatest: Bool?
     
     public init(
-        status: ServerStatus,
-        publishedAt: String,
-        updatedAt: String,
-        isLatest: Bool
+        status: ServerStatus? = nil,
+        publishedAt: String? = nil,
+        updatedAt: String? = nil,
+        isLatest: Bool? = nil
     ) {
         self.status = status
         self.publishedAt = publishedAt
@@ -566,7 +566,7 @@ public struct MCPRegistryExtensionMeta: Codable {
 }
 
 public struct ServerMeta: Codable {
-    public let official: OfficialMeta
+    public let official: OfficialMeta?
     private let additionalProperties: [String: AnyCodable]?
 
     enum CodingKeys: String, CodingKey {
@@ -574,7 +574,7 @@ public struct ServerMeta: Codable {
     }
     
     public init(
-        official: OfficialMeta,
+        official: OfficialMeta? = nil,
         additionalProperties: [String: AnyCodable]? = nil
     ) {
         self.official = official
@@ -688,9 +688,9 @@ public struct MCPRegistryServerDetail: Codable {
 
 public struct MCPRegistryServerResponse : Codable {
     public let server: MCPRegistryServerDetail
-    public let meta: ServerMeta
+    public let meta: ServerMeta?
 
-    public init(server: MCPRegistryServerDetail, meta: ServerMeta) {
+    public init(server: MCPRegistryServerDetail, meta: ServerMeta? = nil) {
         self.server = server
         self.meta = meta
     }

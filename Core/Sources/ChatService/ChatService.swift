@@ -149,30 +149,7 @@ public final class ChatService: ChatServiceType, ObservableObject {
 
     private func subscribeToClientToolConfirmationEvent() {
         ClientToolHandlerImpl.shared.onClientToolConfirmationEvent.sink(receiveValue: { [weak self] (request, completion) in
-            guard let params = request.params else { return }
-            
-            // Check if this conversationId is valid (main conversation or subagent conversation)
-            guard let validIds = self?.conversationTurnTracking.validConversationIds, validIds.contains(params.conversationId) else {
-                return
-            }
-            
-            let parentTurnId = self?.conversationTurnTracking.turnParentMap[params.turnId]
-            
-            let editAgentRounds: [AgentRound] = [
-                AgentRound(roundId: params.roundId,
-                           reply: "",
-                           toolCalls: [
-                            AgentToolCall(id: params.toolCallId, name: params.name, status: .waitForConfirmation, invokeParams: params, title: params.title)
-                           ]
-                          )
-            ]
-            self?.appendToolCallHistory(turnId: params.turnId, editAgentRounds: editAgentRounds, parentTurnId: parentTurnId)
-            self?.pendingToolCallRequests[params.toolCallId] = ToolCallRequest(
-                requestId: request.id,
-                turnId: params.turnId,
-                roundId: params.roundId,
-                toolCallId: params.toolCallId,
-                completion: completion)
+            self?.handleClientToolConfirmationEvent(request: request, completion: completion)
         }).store(in: &cancellables)
     }
 
@@ -298,9 +275,23 @@ public final class ChatService: ChatServiceType, ObservableObject {
     }
     
     // MARK: - Helper Methods for Tool Call Status Updates
+
+    /// Returns true if the `conversationId` belongs to the active conversation or any subagent conversations.
+    func isConversationIdValid(_ conversationId: String) -> Bool {
+        conversationTurnTracking.validConversationIds.contains(conversationId)
+    }
+
+    /// Workaround: toolConfirmation request does not have parent turnId.
+    func parentTurnIdForTurnId(_ turnId: String) -> String? {
+        conversationTurnTracking.turnParentMap[turnId]
+    }
+
+    func storePendingToolCallRequest(toolCallId: String, request: ToolCallRequest) {
+        pendingToolCallRequests[toolCallId] = request
+    }
     
     /// Sends the confirmation response (accept/dismiss) back to the server
-    private func sendToolConfirmationResponse(_ request: ToolCallRequest, accepted: Bool) {
+    func sendToolConfirmationResponse(_ request: ToolCallRequest, accepted: Bool) {
         let toolResult = LanguageModelToolConfirmationResult(
             result: accepted ? .Accept : .Dismiss
         )
@@ -450,8 +441,17 @@ public final class ChatService: ChatServiceType, ObservableObject {
         
         self.lastUserRequest = request
         self.skillSet = validSkillSet
-        if let response = try await sendConversationRequest(request) {
-            await handleConversationCreateResponse(response)
+        
+        do {
+            if let response = try await sendConversationRequest(request) {
+                await handleConversationCreateResponse(response)
+            }
+        } catch {
+            // Check if this is a certificate error and show helpful message
+            if isCertificateError(error) {
+                await showCertificateErrorMessage(turnId: currentTurnId)
+            }
+            throw error
         }
     }
     
@@ -1026,6 +1026,44 @@ public final class ChatService: ChatServiceType, ObservableObject {
                 Logger.client.error("Failed to delete turn: \(error)")
             }
         }
+    }
+    
+    // MARK: - Certificate Error Detection
+    
+    /// Checks if an error is related to SSL certificate issues
+    private func isCertificateError(_ error: Error) -> Bool {
+        let errorDescription = error.localizedDescription.lowercased()
+        
+        // Check for certificate error messages
+        if errorDescription.contains("unable to get local issuer certificate") ||
+           errorDescription.contains("self-signed certificate in certificate chain") ||
+           errorDescription.contains("unable_to_get_issuer_cert_locally") {
+            return true
+        }
+        
+        // Check GitHubCopilotError with ServerError
+        if let serverError = error as? ServerError,
+            case .serverError(_, let message, _) = serverError {
+                let serverMessage = message.lowercased()
+                if serverMessage.contains("unable to get local issuer certificate") ||
+                   serverMessage.contains("self-signed certificate in certificate chain") {
+                    return true
+            }
+        }
+        
+        return false
+    }
+    
+    private func showCertificateErrorMessage(turnId: String?) async {
+        let messageId = turnId ?? UUID().uuidString
+        let errorMessage = ChatMessage(
+            errorMessageWithId: messageId,
+            chatTabID: chatTabInfo.id,
+            errorMessages: [
+                SSLCertificateErrorMessage
+            ]
+        )
+        await memory.appendMessage(errorMessage)
     }
 }
 

@@ -54,12 +54,7 @@ struct ChatSection: View {
                         ),
                         badge: copilotPolicy.isSubagentEnabled 
                             ? nil 
-                            : BadgeItem(
-                                text: "Disabled by organization policy",
-                                level: .warning,
-                                icon: "exclamationmark.triangle.fill",
-                                tooltip: "Subagents are disabled by your organization's policy. Please contact your administrator to enable them."
-                            )
+                            : .disabledByPolicy(feature: "Subagents", isPlural: true)
                     )
                     .disabled(!copilotPolicy.isSubagentEnabled)
 

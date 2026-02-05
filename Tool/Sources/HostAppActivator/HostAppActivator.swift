@@ -9,6 +9,8 @@ public extension Notification.Name {
         .Name("com.github.CopilotForXcode.OpenSettingsWindowRequest")
     static let openToolsSettingsWindowRequest = Notification
         .Name("com.github.CopilotForXcode.OpenToolsSettingsWindowRequest")
+    static let openToolsSettingsAutoApproveWindowRequest = Notification
+        .Name("com.github.CopilotForXcode.OpenToolsSettingsAutoApproveWindowRequest")
     static let openBYOKSettingsWindowRequest = Notification
         .Name("com.github.CopilotForXcode.OpenBYOKSettingsWindowRequest")
     static let openAdvancedSettingsWindowRequest = Notification
@@ -86,6 +88,27 @@ public func launchHostAppToolsSettings(currentAgentSubMode: String) throws {
     } else {
         // If app is not running, launch it with the settings flag
         try launchHostAppWithArgs(args: ["--tools"])
+    }
+}
+
+public func launchHostAppToolsSettingsAutoApprove() throws {
+    // Try the AppleScript approach first, but only if app is already running
+    if let hostApp = getRunningHostApp() {
+        let activated = hostApp.activate(options: [.activateIgnoringOtherApps])
+        Logger.ui.info("\(hostAppName()) activated: \(activated)")
+
+        _ = tryLaunchWithAppleScript()
+        
+        DistributedNotificationCenter.default().postNotificationName(
+            .openToolsSettingsAutoApproveWindowRequest,
+            object: nil
+        )
+        
+        Logger.ui.info("\(hostAppName()) MCP settings (Auto-Approve) notification sent after activation")
+        return
+    } else {
+        // If app is not running, launch it with the settings flag
+        try launchHostAppWithArgs(args: ["--tools-auto-approve"])
     }
 }
 

@@ -107,6 +107,7 @@ public enum RequestType: String, Equatable, Codable {
 }
 
 public let HardCodedToolRoundExceedErrorMessage: String = "Oops, maximum tool attempts reached. You can update the max tool requests in settings."
+public let SSLCertificateErrorMessage: String = "Unable to verify the SSL certificate. This often happens in enterprise environments with custom certificates. Try disabling **Proxy strict SSL** in the Proxy Settings."
 
 public struct ChatMessage: Equatable, Codable {
     public typealias ID = String

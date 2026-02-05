@@ -17,7 +17,8 @@ public class CopilotPolicyManager: ObservableObject {
     @Published public private(set) var isCustomAgentEnabled = true
     @Published public private(set) var isSubagentEnabled = true
     @Published public private(set) var isCVERemediatorAgentEnabled = true
-    
+    @Published public private(set) var isAgentModeAutoApprovalEnabled = true
+
     // MARK: - Private Properties
     
     private var cancellables = Set<AnyCancellable>()
@@ -74,7 +75,8 @@ public class CopilotPolicyManager: ObservableObject {
             isCustomAgentEnabled = policy.customAgentEnabled
             isSubagentEnabled = policy.subagentEnabled
             isCVERemediatorAgentEnabled = policy.cveRemediatorAgentEnabled
-            
+            isAgentModeAutoApprovalEnabled = policy.agentModeAutoApprovalEnabled
+
             Logger.client.info("Copilot policy updated: customAgent=\(policy.customAgentEnabled), mcp=\(policy.mcpContributionPointEnabled), subagent=\(policy.subagentEnabled)")
         } catch {
             Logger.client.error("Failed to update copilot policy: \(error.localizedDescription)")

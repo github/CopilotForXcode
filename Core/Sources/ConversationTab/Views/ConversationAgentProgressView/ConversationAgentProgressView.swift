@@ -1,15 +1,16 @@
-import SwiftUI
-import ConversationServiceProvider
-import ComposableArchitecture
-import Combine
-import ChatTab
 import ChatService
+import ChatTab
+import Combine
+import ComposableArchitecture
+import ConversationServiceProvider
+import GitHubCopilotService
 import SharedUIComponents
+import SwiftUI
 
 struct ProgressAgentRound: View {
     let rounds: [AgentRound]
     let chat: StoreOf<Chat>
-    
+
     var body: some View {
         WithPerceptionTracking {
             VStack(alignment: .leading, spacing: 8) {
@@ -33,9 +34,9 @@ struct ProgressAgentRound: View {
 struct SubAgentRounds: View {
     let rounds: [AgentRound]
     let chat: StoreOf<Chat>
-    
+
     @Environment(\.colorScheme) var colorScheme
-    
+
     var body: some View {
         WithPerceptionTracking {
             VStack(alignment: .leading, spacing: 8) {
@@ -59,12 +60,12 @@ struct SubAgentRounds: View {
 struct ProgressToolCalls: View {
     let tools: [AgentToolCall]
     let chat: StoreOf<Chat>
-    
+
     var body: some View {
         WithPerceptionTracking {
             VStack(alignment: .leading, spacing: 4) {
                 ForEach(tools) { tool in
-                    if tool.name == ToolName.runInTerminal.rawValue && tool.invokeParams != nil {
+                    if tool.name == ToolName.runInTerminal.rawValue && (tool.invokeParams != nil || tool.input != nil) {
                         RunInTerminalToolView(tool: tool, chat: chat)
                     } else if tool.invokeParams != nil && tool.status == .waitForConfirmation {
                         ToolConfirmationView(tool: tool, chat: chat)
@@ -85,6 +86,221 @@ struct ToolConfirmationView: View {
 
     @AppStorage(\.chatFontSize) var chatFontSize
 
+    private var toolName: String { tool.name }
+    private var titleText: String { tool.title ?? "" }
+    private var mcpServerName: String? { ToolAutoApprovalManager.extractMCPServerName(from: titleText) }
+    private var conversationId: String { tool.invokeParams?.conversationId ?? "" }
+    private var invokeMessage: String { tool.invokeParams?.message ?? "" }
+    private var isSensitiveFileOperation: Bool { ToolAutoApprovalManager.isSensitiveFileOperation(message: invokeMessage) }
+    private var sensitiveFileInfo: ToolAutoApprovalManager.SensitiveFileConfirmationInfo {
+        ToolAutoApprovalManager.extractSensitiveFileConfirmationInfo(from: invokeMessage)
+    }
+
+    private var shouldShowMCPSplitButton: Bool { mcpServerName != nil && !conversationId.isEmpty }
+    private var shouldShowSensitiveFileSplitButton: Bool {
+        mcpServerName == nil && isSensitiveFileOperation && !conversationId.isEmpty
+    }
+
+    @ViewBuilder
+    private var confirmationActionView: some View {
+        if #available(macOS 13.0, *),
+           FeatureFlagNotifierImpl.shared.featureFlags.agentModeAutoApproval &&
+           CopilotPolicyNotifierImpl.shared.copilotPolicy.agentModeAutoApprovalEnabled {
+            if tool.isToolcallingLoopContinueTool {
+                continueButton
+            } else if shouldShowSensitiveFileSplitButton {
+                sensitiveFileSplitButton
+            } else if shouldShowMCPSplitButton, let serverName = mcpServerName {
+                mcpSplitButton(serverName: serverName)
+            } else {
+                allowButton
+            }
+        } else {
+            legacyAllowOrContinueButton
+        }
+    }
+
+    private var continueButton: some View {
+        Button(action: {
+            chat.send(.toolCallAccepted(tool.id))
+        }) {
+            Text("Continue")
+                .scaledFont(.body)
+        }
+        .buttonStyle(.borderedProminent)
+    }
+
+    private var allowButton: some View {
+        Button(action: {
+            chat.send(.toolCallAccepted(tool.id))
+        }) {
+            Text("Allow")
+                .scaledFont(.body)
+        }
+        .buttonStyle(.borderedProminent)
+    }
+
+    private var legacyAllowOrContinueButton: some View {
+        Button(action: {
+            chat.send(.toolCallAccepted(tool.id))
+        }) {
+            Text(tool.isToolcallingLoopContinueTool ? "Continue" : "Allow")
+                .scaledFont(.body)
+        }
+        .buttonStyle(.borderedProminent)
+    }
+
+    @available(macOS 13.0, *)
+    private var sensitiveFileMenuItems: [SplitButtonMenuItem] {
+        var items: [SplitButtonMenuItem] = []
+
+        items.append(
+            SplitButtonMenuItem(title: "Allow in this Session") {
+                chat.send(
+                    .toolCallAcceptedWithApproval(
+                        tool.id,
+                        .sensitiveFile(
+                            scope: .session(conversationId),
+                            toolName: toolName,
+                            description: sensitiveFileInfo.description,
+                            pattern: sensitiveFileInfo.pattern
+                        )
+                    )
+                )
+            }
+        )
+
+        let defaultPatterns = ["**/.github/instructions/*", "**/github-copilot/**/*", "outside-workspace"]
+
+        if let pattern = sensitiveFileInfo.pattern, !pattern.isEmpty, !defaultPatterns.contains(pattern) {
+            items.append(
+                SplitButtonMenuItem(title: "Always Allow") {
+                    chat.send(
+                        .toolCallAcceptedWithApproval(
+                            tool.id,
+                            .sensitiveFile(
+                                scope: .global,
+                                toolName: toolName,
+                                description: sensitiveFileInfo.description,
+                                pattern: pattern
+                            )
+                        )
+                    )
+                }
+            )
+        }
+
+        items.append(.divider())
+        items.append(
+            SplitButtonMenuItem(title: "Configure Auto Approve...") {
+                chat.send(.openAutoApproveSettings)
+            }
+        )
+
+        return items
+    }
+
+    @available(macOS 13.0, *)
+    private var sensitiveFileSplitButton: some View {
+        SplitButton(
+            title: "Allow",
+            isDisabled: false,
+            primaryAction: {
+                chat.send(.toolCallAccepted(tool.id))
+            },
+            menuItems: sensitiveFileMenuItems,
+            style: .prominent
+        )
+    }
+
+    @available(macOS 13.0, *)
+    private func mcpMenuItems(serverName: String) -> [SplitButtonMenuItem] {
+        var items: [SplitButtonMenuItem] = []
+
+        items.append(
+            SplitButtonMenuItem(title: "Allow \(toolName) in this Session") {
+                chat.send(
+                    .toolCallAcceptedWithApproval(
+                        tool.id,
+                        .mcpTool(
+                            scope: .session(conversationId),
+                            serverName: serverName,
+                            toolName: toolName
+                        )
+                    )
+                )
+            }
+        )
+
+        items.append(
+            SplitButtonMenuItem(title: "Always Allow \(toolName)") {
+                chat.send(
+                    .toolCallAcceptedWithApproval(
+                        tool.id,
+                        .mcpTool(
+                            scope: .global,
+                            serverName: serverName,
+                            toolName: toolName
+                        )
+                    )
+                )
+            }
+        )
+
+        items.append(.divider())
+
+        items.append(
+            SplitButtonMenuItem(title: "Allow tools from \(serverName) in this Session") {
+                chat.send(
+                    .toolCallAcceptedWithApproval(
+                        tool.id,
+                        .mcpServer(
+                            scope: .session(conversationId),
+                            serverName: serverName
+                        )
+                    )
+                )
+            }
+        )
+
+        items.append(
+            SplitButtonMenuItem(title: "Always Allow tools from \(serverName)") {
+                chat.send(
+                    .toolCallAcceptedWithApproval(
+                        tool.id,
+                        .mcpServer(
+                            scope: .global,
+                            serverName: serverName
+                        )
+                    )
+                )
+            }
+        )
+
+        items.append(.divider())
+
+        items.append(
+            SplitButtonMenuItem(title: "Configure Auto Approve...") {
+                chat.send(.openAutoApproveSettings)
+            }
+        )
+
+        return items
+    }
+
+    @available(macOS 13.0, *)
+    private func mcpSplitButton(serverName: String) -> some View {
+        SplitButton(
+            title: "Allow",
+            isDisabled: false,
+            primaryAction: {
+                chat.send(.toolCallAccepted(tool.id))
+            },
+            menuItems: mcpMenuItems(serverName: serverName),
+            style: .prominent
+        )
+    }
+
     var body: some View {
         WithPerceptionTracking {
             VStack(alignment: .leading, spacing: 8) {
@@ -104,15 +320,8 @@ struct ToolConfirmationView: View {
                         Text(tool.isToolcallingLoopContinueTool ? "Cancel" : "Skip")
                             .scaledFont(.body)
                     }
-                    
-                    Button(action: {
-                        chat.send(.toolCallAccepted(tool.id))
-                    }) {
-                        Text(tool.isToolcallingLoopContinueTool ? "Continue" : "Allow")
-                            .scaledFont(.body)
-                    }
-                    .buttonStyle(BorderedProminentButtonStyle())
-                    
+
+                    confirmationActionView
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .scaledPadding(.top, 4)
@@ -132,7 +341,7 @@ struct ToolConfirmationTitleView: View {
     var fontWeight: Font.Weight = .regular
 
     @AppStorage(\.chatFontSize) var chatFontSize
-    
+
     var body: some View {
         HStack(spacing: 4) {
             Text(title)
@@ -190,9 +399,9 @@ struct ProgressAgentRound_Preview: PreviewProvider {
                 id: "toolcall_002",
                 name: "Tool Call 2",
                 progressMessage: "Running Tool Call 2",
-                status: .running)
-            ])
-        ]
+                status: .running),
+        ]),
+    ]
 
     static var previews: some View {
         let chatTabInfo = ChatTabInfo(id: "id", workspacePath: "path", username: "name")

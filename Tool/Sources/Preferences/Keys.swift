@@ -624,3 +624,27 @@ public extension UserDefaultPreferenceKeys {
         .init(defaultValue: [], key: "MCPRegistryBaseURLHistory")
     }
 }
+
+// MARK: - Auto Approval
+public extension UserDefaultPreferenceKeys {
+
+    var enableAutoApproval: PreferenceKey<Bool> {
+        .init(defaultValue: false, key: "EnableAutoApproval")
+    }
+
+    var trustToolAnnotations: PreferenceKey<Bool> {
+        .init(defaultValue: false, key: "TrustToolAnnotations")
+    }
+
+    var sensitiveFilesGlobalApprovals: PreferenceKey<SensitiveFilesRules> {
+        .init(defaultValue: SensitiveFilesRules(), key: "AutoApproval_SensitiveFiles_GlobalApprovals")
+    }
+
+    var mcpServersGlobalApprovals: PreferenceKey<AutoApprovedMCPServers> {
+        .init(defaultValue: AutoApprovedMCPServers(), key: "AutoApproval_MCP_GlobalApprovals")
+    }
+
+    var terminalCommandsGlobalApprovals: PreferenceKey<TerminalCommandsRules> {
+        .init(defaultValue: TerminalCommandsRules(), key: "AutoApproval_Terminal_GlobalApprovals")
+    }
+}

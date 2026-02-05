@@ -7,7 +7,7 @@ import Foundation
 @available(macOS 13.0, *)
 struct MCPServerDetailSheet: View {
     let server: MCPRegistryServerDetail
-    let meta: ServerMeta
+    let meta: ServerMeta?
     @State private var selectedTab = TabType.Packages
     @State private var expandedPackages: Set<Int> = []
     @State private var expandedRemotes: Set<Int> = []
@@ -101,8 +101,8 @@ struct MCPServerDetailSheet: View {
                 Text(server.title ?? server.name)
                     .font(.system(size: 18, weight: .semibold))
                 
-                if meta.official.status == .deprecated {
-                    statusBadge(meta.official.status)
+                if let status = meta?.official?.status, status == .deprecated {
+                    statusBadge(status)
                 }
                 
                 Spacer()
@@ -115,10 +115,14 @@ struct MCPServerDetailSheet: View {
                 }
                 .font(.system(size: 12, design: .monospaced))
                 .foregroundColor(.secondary)
-                
-                dateMetadataTag(title: "Published ", dateString: meta.official.publishedAt, image: "clock.arrow.trianglehead.counterclockwise.rotate.90")
 
-                dateMetadataTag(title: "Updated ", dateString: meta.official.updatedAt, image: "icloud.and.arrow.up")
+                if let publishedAt = meta?.official?.publishedAt {
+                    dateMetadataTag(title: "Published ", dateString: publishedAt, image: "clock.arrow.trianglehead.counterclockwise.rotate.90")
+                }
+
+                if let updatedAt = meta?.official?.updatedAt {
+                    dateMetadataTag(title: "Updated ", dateString: updatedAt, image: "icloud.and.arrow.up")
+                }
 
                 if let repo = server.repository, !repo.url.isEmpty, !repo.source.isEmpty {
                     if let repoURL = URL(string: repo.url) {  
@@ -175,8 +179,10 @@ struct MCPServerDetailSheet: View {
                     .tag(TabType.Packages)
                 Text("Remotes (\(server.remotes?.count ?? 0))")
                     .tag(TabType.Remotes)
-                Text("Metadata")
-                    .tag(TabType.Metadata)
+                if meta?.official != nil {
+                    Text("Metadata")
+                        .tag(TabType.Metadata)
+                }
             }
             .pickerStyle(.segmented)
         }
@@ -292,7 +298,9 @@ struct MCPServerDetailSheet: View {
     
     private var metadataTab: some View {
         VStack(alignment: .leading, spacing: 16) {
-            officialMetadataSection(meta.official)
+            if let officialMeta = meta?.official {
+                officialMetadataSection(officialMeta)
+            }
         }
     }
     
@@ -304,18 +312,23 @@ struct MCPServerDetailSheet: View {
             }
             
             VStack(alignment: .leading, spacing: 8) {
-                metadataRow(
-                    label: "Published",
-                    value: parseDate(official.publishedAt) != nil ? formatExactDate(
-                        parseDate(official.publishedAt)!
-                    ) : official.publishedAt
-                )
-                metadataRow(
-                    label: "Updated",
-                    value: parseDate(official.updatedAt) != nil ? formatExactDate(
-                        parseDate(official.updatedAt)!
-                    ) : official.updatedAt
-                )
+                if let publishedAt = official.publishedAt {
+                    metadataRow(
+                        label: "Published",
+                        value: parseDate(publishedAt) != nil ? formatExactDate(
+                            parseDate(publishedAt)!
+                        ) : publishedAt
+                    )
+                }
+
+                if let updatedAt = official.updatedAt {
+                    metadataRow(
+                        label: "Updated",
+                        value: parseDate(updatedAt) != nil ? formatExactDate(
+                            parseDate(updatedAt)!
+                        ) : updatedAt
+                    )
+                }
             }
         }
         .padding(16)

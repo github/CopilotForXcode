@@ -12,6 +12,7 @@ import OrderedCollections
 import SwiftUI
 import GitHelper
 import SuggestionBasic
+import HostAppActivator
 
 public struct DisplayedChatMessage: Equatable {
     public enum Role: Equatable {
@@ -581,6 +582,7 @@ struct Chat {
         case copyCode(MessageID)
         case insertCode(String)
         case toolCallAccepted(String)
+        case toolCallAcceptedWithApproval(String, ToolAutoApprovalManager.AutoApproval?)
         case toolCallCompleted(String, String)
         case toolCallCancelled(String)
 
@@ -637,6 +639,8 @@ struct Chat {
         case undoCheckPoint // Revert the restore
         case discardCheckPoint
         case reloadWorkingset(DisplayedChatMessage)
+
+        case openAutoApproveSettings
     }
 
     let service: ChatService
@@ -760,6 +764,17 @@ struct Chat {
                 return .run { _ in
                     service.updateToolCallStatus(toolCallId: toolCallId, status: .accepted)
                 }.cancellable(id: CancelID.sendMessage(self.id))
+
+            case let .toolCallAcceptedWithApproval(toolCallId, approval):
+                guard !toolCallId.isEmpty else { return .none }
+                return .run { send in
+                    if let approval {
+                        await ToolAutoApprovalManager.shared.approve(approval)
+                    }
+
+                    await send(.toolCallAccepted(toolCallId))
+                }.cancellable(id: CancelID.sendMessage(self.id))
+
             case let .toolCallCancelled(toolCallId):
                 guard !toolCallId.isEmpty else { return .none }
                 return .run { _ in
@@ -1414,6 +1429,11 @@ struct Chat {
                     for fileEdit in message.fileEdits {
                         service.updateFileEdits(by: fileEdit)
                     }
+                }
+
+            case .openAutoApproveSettings:
+                return .run { _ in
+                    try launchHostAppToolsSettingsAutoApprove()
                 }
             }
         }
