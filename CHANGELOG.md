@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.47.0 - February 4, 2026
+### Added
+- Auto approval for MCP tools, sensitive files, and terminal commands.
+- MCP registry and allowlist are now available (requires editor preview feature flag).
+
+### Changed
+- Improved UI for MCP tool call details.
+- Improved UI for working set header.
+
+### Fixed
+- Fixed toolcall layout issue.
+- Fixed NES display issue.
+- Fixed error message for SSL certificate errors.
+- Fixed several performance issues.
+
 ## 0.46.0 - December 11, 2025
 ### Added
 - MCP: Support delete MCP server from list.
