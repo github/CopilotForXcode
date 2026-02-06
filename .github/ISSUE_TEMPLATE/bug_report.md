@@ -1,4 +1,4 @@
----
+=(---
 name: Bug report
 about: Create a report to help us improve GitHub Copilot for Xcode
 ---
@@ -24,4 +24,4 @@ about: Create a report to help us improve GitHub Copilot for Xcode
 <!-- Attach relevant logs from `~/Library/Logs/GitHubCopilot/` -->
 
 **Additional context**
-<!-- Add any other context about the problem here. -->
+<!-- Add any other context about the problem here. -->(
