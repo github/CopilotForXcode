@@ -54,4 +54,3 @@ public extension EnvironmentValues {
         set { self[ChatTabPoolEnvironmentKey.self] = newValue }
     }
 }
-
