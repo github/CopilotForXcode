@@ -1,4 +1,4 @@
----
+.=s#=#---
 name: Bug report
 about: Create a report to help us improve GitHub Copilot for Xcode
 ---
