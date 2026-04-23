@@ -20,7 +20,8 @@ public struct SuggestionInjector {
         cursorPosition: inout CursorPosition,
         completion: CodeSuggestion,
         extraInfo: inout ExtraInfo,
-        suggestionLineLimit: Int? = nil
+        suggestionLineLimit: Int? = nil,
+        isNES: Bool = false
     ) {
         extraInfo.didChangeContent = true
         extraInfo.didChangeCursorPosition = true
@@ -76,6 +77,35 @@ public struct SuggestionInjector {
                 contentsOf: leftover,
                 at: toBeInserted[0].startIndex
             )
+        }
+        
+        // appending suffix text not in range if needed.
+        if isNES,
+           let lastRemovedLine,
+           !lastRemovedLine.isEmptyOrNewLine,
+           end.character >= 0,
+           end.character < lastRemovedLine.count,
+           !toBeInserted.isEmpty
+        {
+            let suffixStartIndex = lastRemovedLine.utf16.index(
+                lastRemovedLine.utf16.startIndex,
+                offsetBy: end.character,
+                limitedBy: lastRemovedLine.utf16.endIndex
+            ) ?? lastRemovedLine.utf16.endIndex
+            var suffix = String(lastRemovedLine[suffixStartIndex...])
+            if suffix.last?.isNewline ?? false {
+                suffix.removeLast(1)
+            }
+            let lastIndex = toBeInserted.endIndex - 1
+            var lastLine = toBeInserted[lastIndex]
+            if lastLine.last?.isNewline ?? false {
+                lastLine.removeLast(1)
+                lastLine.append(contentsOf: suffix)
+                lastLine.append(lineEnding)
+            } else {
+                lastLine.append(contentsOf: suffix)
+            }
+            toBeInserted[lastIndex] = lastLine
         }
 
         let recoveredSuffixLength = recoverSuffixIfNeeded(

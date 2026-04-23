@@ -265,28 +265,11 @@ public extension NSWorkspace {
     /// Opens the System Preferences/Settings app at the Extensions pane
     /// - Parameter extensionPointIdentifier: Optional identifier for specific extension type
     static func openExtensionsPreferences(extensionPointIdentifier: String? = nil) {
-        if #available(macOS 13.0, *) {
-            var urlString = "x-apple.systempreferences:com.apple.ExtensionsPreferences"
-            if let extensionPointIdentifier = extensionPointIdentifier {
-                urlString += "?extensionPointIdentifier=\(extensionPointIdentifier)"
-            }
-            NSWorkspace.shared.open(URL(string: urlString)!)
-        } else {
-            let process = Process()
-            process.executableURL = URL(fileURLWithPath: "/usr/bin/open")
-            process.arguments = [
-                "-b",
-                "com.apple.systempreferences",
-                "/System/Library/PreferencePanes/Extensions.prefPane"
-            ]
-            
-            do {
-                try process.run()
-            } catch {
-                // Handle error silently
-                return
-            }
+        var urlString = "x-apple.systempreferences:com.apple.ExtensionsPreferences"
+        if let extensionPointIdentifier = extensionPointIdentifier {
+            urlString += "?extensionPointIdentifier=\(extensionPointIdentifier)"
         }
+        NSWorkspace.shared.open(URL(string: urlString)!)
     }
     
     /// Opens the Xcode Extensions preferences directly

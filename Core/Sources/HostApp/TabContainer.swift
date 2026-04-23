@@ -15,9 +15,8 @@ public let hostAppStore: StoreOf<HostApp> = .init(initialState: .init(), reducer
 public struct TabContainer: View {
     let store: StoreOf<HostApp>
     @ObservedObject var toastController: ToastController
+    @ObservedObject private var featureFlags = FeatureFlagManager.shared
     @State private var tabBarItems = [TabBarItem]()
-    @State private var isAgentModeFFEnabled = true
-    @State private var isBYOKFFEnabled = true
     @Binding var tag: TabIndex
 
     public init() {
@@ -37,23 +36,6 @@ public struct TabContainer: View {
             set: { store.send(.setActiveTab($0)) }
         )
     }
-    
-    private func updateHostAppFeatureFlags() async {
-        do {
-            let service = try getService()
-            let featureFlags = try await service.getCopilotFeatureFlags()
-            isAgentModeFFEnabled = featureFlags?.agentMode ?? true
-            isBYOKFFEnabled = featureFlags?.byok ?? true
-            if hostAppStore.state.activeTabIndex == .tools && !isAgentModeFFEnabled {
-                hostAppStore.send(.setActiveTab(.general))
-            }
-            if hostAppStore.state.activeTabIndex == .byok && !isBYOKFFEnabled {
-                hostAppStore.send(.setActiveTab(.general))
-            }
-        } catch {
-            Logger.client.error("Failed to get copilot feature flags: \(error)")
-        }
-    }
 
     public var body: some View {
         WithPerceptionTracking {
@@ -63,10 +45,10 @@ public struct TabContainer: View {
                 ZStack(alignment: .center) {
                     GeneralView(store: store.scope(state: \.general, action: \.general)).tabBarItem(for: .general)
                     AdvancedSettings().tabBarItem(for: .advanced)
-                    if isAgentModeFFEnabled {
+                    if featureFlags.isAgentModeEnabled {
                         MCPConfigView().tabBarItem(for: .tools)
                     }
-                    if isBYOKFFEnabled {
+                    if featureFlags.isBYOKEnabled {
                         BYOKConfigView().tabBarItem(for: .byok)
                     }
                 }
@@ -82,16 +64,17 @@ public struct TabContainer: View {
             }
             .onAppear {
                 store.send(.appear)
-                Task {
-                    await updateHostAppFeatureFlags()
+            }
+            .onChange(of: featureFlags.isAgentModeEnabled) { isEnabled in
+                if hostAppStore.state.activeTabIndex == .tools && !isEnabled {
+                    hostAppStore.send(.setActiveTab(.general))
                 }
             }
-            .onReceive(DistributedNotificationCenter.default()
-                .publisher(for: .gitHubCopilotFeatureFlagsDidChange)) { _ in
-                    Task {
-                        await updateHostAppFeatureFlags()
-                    }
+            .onChange(of: featureFlags.isBYOKEnabled) { isEnabled in
+                if hostAppStore.state.activeTabIndex == .byok && !isEnabled {
+                    hostAppStore.send(.setActiveTab(.general))
                 }
+            }
         }
     }
 }

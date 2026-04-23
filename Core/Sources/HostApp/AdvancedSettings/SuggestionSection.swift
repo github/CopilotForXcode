@@ -7,6 +7,7 @@ struct SuggestionSection: View {
     @AppStorage(\.realtimeNESToggle) var realtimeNESToggle
     @State var isSuggestionFeatureDisabledLanguageListViewOpen = false
     @State private var shouldPresentTurnoffSheet = false
+    @ObservedObject private var featureFlags = FeatureFlagManager.shared
 
     var realtimeSuggestionBinding : Binding<Bool> {
         Binding(
@@ -27,11 +28,15 @@ struct SuggestionSection: View {
                 title: "Enable completions while typing",
                 isOn: realtimeSuggestionBinding
             )
-            Divider()
-            SettingsToggle(
-                title: "Enable Next Edit Suggestions (NES)",
-                isOn: $realtimeNESToggle
-            )
+            
+            if featureFlags.isEditorPreviewEnabled {
+                Divider()
+                SettingsToggle(
+                    title: "Enable Next Edit Suggestions (NES)",
+                    isOn: $realtimeNESToggle
+                )
+            }
+            
             Divider()
             SettingsToggle(
                 title: "Accept suggestions with Tab",

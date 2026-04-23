@@ -1,0 +1,50 @@
+name: Auto-create Release PR
+
+on:
+  push:
+    branches:
+      - 'release/**'
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create pull request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          existing_pr_count="$(gh pr list \
+            --state open \
+            --base main \
+            --head "${{ github.ref_name }}" \
+            --json number \
+            --jq 'length')"
+          if [ "${existing_pr_count}" -gt 0 ]; then
+            echo "Open pull request already exists for branch '${{ github.ref_name }}' into 'main'; skipping creation."
+          else
+            gh pr create \
+              --title "$(git log -1 --pretty=%s)" \
+              --body "Automated release PR." \
+              --base main \
+              --head "${{ github.ref_name }}"
+          fi
+
+      - name: Approve pull request
+        env:
+          # PAT stored in github/CopilotForXcode, with write permissions to pull requests
+          GH_TOKEN: ${{ secrets.XCODE_AUTO_APPROVE }}
+        run: |
+          gh pr review --approve "${{ github.ref_name }}"
+
+      - name: Auto-merge pull request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr merge "${{ github.ref_name }}" \
+            --auto \
+            --delete-branch

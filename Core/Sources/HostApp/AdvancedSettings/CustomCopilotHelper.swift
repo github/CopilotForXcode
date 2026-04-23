@@ -5,123 +5,31 @@ import SwiftUI
 import Toast
 import XcodeInspector
 import SystemUtils
+import SharedUIComponents
+import Workspace
+import LanguageServerProtocol
 
-public enum PromptType: String, CaseIterable, Equatable {
-    case instructions = "instructions"
-    case prompt = "prompt"
-    
-    /// The directory name under .github where files of this type are stored
-    var directoryName: String {
-        switch self {
-        case .instructions:
-            return "instructions"
-        case .prompt:
-            return "prompts"
-        }
-    }
-    
-    /// The file extension for this prompt type
-    var fileExtension: String {
-        switch self {
-        case .instructions:
-            return ".instructions.md"
-        case .prompt:
-            return ".prompt.md"
-        }
-    }
-    
-    /// Human-readable name for display purposes
-    var displayName: String {
-        switch self {
-        case .instructions:
-            return "Instruction File"
-        case .prompt:
-            return "Prompt File"
-        }
-    }
-    
-    /// Human-readable name for settings
-    var settingTitle: String {
-        switch self {
-        case .instructions:
-            return "Custom Instructions"
-        case .prompt:
-            return "Prompt Files"
-        }
-    }
-    
-    /// Description for the prompt type
-    var description: String {
-        switch self {
-        case .instructions:
-            return "Configure `.github/instructions/*.instructions.md` files scoped to specific file patterns or tasks."
-        case .prompt:
-            return "Configure `.github/prompts/*.prompt.md` files for reusable prompts. Trigger with '/' commands in the Chat view."
-        }
-    }
-    
-    /// Default template content for new files
-    var defaultTemplate: String {
-        switch self {
-        case .instructions:
-            return """
-            ---
-            applyTo: '**'
-            ---
-            Provide project context and coding guidelines that AI should follow when generating code, or answering questions.
+// MARK: - Workspace URL Helpers
 
-            """
-        case .prompt:
-            return """
-            ---
-            description: Prompt Description
-            ---
-            Define the task to achieve, including specific requirements, constraints, and success criteria.
+private func getCurrentWorkspaceURL() async -> URL? {
+    guard let service = try? getService(),
+          let inspectorData = try? await service.getXcodeInspectorData() else {
+        return nil
+    }
 
-            """
-        }
+    if let url = inspectorData.realtimeActiveWorkspaceURL,
+       let workspaceURL = URL(string: url),
+       workspaceURL.path != "/" {
+        return workspaceURL
+    } else if let url = inspectorData.latestNonRootWorkspaceURL {
+        return URL(string: url)
     }
-    
-    var helpLink: String {
-        var editorPluginVersion = SystemUtils.editorPluginVersionString
-        if editorPluginVersion == "0.0.0" {
-            editorPluginVersion = "main"
-        }
-        
-        switch self {
-        case .instructions:
-            return "https://github.com/github/CopilotForXcode/blob/\(editorPluginVersion)/Docs/CustomInstructions.md"
-        case .prompt:
-            return "https://github.com/github/CopilotForXcode/blob/\(editorPluginVersion)/Docs/PromptFiles.md"
-        }
-    }
-    
-    /// Get the full file path for a given name and project URL
-    func getFilePath(fileName: String, projectURL: URL) -> URL {
-        let directory = getDirectoryPath(projectURL: projectURL)
-        return directory.appendingPathComponent("\(fileName)\(fileExtension)")
-    }
-    
-    /// Get the directory path for this prompt type
-    func getDirectoryPath(projectURL: URL) -> URL {
-        return projectURL.appendingPathComponent(".github/\(directoryName)")
-    }
+
+    return nil
 }
 
 func getCurrentProjectURL() async -> URL? {
-    let service = try? getService()
-    let inspectorData = try? await service?.getXcodeInspectorData()
-    var currentWorkspace: URL?
-
-    if let url = inspectorData?.realtimeActiveWorkspaceURL,
-       let workspaceURL = URL(string: url),
-       workspaceURL.path != "/" {
-        currentWorkspace = workspaceURL
-    } else if let url = inspectorData?.latestNonRootWorkspaceURL {
-        currentWorkspace = URL(string: url)
-    }
-
-    guard let workspaceURL = currentWorkspace,
+    guard let workspaceURL = await getCurrentWorkspaceURL(),
           let projectURL = WorkspaceXcodeWindowInspector.extractProjectURL(
               workspaceURL: workspaceURL,
               documentURL: nil
@@ -131,6 +39,22 @@ func getCurrentProjectURL() async -> URL? {
 
     return projectURL
 }
+
+// MARK: - Workspace Folders
+
+func getWorkspaceFolders() async -> [WorkspaceFolder]? {
+    guard let workspaceURL = await getCurrentWorkspaceURL(),
+          let workspaceInfo = WorkspaceFile.getWorkspaceInfo(workspaceURL: workspaceURL) else {
+        return nil
+    }
+
+    let projects = WorkspaceFile.getProjects(workspace: workspaceInfo)
+    return projects.map { project in
+        WorkspaceFolder(uri: project.uri, name: project.name)
+    }
+}
+
+// MARK: - File System Helpers
 
 func ensureDirectoryExists(at url: URL) throws {
     let fileManager = FileManager.default

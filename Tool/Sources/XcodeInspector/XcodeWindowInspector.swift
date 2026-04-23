@@ -111,6 +111,72 @@ public final class WorkspaceXcodeWindowInspector: XcodeWindowInspector {
                 return url
             }
         }
+        
+        // Fallback: If no child has the workspace path in description, 
+        // try to derive it from the window's document URL
+        if let documentURL = extractDocumentURL(windowElement: windowElement) {
+            if let workspaceURL = deriveWorkspaceFromDocumentURL(documentURL) {
+                return workspaceURL
+            }
+        }
+        
+        return nil
+    }
+    
+    static func deriveWorkspaceFromDocumentURL(_ documentURL: URL) -> URL? {
+        // Check if documentURL itself is already a workspace/project/playground
+        if documentURL.pathExtension == "xcworkspace" || 
+           documentURL.pathExtension == "xcodeproj" || 
+           documentURL.pathExtension == "playground" {
+            return documentURL
+        }
+        
+        // Try to find .xcodeproj or .xcworkspace in parent directories
+        var currentURL = documentURL
+        while currentURL.pathComponents.count > 1 {
+            currentURL.deleteLastPathComponent()
+            
+            // Check if current directory is a playground
+            if currentURL.pathExtension == "playground" {
+                return currentURL
+            }
+            
+            // Check if this directory contains .xcodeproj or .xcworkspace
+            guard let contents = try? FileManager.default.contentsOfDirectory(atPath: currentURL.path) else {
+                continue
+            }
+            
+            // Check for .playground, .xcworkspace, and .xcodeproj in a single pass
+            var foundPlaygroundURL: URL?
+            var foundWorkspaceURL: URL?
+            var foundProjectURL: URL?
+            for item in contents {
+                if foundPlaygroundURL == nil, item.hasSuffix(".playground") {
+                    foundPlaygroundURL = currentURL.appendingPathComponent(item)
+                }
+                if foundWorkspaceURL == nil, item.hasSuffix(".xcworkspace") {
+                    foundWorkspaceURL = currentURL.appendingPathComponent(item)
+                }
+                if foundProjectURL == nil, item.hasSuffix(".xcodeproj") {
+                    foundProjectURL = currentURL.appendingPathComponent(item)
+                }
+            }
+            if let playgroundURL = foundPlaygroundURL {
+                return playgroundURL
+            }
+            if let workspaceURL = foundWorkspaceURL {
+                return workspaceURL
+            }
+            if let projectURL = foundProjectURL {
+                return projectURL
+            }
+            
+            // Stop at the user's home directory or root
+            if currentURL.path == "/" || currentURL.path == NSHomeDirectory() {
+                break
+            }
+        }
+        
         return nil
     }
 
@@ -152,4 +218,3 @@ public final class WorkspaceXcodeWindowInspector: XcodeWindowInspector {
         return url
     }
 }
-

@@ -68,7 +68,6 @@ public class QuotaView: NSView {
         autoresizingMask = [.width]
         setupView()
         
-        layoutSubtreeIfNeeded()
         let calculatedHeight = fittingSize.height
         frame = NSRect(x: 0, y: 0, width: Layout.viewWidth, height: calculatedHeight)
     }

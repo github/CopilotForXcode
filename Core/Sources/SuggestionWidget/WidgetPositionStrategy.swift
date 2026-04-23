@@ -70,6 +70,31 @@ public struct WidgetLocation: Equatable {
         }
     }
     
+    struct AgentConfigurationWidgetLocation: Equatable {
+        var firstLineFrame: CGRect
+        var scrollViewRect: CGRect
+        var screenFrame: CGRect
+        var textEndX: CGFloat
+        
+        var lineHeight: CGFloat {
+            firstLineFrame.height
+        }
+        
+        func getWidgetFrame(_ originalFrame: NSRect) -> NSRect {
+            let width = originalFrame.width
+            let height = originalFrame.height
+            let lineCenter = firstLineFrame.minY + firstLineFrame.height / 2
+            let panelHalfHeight = originalFrame.height / 2
+            
+            return .init(
+                x: textEndX + Style.agentConfigurationWidgetLeadingSpacing,
+                y: screenFrame.maxY - lineCenter - panelHalfHeight + screenFrame.minY,
+                width: width,
+                height: height
+            )
+        }
+    }
+    
     struct PanelLocation: Equatable {
         var frame: CGRect
         var alignPanelTop: Bool
@@ -83,6 +108,7 @@ public struct WidgetLocation: Equatable {
     var suggestionPanelLocation: PanelLocation?
     var nesSuggestionPanelLocation: NESPanelLocation?
     var locationTrigger: LocationTrigger = .unknown
+    var agentConfigurationWidgetLocation: AgentConfigurationWidgetLocation?
     
     mutating func setNESSuggestionPanelLocation(_ location: NESPanelLocation?) {
         self.nesSuggestionPanelLocation = location
@@ -90,6 +116,10 @@ public struct WidgetLocation: Equatable {
     
     mutating func setLocationTrigger(_ trigger: LocationTrigger) {
         self.locationTrigger = trigger
+    }
+    
+    mutating func setAgentConfigurationWidgetLocation(_ location: AgentConfigurationWidgetLocation?) {
+        self.agentConfigurationWidgetLocation = location
     }
 }
 
@@ -520,6 +550,76 @@ public struct NESPanelLocationStrategy {
             scrollViewFrame: scrollViewFrame,
             screenFrame: screen.frame,
             lineFirstCharacterFrame: lineFirstCharacterFrame
+        )
+    }
+}
+
+public struct AgentConfigurationWidgetLocationStrategy {
+    static func getAgentConfigurationWidgetLocation(
+        maybeEditor: AXUIElement,
+        screen: NSScreen
+    ) -> WidgetLocation.AgentConfigurationWidgetLocation? {
+        guard let sourceEditorElement = maybeEditor.findSourceEditorElement(shouldRetry: false),
+              let editorContent: String = try? sourceEditorElement.copyValue(key: kAXValueAttribute),
+              let scrollViewRect = sourceEditorElement.parent?.rect
+        else {
+            return nil
+        }
+        
+        // Get the editor content to access lines
+        let lines = editorContent.components(separatedBy: .newlines)
+        guard !lines.isEmpty else {
+            return nil
+        }
+        
+        // Get the frame of the first line (line 0)
+        guard let firstLineFrame = LocationStrategyHelper.getLineFrame(
+            0,
+            in: sourceEditorElement,
+            with: [lines[0]]
+        ) else {
+            return nil
+        }
+        
+        // Check if the first line is visible within the scroll view
+        guard firstLineFrame.width > 0, firstLineFrame.height > 0,
+              scrollViewRect.contains(firstLineFrame)
+        else {
+            return nil
+        }
+        
+        // Get the actual text content width (excluding trailing whitespace)
+        let firstLineText = lines[0].trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+        let textEndX: CGFloat
+        
+        if !firstLineText.isEmpty {
+            // Calculate character position for the end of the trimmed text
+            let textLength = firstLineText.count
+            var range = CFRange(location: 0, length: textLength)
+            
+            if let rangeValue = AXValueCreate(AXValueType.cfRange, &range),
+               let boundsValue: AXValue = try? sourceEditorElement.copyParameterizedValue(
+                key: kAXBoundsForRangeParameterizedAttribute,
+                parameters: rangeValue
+               ) {
+                var textRect = CGRect.zero
+                if AXValueGetValue(boundsValue, .cgRect, &textRect) {
+                    textEndX = textRect.maxX
+                } else {
+                    textEndX = firstLineFrame.minX
+                }
+            } else {
+                textEndX = firstLineFrame.minX
+            }
+        } else {
+            textEndX = firstLineFrame.minX
+        }
+        
+        return .init(
+            firstLineFrame: firstLineFrame,
+            scrollViewRect: scrollViewRect,
+            screenFrame: screen.frame,
+            textEndX: textEndX
         )
     }
 }

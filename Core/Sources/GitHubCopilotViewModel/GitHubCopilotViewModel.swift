@@ -4,6 +4,7 @@ import ComposableArchitecture
 import Status
 import SwiftUI
 import Cache
+import Client
 
 public struct SignInResponse {
     public let status: SignInInitiateStatus
@@ -126,7 +127,7 @@ public class GitHubCopilotViewModel: ObservableObject {
         waitingForSignIn = false
     }
     
-    public func copyAndOpen() {
+    public func copyAndOpen(fromHostApp: Bool = false) {
         waitingForSignIn = true
         guard let signInResponse else {
             toast("Missing sign in details.", .error)
@@ -137,10 +138,10 @@ public class GitHubCopilotViewModel: ObservableObject {
         pasteboard.setString(signInResponse.userCode, forType: NSPasteboard.PasteboardType.string)
         toast("Sign-in code \(signInResponse.userCode) copied", .info)
         NSWorkspace.shared.open(signInResponse.verificationURL)
-        waitForSignIn()
+        waitForSignIn(fromHostApp: fromHostApp)
     }
     
-    public func waitForSignIn() {
+    public func waitForSignIn(fromHostApp: Bool = false) {
         Task {
             do {
                 guard waitingForSignIn else { return }
@@ -155,14 +156,19 @@ public class GitHubCopilotViewModel: ObservableObject {
                 self.status = status
                 await Status.shared.updateAuthStatus(.loggedIn, username: username)
                 broadcastStatusChange()
-                let models = try? await service.models()
-                if let models = models, !models.isEmpty {
-                    CopilotModelManager.updateLLMs(models)
+                if !fromHostApp {
+                    let models = try? await service.models()
+                    if let models = models, !models.isEmpty {
+                        CopilotModelManager.updateLLMs(models)
+                    }
+                } else {
+                    let xpcService = try getService()
+                    _ = try? await xpcService.updateCopilotModels()
                 }
             } catch let error as GitHubCopilotError {
                 switch error {
                 case .languageServerError(.timeout):
-                    waitForSignIn()
+                    waitForSignIn(fromHostApp: fromHostApp)
                     return
                 case .languageServerError(
                     .serverError(

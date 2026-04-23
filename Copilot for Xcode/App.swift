@@ -21,23 +21,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         case chat
         case settings
         case tools
+        case toolsAutoApprove
         case byok
     }
     
     func applicationDidFinishLaunching(_ notification: Notification) {
-        if #available(macOS 13.0, *) {
-            checkBackgroundPermissions()
-        }
-        
+        checkBackgroundPermissions()
+
         let launchMode = determineLaunchMode()
         handleLaunchMode(launchMode)
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-        if #available(macOS 13.0, *) {
-            checkBackgroundPermissions()
-        }
-        
+        checkBackgroundPermissions()
+
         let launchMode = determineLaunchMode()
         handleLaunchMode(launchMode)
         return true
@@ -51,6 +48,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return .settings
         } else if launchArgs.contains("--tools") {
             return .tools
+        } else if launchArgs.contains("--tools-auto-approve") {
+            return .toolsAutoApprove
         } else if launchArgs.contains("--byok") {
             return .byok
         } else {
@@ -64,6 +63,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             openSettings()
         case .tools:
             openToolsSettings()
+        case .toolsAutoApprove:
+            openToolsSettingsAutoApprove()
         case .byok:
             openBYOKSettings()
         case .chat:
@@ -92,6 +93,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             hostAppStore.send(.setActiveTab(.tools))
         }
     }
+
+    private func openToolsSettingsAutoApprove() {
+        DispatchQueue.main.async {
+            activateAndOpenSettings()
+            hostAppStore.send(.setActiveTab(.tools))
+            hostAppStore.send(.setActiveToolsSubTab(.AutoApprove))
+        }
+    }
     
     private func openBYOKSettings() {
         DispatchQueue.main.async {
@@ -100,7 +109,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
     
-    @available(macOS 13.0, *)
     private func checkBackgroundPermissions() {
         Task {
             // Direct check of permission status
@@ -109,7 +117,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             
             if !isPermissionGranted {
                 // Only show alert if permission isn't granted
-                DispatchQueue.main.async {
+                await MainActor.run {
                     if !self.permissionAlertShown {
                         showBackgroundPermissionAlert()
                         self.permissionAlertShown = true
@@ -117,7 +125,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 }
             } else {
                 // Permission is granted, reset flag
-                self.permissionAlertShown = false
+                await MainActor.run {
+                    self.permissionAlertShown = false
+                }
             }
         }
     }
@@ -202,6 +212,18 @@ struct CopilotForXcodeApp: App {
                 hostAppStore.send(.setActiveTab(.tools))
             }
         }
+
+        DistributedNotificationCenter.default().addObserver(
+            forName: .openToolsSettingsAutoApproveWindowRequest,
+            object: nil,
+            queue: .main
+        ) { _ in
+            DispatchQueue.main.async {
+                activateAndOpenSettings()
+                hostAppStore.send(.setActiveTab(.tools))
+                hostAppStore.send(.setActiveToolsSubTab(.AutoApprove))
+            }
+        }
         
         DistributedNotificationCenter.default().addObserver(
             forName: .openBYOKSettingsWindowRequest,
@@ -247,10 +269,8 @@ func activateAndOpenSettings() {
     if #available(macOS 14.0, *) {
         let environment = SettingsEnvironment()
         environment.open()
-    } else if #available(macOS 13.0, *) {
-        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
     } else {
-        NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil)
+        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
     }
 }
 

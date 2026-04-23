@@ -14,7 +14,8 @@ jobs:
           gh pr close ${{ github.event.pull_request.number }} --comment \
           "At the moment we are not accepting contributions to the repository.
 
-          Feedback for GitHub Copilot for Xcode can be given in the [Copilot community discussions](https://github.com/orgs/community/discussions/categories/copilot)."
+          Feedback for GitHub Copilot for Xcode can be given in the [Copilot community discussions](https://github.com/github/CopilotForXcode/discussions)."
+        if: ${{ !(startsWith(github.head_ref, 'release/') && github.event.pull_request.head.repo.full_name == github.repository) }}
         env:
           GH_REPO: ${{ github.repository }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

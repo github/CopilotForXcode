@@ -52,9 +52,7 @@ class CopilotMCPToolManagerObservable: ObservableObject {
         let totalToolsCount = tools.reduce(0) { $0 + $1.tools.count }
         let serverNames = tools.map { $0.name }.joined(separator: ", ")
         Logger.client.info("Refreshed MCP tools - Servers: \(tools.count), Total tools: \(totalToolsCount), Server names: [\(serverNames)]")
-        
-        AppState.shared.cleanupMCPToolsStatus(availableTools: tools)
-        AppState.shared.createMCPToolsStatus(tools)
+
         self.availableMCPServerTools = tools
     }
 }

@@ -1,4 +1,5 @@
 import SwiftUI
+import SharedUIComponents
 
 public struct CardGroupBoxStyle: GroupBoxStyle {
     public var backgroundColor: Color

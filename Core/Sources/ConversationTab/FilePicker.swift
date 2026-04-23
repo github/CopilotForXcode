@@ -203,9 +203,8 @@ struct FileRowView: View {
 
     var body: some View {
         WithPerceptionTracking {
-            HStack {
+            HStack(alignment: .center) {
                 drawFileIcon(ref.url, isDirectory: ref.isDirectory)
-                    .resizable()
                     .scaledToFit()
                     .scaledFrame(width: 16, height: 16)
                     .hoverSecondaryForeground(isHovered: selectedId == id)

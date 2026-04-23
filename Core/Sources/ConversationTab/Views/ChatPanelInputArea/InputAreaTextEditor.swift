@@ -35,6 +35,7 @@ struct InputAreaTextEditor: View {
     )
     @ObservedObject private var status: StatusObserver = .shared
     @State private var isCCRFFEnabled: Bool
+    @State private var isCCRHovering: Bool = false
     @State private var cancellables = Set<AnyCancellable>()
     
     @StateObject private var fontScaleManager = FontScaleManager.shared
@@ -77,6 +78,13 @@ struct InputAreaTextEditor: View {
         }
         
         return false
+    }
+
+    var projectRootURL: URL? {
+        WorkspaceXcodeWindowInspector.extractProjectURL(
+            workspaceURL: chat.workspaceURL,
+            documentURL: chat.state.currentEditor?.url
+        )
     }
     
     var body: some View {
@@ -162,25 +170,43 @@ struct InputAreaTextEditor: View {
                 .padding(.top, 4)
                 
                 HStack(spacing: 0) {
-                    ModelPicker()
-                    
+                    ModeAndModelPicker(projectRootURL: projectRootURL, selectedAgent: $chat.selectedAgent)
+
                     Spacer()
-                    
-                    if chat.editorMode.isDefault {
-                        codeReviewButton
-                            .buttonStyle(HoverButtonStyle(padding: 0))
-                            .disabled(isRequestingConversation)
+
+                    if let contextSizeInfo = chat.contextSizeInfo {
+                        ContextSizeButton(contextSizeInfo: contextSizeInfo)
+                            .padding(.trailing, 4)
                     }
-                    
+
+                    if chat.editorMode.isDefault && !isRequestingConversation {
+                        codeReviewButton
+                            .buttonStyle(HoverButtonStyle(padding: 0, hoverColor: .clear))
+                            .padding(.trailing, 4)
+                    }
+
                     ZStack {
                         sendButton
-                            .opacity(isRequestingConversation ? 0 : 1)
-                        
+                            .opacity(isRequestingConversation || isRequestingCodeReview ? 0 : 1)
+                            .foregroundColor(
+                                typedMessage.isEmpty ? Color(nsColor: .tertiaryLabelColor) : Color(
+                                    "IconStrokeColor"
+                                )
+                            )
+                            .disabled(typedMessage.isEmpty)
+
                         stopButton
-                            .opacity(isRequestingConversation ? 1 : 0)
+                            .opacity(isRequestingConversation || isRequestingCodeReview ? 1 : 0)
+                            .foregroundColor(Color("IconStrokeColor"))
                     }
-                    .buttonStyle(HoverButtonStyle(padding: 0))
-                    .disabled(isRequestingCodeReview)
+                    .buttonStyle(
+                        HoverButtonStyle(
+                            padding: 0,
+                            hoverColor: Color(nsColor: .quaternaryLabelColor),
+                            backgroundColor: Color(nsColor: .quinaryLabel),
+                            cornerRadius: .infinity
+                        )
+                    )
                 }
                 .padding(8)
                 .padding(.top, -4)
@@ -283,9 +309,12 @@ struct InputAreaTextEditor: View {
         Button(action: {
             submitChatMessage()
         }) {
-            Image(systemName: "paperplane.fill")
-                .scaledFont(.body)
-                .padding(4)
+            Image(systemName: "paperplane")
+                .scaledFont(size: 12, weight: .medium)
+                .padding(.leading, 5)
+                .padding(.trailing, 6)
+                .padding(.top, 6.5)
+                .padding(.bottom, 5.5)
         }
         .keyboardShortcut(KeyEquivalent.return, modifiers: [])
         .help("Send")
@@ -295,10 +324,12 @@ struct InputAreaTextEditor: View {
         Button(action: {
             chat.send(.stopRespondingButtonTapped)
         }) {
-            Image(systemName: "stop.circle")
-                .scaledFont(.body)
-                .padding(4)
+            Image(systemName: "stop.fill")
+                .scaledFont(size: 12, weight: .medium)
+                .padding(8)
         }
+        .keyboardShortcut(KeyEquivalent.escape, modifiers: [])
+        .help("Stop")
     }
     
     private var isFreeUser: Bool {
@@ -328,31 +359,28 @@ struct InputAreaTextEditor: View {
             if isFreeUser {
                 // Show nothing
             } else if isCCRFFEnabled {
-                ZStack {
-                    stopButton
-                        .opacity(isRequestingCodeReview ? 1 : 0)
-                        .help("Stop Code Review")
-                    
-                    Menu {
-                        Button(action: {
-                            chat.send(.codeReview(.request(.index)))
-                        }) {
-                            Text("Review Staged Changes")
-                        }
-                        
-                        Button(action: {
-                            chat.send(.codeReview(.request(.workingTree)))
-                        }) {
-                            Text("Review Unstaged Changes")
-                        }
-                    } label: {
-                        codeReviewIcon
+                Menu {
+                    Button(action: {
+                        chat.send(.codeReview(.request(.index)))
+                    }) {
+                        Text("Review Staged Changes")
                     }
-                    .scaledFont(.body)
-                    .opacity(isRequestingCodeReview ? 0 : 1)
-                    .help("Code Review")
+
+                    Button(action: {
+                        chat.send(.codeReview(.request(.workingTree)))
+                    }) {
+                        Text("Review Unstaged Changes")
+                    }
+                } label: {
+                    codeReviewIcon
+                        .foregroundColor(isCCRHovering ? .primary : Color("IconStrokeColor"))
                 }
-                .buttonStyle(HoverButtonStyle(padding: 0))
+                .scaledFont(.body)
+                .onHover { hovering in
+                    isCCRHovering = hovering
+                }
+                .opacity(isRequestingCodeReview ? 0 : 1)
+                .help("Code Review")
             } else {
                 codeReviewIcon
                     .foregroundColor(Color(nsColor: .tertiaryLabelColor))
@@ -457,7 +485,7 @@ struct InputAreaTextEditor: View {
             }
         }()
         
-        HStack(spacing: 0) {
+        HStack(alignment: .center, spacing: 0) {
             makeContextFileNameView(url: ref.url, isCurrentEditor: true, selection: ref.selection)
             
             Toggle("", isOn: $isCurrentEditorContextEnabled)
@@ -497,7 +525,6 @@ struct InputAreaTextEditor: View {
         selection: LSPRange? = nil
     ) -> some View {
         drawFileIcon(url, isDirectory: isDirectory)
-            .resizable()
             .scaledToFit()
             .scaledFrame(width: 16, height: 16)
             .foregroundColor(.primary.opacity(0.85))

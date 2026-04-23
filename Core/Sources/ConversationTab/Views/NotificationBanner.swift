@@ -20,18 +20,19 @@ public enum BannerStyle {
 struct NotificationBanner<Content: View>: View {
     var style: BannerStyle
     @ViewBuilder var content: () -> Content
+    @AppStorage(\.chatFontSize) var chatFontSize
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .top, spacing: 6) {
                 Image(systemName: style.iconName)
-                    .font(Font.system(size: 12))
                     .foregroundColor(style.color)
                 
                 VStack(alignment: .leading, spacing: 8) {
                     content()
                 }
             }
+            .scaledFont(size: chatFontSize - 1)
         }
         .frame(maxWidth: .infinity, alignment: .topLeading)
         .scaledPadding(.vertical, 10)

@@ -61,8 +61,9 @@ actor WidgetWindowsController: NSObject {
         }.store(in: &cancellable)
 
         xcodeInspector.$focusedEditor.sink { [weak self] editor in
-            Task { @MainActor [weak self] in 
+            Task { @MainActor [weak self] in
                 self?.store.send(.fixErrorPanel(.onFocusedEditorChanged(editor)))
+                self?.store.send(.panel(.agentConfigurationWidget(.onFocusedEditorChanged(editor))))
             }
             
             guard let editor else { return }
@@ -76,7 +77,7 @@ actor WidgetWindowsController: NSObject {
         }.store(in: &cancellable)
 
         xcodeInspector.$activeDocumentURL.sink { [weak self] url in 
-            Task { [weak self] in 
+            Task { [weak self] in
                 await self?.updateCodeReviewWindowLocation(.onActiveDocumentURLChanged)
                 _ = await MainActor.run { [weak self] in 
                     self?.store.send(.codeReviewPanel(.onActiveDocumentURLChanged(url))) 
@@ -99,6 +100,9 @@ actor WidgetWindowsController: NSObject {
         
         // Observer state change for NES
         setupNESSuggestionPanelObservers()
+
+        // Observe feature flags
+        setupFeatureFlagObservers()
     }
     
     private func setupCodeReviewPanelObservers() {
@@ -236,42 +240,24 @@ private extension WidgetWindowsController {
             let valueChange = await editor.axNotifications.notifications()
                 .filter { $0.kind == .valueChanged }
 
-            if #available(macOS 13.0, *) {
-                for await notification in merge(
-                    scroll,
-                    selectionRangeChange.debounce(for: Duration.milliseconds(0)),
-                    valueChange.debounce(for: Duration.milliseconds(100))
-                ) {
-                    guard await xcodeInspector.safe.latestActiveXcode != nil else { return }
-                    try Task.checkCancellation()
+            for await notification in merge(
+                scroll,
+                selectionRangeChange.debounce(for: Duration.milliseconds(0)),
+                valueChange.debounce(for: Duration.milliseconds(100))
+            ) {
+                guard await xcodeInspector.safe.latestActiveXcode != nil else { return }
+                try Task.checkCancellation()
 
-                    // for better looking
-                    if notification.kind == .scrollPositionChanged {
-                        await hideSuggestionPanelWindow()
-                    }
-
-                    updateWindowLocation(animated: false, immediately: false)
-                    updateWindowOpacity(immediately: false)
-                    await updateCodeReviewWindowLocation(.onSourceEditorNotification(notification))
-                    
-                    await handleFixErrorEditorNotification(notification: notification)
+                // for better looking
+                if notification.kind == .scrollPositionChanged {
+                    await hideSuggestionPanelWindow()
                 }
-            } else {
-                for await notification in merge(selectionRangeChange, scroll, valueChange) {
-                    guard await xcodeInspector.safe.latestActiveXcode != nil else { return }
-                    try Task.checkCancellation()
 
-                    // for better looking
-                    if notification.kind == .scrollPositionChanged {
-                        await hideSuggestionPanelWindow()
-                    }
+                updateWindowLocation(animated: false, immediately: false)
+                updateWindowOpacity(immediately: false)
+                await updateCodeReviewWindowLocation(.onSourceEditorNotification(notification))
 
-                    updateWindowLocation(animated: false, immediately: false)
-                    updateWindowOpacity(immediately: false)
-                    await updateCodeReviewWindowLocation(.onSourceEditorNotification(notification))
-                    
-                    await handleFixErrorEditorNotification(notification: notification)
-                }
+                await handleFixErrorEditorNotification(notification: notification)
             }
         }
     }
@@ -305,7 +291,7 @@ extension WidgetWindowsController {
     @MainActor
     func hideSuggestionPanelWindow() {
         windows.suggestionPanelWindow.alphaValue = 0
-        send(.panel(.hidePanel))
+        send(.panel(.hidePanel(.suggestion)))
     }
 
     @MainActor
@@ -339,6 +325,9 @@ extension WidgetWindowsController {
                 
                 let nesPanelLocation: WidgetLocation.NESPanelLocation? = NESPanelLocationStrategy.getNESPanelLocation(maybeEditor: parent, state: state)
                 let locationTrigger: WidgetLocation.LocationTrigger = .sourceEditor
+                let agentConfigurationWidgetLocation = AgentConfigurationWidgetLocationStrategy.getAgentConfigurationWidgetLocation(
+                    maybeEditor: parent, screen: screen
+                )
 
                 switch positionMode {
                 case .fixedToBottom:
@@ -349,6 +338,7 @@ extension WidgetWindowsController {
                     )
                     result.setNESSuggestionPanelLocation(nesPanelLocation)
                     result.setLocationTrigger(locationTrigger)
+                    result.setAgentConfigurationWidgetLocation(agentConfigurationWidgetLocation)
                     switch suggestionMode {
                     case .nearbyTextCursor:
                         result.suggestionPanelLocation = UpdateLocationStrategy
@@ -372,6 +362,7 @@ extension WidgetWindowsController {
                     )
                     result.setNESSuggestionPanelLocation(nesPanelLocation)
                     result.setLocationTrigger(locationTrigger)
+                    result.setAgentConfigurationWidgetLocation(agentConfigurationWidgetLocation)
                     switch suggestionMode {
                     case .nearbyTextCursor:
                         result.suggestionPanelLocation = UpdateLocationStrategy
@@ -456,6 +447,7 @@ extension WidgetWindowsController {
     func updatePanelState(_ location: WidgetLocation) async {
         await send(.updatePanelStateToMatch(location))
         await send(.updateNESSuggestionPanelStateToMatch(location))
+        await send(.updateAgentConfigurationWidgetStateToMatch(location))
     }
 
     func updateWindowOpacity(immediately: Bool) {
@@ -491,11 +483,12 @@ extension WidgetWindowsController {
                     /// We need this to hide the windows when Xcode is minimized.
                     let noFocus = application.focusedWindow == nil
                     windows.sharedPanelWindow.alphaValue = noFocus ? 0 : 1
-                    send(.panel(noFocus ? .hidePanel : .showPanel))
+                    send(.panel(noFocus ? .hidePanel(.suggestion) : .showPanel(.suggestion)))
                     windows.suggestionPanelWindow.alphaValue = noFocus ? 0 : 1
-                    send(.panel(noFocus ? .hideNESPanel : .showNESPanel))
-                    windows.nesMenuWindow.alphaValue = noFocus ? 0 : 1
-                    windows.nesDiffWindow.alphaValue = noFocus ? 0 : 1
+                    send(.panel(noFocus ? .hidePanel(.nes) : .showPanel(.nes)))
+                    applyOpacityForNESWindows(by: noFocus)
+                    send(.panel(noFocus ? .hidePanel(.agentConfiguration) : .showPanel(.agentConfiguration)))
+                    applyOpacityForAgentConfigurationWidget(by: noFocus)
                     windows.nesNotificationWindow.alphaValue = noFocus ? 0 : 1
                     windows.widgetWindow.alphaValue = noFocus ? 0 : 1
                     windows.toastWindow.alphaValue = noFocus ? 0 : 1
@@ -518,11 +511,12 @@ extension WidgetWindowsController {
 
                     let previousAppIsXcode = previousActiveApplication?.isXcode ?? false
 
-                    send(.panel(noFocus ? .hidePanel : .showPanel))
+                    send(.panel(noFocus ? .hidePanel(.suggestion) : .showPanel(.suggestion)))
                     windows.sharedPanelWindow.alphaValue = noFocus ? 0 : 1
-                    send(.panel(noFocus ? .hideNESPanel : .showNESPanel))
-                    windows.nesMenuWindow.alphaValue = noFocus ? 0 : 1
-                    windows.nesDiffWindow.alphaValue = noFocus ? 0 : 1
+                    send(.panel(noFocus ? .hidePanel(.nes) : .showPanel(.nes)))
+                    applyOpacityForNESWindows(by: noFocus)
+                    send(.panel(noFocus ? .hidePanel(.agentConfiguration) : .showPanel(.agentConfiguration)))
+                    applyOpacityForAgentConfigurationWidget(by: noFocus)
                     windows.nesNotificationWindow.alphaValue = noFocus ? 0 : 1
                     windows.suggestionPanelWindow.alphaValue = noFocus ? 0 : 1
                     windows.widgetWindow.alphaValue = if noFocus {
@@ -544,6 +538,7 @@ extension WidgetWindowsController {
                     windows.suggestionPanelWindow.alphaValue = 0
                     windows.nesMenuWindow.alphaValue = 0
                     windows.nesDiffWindow.alphaValue = 0
+                    applyOpacityForAgentConfigurationWidget()
                     windows.nesNotificationWindow.alphaValue = 0
                     windows.widgetWindow.alphaValue = 0
                     windows.toastWindow.alphaValue = 0
@@ -662,6 +657,14 @@ extension WidgetWindowsController {
                 )
                 
                 await updateNESNotificationWindowFrame(nesPanelLocation, animated: animated)
+            }
+            
+            if let agentConfigurationWidgetLocation = widgetLocation.agentConfigurationWidgetLocation {
+                windows.agentConfigurationWidgetWindow.setFrame(
+                    agentConfigurationWidgetLocation.getWidgetFrame(windows.agentConfigurationWidgetWindow.frame),
+                    display: false,
+                    animate: animated
+                )
             }
             
             let isAttachedToXcodeEnabled = UserDefaults.shared.value(for: \.autoAttachChatToXcode)
@@ -1198,6 +1201,42 @@ public final class WidgetWindows {
                 )
             ).environment(cursorPositionTracker)
         )
+        it.canBecomeKeyChecker = { false }
+        it.alphaValue = 0
+        it.setIsVisible(false)
+        return it
+    }()
+    
+    @MainActor
+    lazy var agentConfigurationWidgetWindow = {
+        let it = CanBecomeKeyWindow(
+            contentRect: .init(
+                x: 0,
+                y: 0,
+                width: Style.panelWidth,
+                height: Style.panelHeight
+            ),
+            styleMask: .borderless,
+            backing: .buffered,
+            defer: true
+        )
+        it.isReleasedWhenClosed = false
+        it.isOpaque = false
+        it.backgroundColor = .clear
+        it.collectionBehavior = [.fullScreenAuxiliary, .transient, .canJoinAllSpaces]
+        it.hasShadow = false
+        it.level = widgetLevel(2)
+        it.contentView = NSHostingView(
+            rootView: AgentConfigurationWidgetView(
+                store: store.scope(
+                    state: \.panelState,
+                    action: \.panel
+                ).scope(
+                    state: \.agentConfigurationWidgetState,
+                    action: \.agentConfigurationWidget
+                )
+            ).environment(cursorPositionTracker)
+        )
         it.canBecomeKeyChecker = { true }
         it.alphaValue = 0
         it.setIsVisible(false)
@@ -1266,6 +1305,7 @@ public final class WidgetWindows {
         fixErrorPanelWindow.orderFrontRegardless()
         nesDiffWindow.orderFrontRegardless()
         nesNotificationWindow.orderFrontRegardless()
+        agentConfigurationWidgetWindow.orderFrontRegardless()
         if chatPanelWindow.level.rawValue > NSWindow.Level.normal.rawValue {
             chatPanelWindow.orderFrontRegardless()
         }

@@ -24,17 +24,10 @@ public struct LaunchAgentManager {
     }
 
     public func setupLaunchAgentForTheFirstTimeIfNeeded() async throws {
-        if #available(macOS 13, *) {
-            await removeObsoleteLaunchAgent()
-            try await setupLaunchAgent()
-        } else {
-            guard !FileManager.default.fileExists(atPath: launchAgentPath) else { return }
-            try await setupLaunchAgent()
-            await removeObsoleteLaunchAgent()
-        }
+        await removeObsoleteLaunchAgent()
+        try await setupLaunchAgent()
     }
     
-    @available(macOS 13.0, *)
     public func isBackgroundPermissionGranted() async -> Bool {
         // On macOS 13+, check SMAppService status
         let bridgeLaunchAgent = SMAppService.agent(plistName: "bridgeLaunchAgent.plist")
@@ -43,87 +36,41 @@ public struct LaunchAgentManager {
     }
 
     public func setupLaunchAgent() async throws {
-        if #available(macOS 13, *) {
-            Logger.client.info("Registering bridge launch agent")
-            let bridgeLaunchAgent = SMAppService.agent(plistName: "bridgeLaunchAgent.plist")
-            try bridgeLaunchAgent.register()
-        } else {
-            Logger.client.info("Creating and loading bridge launch agent")
-            let content = """
-            <?xml version="1.0" encoding="UTF-8"?>
-            <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-            <plist version="1.0">
-            <dict>
-                <key>Label</key>
-                <string>\(serviceIdentifier)</string>
-                <key>Program</key>
-                <string>\(executablePath)</string>
-                <key>MachServices</key>
-                <dict>
-                    <key>\(serviceIdentifier)</key>
-                    <true/>
-                </dict>
-                <key>AssociatedBundleIdentifiers</key>
-                <array>
-                    <string>\(bundleIdentifier)</string>
-                    <string>\(serviceIdentifier)</string>
-                </array>
-            </dict>
-            </plist>
-            """
-            if !FileManager.default.fileExists(atPath: launchAgentDirURL.path) {
-                try FileManager.default.createDirectory(
-                    at: launchAgentDirURL,
-                    withIntermediateDirectories: false
-                )
-            }
-            FileManager.default.createFile(
-                atPath: launchAgentPath,
-                contents: content.data(using: .utf8)
-            )
-            try await launchctl("load", launchAgentPath)
-        }
+        Logger.client.info("Registering bridge launch agent")
+        let bridgeLaunchAgent = SMAppService.agent(plistName: "bridgeLaunchAgent.plist")
+        try bridgeLaunchAgent.register()
 
         let buildNumber = Bundle.main.infoDictionary?["CFBundleVersion"] as? String
         UserDefaults.standard.set(buildNumber, forKey: lastLaunchAgentVersionKey)
     }
 
     public func removeLaunchAgent() async throws {
-        if #available(macOS 13, *) {
-            Logger.client.info("Unregistering bridge launch agent")
-            let bridgeLaunchAgent = SMAppService.agent(plistName: "bridgeLaunchAgent.plist")
-            try await bridgeLaunchAgent.unregister()
-        } else {
-            Logger.client.info("Unloading and removing bridge launch agent")
-            try await launchctl("unload", launchAgentPath)
-            try FileManager.default.removeItem(atPath: launchAgentPath)
-        }
+        Logger.client.info("Unregistering bridge launch agent")
+        let bridgeLaunchAgent = SMAppService.agent(plistName: "bridgeLaunchAgent.plist")
+        try await bridgeLaunchAgent.unregister()
     }
 
     public func reloadLaunchAgent() async throws {
-        if #unavailable(macOS 13) {
-            Logger.client.info("Reloading bridge launch agent")
-            try await helper("reload-launch-agent", "--service-identifier", serviceIdentifier)
-        }
+        // No-op: macOS 13+ uses SMAppService which doesn't need manual reload
     }
 
     public func removeObsoleteLaunchAgent() async {
-        if #available(macOS 13, *) {
-            let path = launchAgentPath
-            if FileManager.default.fileExists(atPath: path) {
-                Logger.client.info("Unloading and removing old bridge launch agent")
-                try? await launchctl("unload", path)
-                try? FileManager.default.removeItem(atPath: path)
-            }
-        } else {
-            let path = launchAgentPath.replacingOccurrences(
-                of: "ExtensionService",
-                with: "XPCService"
-            )
-            if FileManager.default.fileExists(atPath: path) {
-                Logger.client.info("Removing old bridge launch agent plist")
-                try? FileManager.default.removeItem(atPath: path)
-            }
+        let path = launchAgentPath
+        if FileManager.default.fileExists(atPath: path) {
+            Logger.client.info("Unloading and removing old bridge launch agent")
+            try? await launchctl("unload", path)
+            try? FileManager.default.removeItem(atPath: path)
+        }
+
+        // Also remove legacy plist that used "XPCService" instead of "ExtensionService"
+        let legacyIdentifier = serviceIdentifier
+            .replacingOccurrences(of: "ExtensionService", with: "XPCService")
+        let legacyPath = launchAgentDirURL
+            .appendingPathComponent("\(legacyIdentifier).plist").path
+        if FileManager.default.fileExists(atPath: legacyPath) {
+            Logger.client.info("Unloading and removing legacy XPCService launch agent")
+            try? await launchctl("unload", legacyPath)
+            try? FileManager.default.removeItem(atPath: legacyPath)
         }
     }
 }

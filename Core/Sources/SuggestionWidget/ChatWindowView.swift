@@ -232,11 +232,7 @@ struct ChatTitleBar: View {
 
 private extension View {
     func hideScrollIndicator() -> some View {
-        if #available(macOS 13.0, *) {
-            return scrollIndicators(.hidden)
-        } else {
-            return self
-        }
+        scrollIndicators(.hidden)
     }
 }
 

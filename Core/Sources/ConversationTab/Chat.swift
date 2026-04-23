@@ -12,6 +12,7 @@ import OrderedCollections
 import SwiftUI
 import GitHelper
 import SuggestionBasic
+import HostAppActivator
 
 public struct DisplayedChatMessage: Equatable {
     public enum Role: Equatable {
@@ -30,11 +31,14 @@ public struct DisplayedChatMessage: Equatable {
     public var errorMessages: [String] = []
     public var steps: [ConversationProgressStep] = []
     public var editAgentRounds: [AgentRound] = []
+    public var parentTurnId: String? = nil
     public var panelMessages: [CopilotShowMessageParams] = []
     public var codeReviewRound: CodeReviewRound? = nil
     public var fileEdits: [FileEdit] = []
     public var turnStatus: ChatMessage.TurnStatus? = nil
     public let requestType: RequestType
+    public var modelName: String? = nil
+    public var billingMultiplier: Float? = nil
 
     public init(
         id: String,
@@ -47,11 +51,14 @@ public struct DisplayedChatMessage: Equatable {
         errorMessages: [String] = [],
         steps: [ConversationProgressStep] = [],
         editAgentRounds: [AgentRound] = [],
+        parentTurnId: String? = nil,
         panelMessages: [CopilotShowMessageParams] = [],
         codeReviewRound: CodeReviewRound? = nil,
         fileEdits: [FileEdit] = [],
         turnStatus: ChatMessage.TurnStatus? = nil,
-        requestType: RequestType
+        requestType: RequestType,
+        modelName: String? = nil,
+        billingMultiplier: Float? = nil
     ) {
         self.id = id
         self.role = role
@@ -63,11 +70,14 @@ public struct DisplayedChatMessage: Equatable {
         self.errorMessages = errorMessages
         self.steps = steps
         self.editAgentRounds = editAgentRounds
+        self.parentTurnId = parentTurnId
         self.panelMessages = panelMessages
         self.codeReviewRound = codeReviewRound
         self.fileEdits = fileEdits
         self.turnStatus = turnStatus
         self.requestType = requestType
+        self.modelName = modelName
+        self.billingMultiplier = billingMultiplier
     }
 }
 
@@ -195,19 +205,22 @@ struct Chat {
         var contextProvider: ChatContextProvider
         var focusedField: Field?
         var currentEditor: ConversationFileReference?
+        var handOffClicked: Bool = false
 
         init(
             mode: EditorMode = .input,
             contexts: [EditorMode: ChatContext] = [.input: .empty()],
             contextProvider: ChatContextProvider = .init(),
             focusedField: Field? = nil,
-            currentEditor: ConversationFileReference? = nil
+            currentEditor: ConversationFileReference? = nil,
+            handOffClicked: Bool = false
         ) {
             self.mode = mode
             self.contexts = contexts
             self.contextProvider = contextProvider
             self.focusedField = focusedField
             self.currentEditor = currentEditor
+            self.handOffClicked = handOffClicked
         }
 
         func context(for mode: EditorMode) -> ChatContext {
@@ -282,16 +295,22 @@ struct Chat {
     struct ConversationState: Equatable {
         var history: [DisplayedChatMessage]
         var isReceivingMessage: Bool
+        var isSummarizingConversation: Bool
         var requestType: RequestType?
+        var contextSizeInfo: ContextSizeInfo?
 
         init(
             history: [DisplayedChatMessage] = [],
             isReceivingMessage: Bool = false,
-            requestType: RequestType? = nil
+            isSummarizingConversation: Bool = false,
+            requestType: RequestType? = nil,
+            contextSizeInfo: ContextSizeInfo? = nil
         ) {
             self.history = history
             self.isReceivingMessage = isReceivingMessage
+            self.isSummarizingConversation = isSummarizingConversation
             self.requestType = requestType
+            self.contextSizeInfo = contextSizeInfo
         }
 
         func subsequentMessages(after messageId: MessageID) -> [DisplayedChatMessage] {
@@ -329,13 +348,16 @@ struct Chat {
     struct EnvironmentState: Equatable {
         var isAgentMode: Bool
         var workspaceURL: URL?
+        var selectedAgent: ConversationMode
 
         init(
             isAgentMode: Bool = AppState.shared.isAgentModeEnabled(),
-            workspaceURL: URL? = nil
+            workspaceURL: URL? = nil,
+            selectedAgent: ConversationMode = .defaultAgent
         ) {
             self.isAgentMode = isAgentMode
             self.workspaceURL = workspaceURL
+            self.selectedAgent = selectedAgent
         }
     }
 
@@ -383,6 +405,7 @@ struct Chat {
             diffViewerController: DiffViewWindowController? = nil,
             isAgentMode: Bool = AppState.shared.isAgentModeEnabled(),
             workspaceURL: URL? = nil,
+            selectedAgent: ConversationMode = .defaultAgent,
             chatMenu: ChatMenu.State = .init(),
             codeReviewState: ConversationCodeReviewFeature.State = .init()
         ) {
@@ -404,7 +427,8 @@ struct Chat {
                 ),
                 environment: EnvironmentState(
                     isAgentMode: isAgentMode,
-                    workspaceURL: workspaceURL
+                    workspaceURL: workspaceURL,
+                    selectedAgent: selectedAgent
                 ),
                 chatMenu: chatMenu,
                 codeReviewState: codeReviewState
@@ -436,9 +460,24 @@ struct Chat {
             set { conversation.isReceivingMessage = newValue }
         }
 
+        var isSummarizingConversation: Bool {
+            get { conversation.isSummarizingConversation }
+            set { conversation.isSummarizingConversation = newValue }
+        }
+
         var requestType: RequestType? {
             get { conversation.requestType }
             set { conversation.requestType = newValue }
+        }
+
+        var contextSizeInfo: ContextSizeInfo? {
+            get { conversation.contextSizeInfo }
+            set { conversation.contextSizeInfo = newValue }
+        }
+
+        var handOffClicked: Bool {
+            get { editor.handOffClicked }
+            set { editor.handOffClicked = newValue }
         }
 
         var focusedField: Field? {
@@ -485,6 +524,11 @@ struct Chat {
         var workspaceURL: URL? {
             get { environment.workspaceURL }
             set { environment.workspaceURL = newValue }
+        }
+
+        var selectedAgent: ConversationMode {
+            get { environment.selectedAgent }
+            set { environment.selectedAgent = newValue }
         }
 
         /// Not including the one being edited
@@ -554,6 +598,7 @@ struct Chat {
         case copyCode(MessageID)
         case insertCode(String)
         case toolCallAccepted(String)
+        case toolCallAcceptedWithApproval(String, ToolAutoApprovalManager.AutoApproval?)
         case toolCallCompleted(String, String)
         case toolCallCancelled(String)
 
@@ -561,10 +606,12 @@ struct Chat {
         case observeHistoryChange
         case observeIsReceivingMessageChange
         case observeFileEditChange
+        case observeContextSizeInfoChange
 
         case historyChanged
         case isReceivingMessageChanged
         case fileEditChanged
+        case contextSizeInfoChanged
 
         case chatMenu(ChatMenu.Action)
         
@@ -579,6 +626,7 @@ struct Chat {
         case removeSelectedImage(ImageReference)
         
         case followUpButtonClicked(String, String)
+        case handOffButtonClicked(HandOff)
         
         // Agent File Edit
         case undoEdits(fileURLs: [URL])
@@ -589,6 +637,7 @@ struct Chat {
         case setDiffViewerController(chat: StoreOf<Chat>)
 
         case agentModeChanged(Bool)
+        case selectedAgentChanged(ConversationMode)
         
         // Code Review
         case codeReview(ConversationCodeReviewFeature.Action)
@@ -608,6 +657,8 @@ struct Chat {
         case undoCheckPoint // Revert the restore
         case discardCheckPoint
         case reloadWorkingset(DisplayedChatMessage)
+
+        case openAutoApproveSettings
     }
 
     let service: ChatService
@@ -618,6 +669,7 @@ struct Chat {
         case observeIsReceivingMessageChange(UUID)
         case sendMessage(UUID)
         case observeFileEditChange(UUID)
+        case observeContextSizeInfoChange(UUID)
         case observeFixErrorNotification(UUID)
     }
 
@@ -647,11 +699,23 @@ struct Chat {
                     await send(.focusOnTextField)
                     await send(.refresh)
                     await send(.observeFixErrorNotification)
-                    
+
+                    let selectedAgentSubModeId = AppState.shared.getSelectedAgentSubMode()
+                    if let modes = await SharedChatService.shared.loadConversationModes(),
+                       let currentMode = modes.first(where: { $0.id == selectedAgentSubModeId }) {
+                        await send(.selectedAgentChanged(currentMode))
+                    }
+
                     let publisher = NotificationCenter.default.publisher(for: .gitHubCopilotChatModeDidChange)
                     for await _ in publisher.values {
                         let isAgentMode = AppState.shared.isAgentModeEnabled()
                         await send(.agentModeChanged(isAgentMode))
+
+                        let selectedAgentSubModeId = AppState.shared.getSelectedAgentSubMode()
+                        if let modes = await SharedChatService.shared.loadConversationModes(),
+                           let currentMode = modes.first(where: { $0.id == selectedAgentSubModeId }) {
+                            await send(.selectedAgentChanged(currentMode))
+                        }
                     }
                 }
 
@@ -673,6 +737,7 @@ struct Chat {
                     scope: AppState.shared.modelScope()
                 )?.modelFamily
                 let agentMode = AppState.shared.isAgentModeEnabled()
+                let selectedAgentSubMode = AppState.shared.getSelectedAgentSubMode()
                 let shouldAttachImages = selectedModel?.supportVision ?? CopilotModelManager.getDefaultChatModel(
                     scope: AppState.shared.modelScope()
                 )?.supportVision ?? false
@@ -708,6 +773,7 @@ struct Chat {
                             model: selectedModelFamily,
                             modelProviderName: selectedModel?.providerName,
                             agentMode: agentMode,
+                            customChatModeId: selectedAgentSubMode,
                             userLanguage: chatResponseLocale
                         )
                 }.cancellable(id: CancelID.sendMessage(self.id))
@@ -717,6 +783,17 @@ struct Chat {
                 return .run { _ in
                     service.updateToolCallStatus(toolCallId: toolCallId, status: .accepted)
                 }.cancellable(id: CancelID.sendMessage(self.id))
+
+            case let .toolCallAcceptedWithApproval(toolCallId, approval):
+                guard !toolCallId.isEmpty else { return .none }
+                return .run { send in
+                    if let approval {
+                        await ToolAutoApprovalManager.shared.approve(approval)
+                    }
+
+                    await send(.toolCallAccepted(toolCallId))
+                }.cancellable(id: CancelID.sendMessage(self.id))
+
             case let .toolCallCancelled(toolCallId):
                 guard !toolCallId.isEmpty else { return .none }
                 return .run { _ in
@@ -740,6 +817,7 @@ struct Chat {
                 )?.modelFamily
                 let references = state.attachedReferences
                 let agentMode = AppState.shared.isAgentModeEnabled()
+                let selectedAgentSubMode = AppState.shared.getSelectedAgentSubMode()
                 
                 return .run { send in
                     await send(.resetContextProvider)
@@ -754,9 +832,34 @@ struct Chat {
                             model: selectedModelFamily,
                             modelProviderName: selectedModel?.providerName,
                             agentMode: agentMode,
+                            customChatModeId: selectedAgentSubMode,
                             userLanguage: chatResponseLocale
                         )
                 }.cancellable(id: CancelID.sendMessage(self.id))
+            
+            case let .handOffButtonClicked(handOff):
+                state.handOffClicked = true
+                let agent = handOff.agent
+                let prompt = handOff.prompt
+                let shouldSend = handOff.send ?? false
+                
+                return .run { send in
+                    // Find and switch to the target agent
+                    let modes = await SharedChatService.shared.loadConversationModes() ?? []
+                    if let targetAgent = modes.first(where: { $0.name.lowercased() == agent.lowercased() }) {
+                        await send(.selectedAgentChanged(targetAgent))
+                    }
+                    
+                    // If send is true, send the prompt message
+                    if shouldSend && !prompt.isEmpty {
+                        await send(.updateTypedMessage(prompt))
+                        let id = UUID().uuidString
+                        await send(.sendButtonTapped(id))
+                    } else if !prompt.isEmpty {
+                        // Just populate the message field
+                        await send(.updateTypedMessage(prompt))
+                    }
+                }
 
             case .returnButtonTapped:
                 state.typedMessage += "\n"
@@ -858,6 +961,7 @@ struct Chat {
                     await send(.observeHistoryChange)
                     await send(.observeIsReceivingMessageChange)
                     await send(.observeFileEditChange)
+                    await send(.observeContextSizeInfoChange)
                 }
 
             case .observeHistoryChange:
@@ -883,6 +987,7 @@ struct Chat {
                 return .run { send in
                     let stream = AsyncStream<Void> { continuation in
                         let cancellable = service.$isReceivingMessage
+                            .merge(with: service.$isSummarizingConversation)
                             .sink { _ in
                                 continuation.yield()
                             }
@@ -917,6 +1022,25 @@ struct Chat {
                     cancelInFlight: true
                 )
 
+            case .observeContextSizeInfoChange:
+                return .run { send in
+                    let stream = AsyncStream<Void> { continuation in
+                        let cancellable = service.$contextSizeInfo
+                            .sink { _ in
+                                continuation.yield()
+                            }
+                        continuation.onTermination = { _ in
+                            cancellable.cancel()
+                        }
+                    }
+                    for await _ in stream {
+                        await send(.contextSizeInfoChanged)
+                    }
+                }.cancellable(
+                    id: CancelID.observeContextSizeInfoChange(id),
+                    cancelInFlight: true
+                )
+
             case .historyChanged:
                 state.history = service.chatHistory.flatMap { message in
                     var all = [DisplayedChatMessage]()
@@ -944,11 +1068,14 @@ struct Chat {
                         errorMessages: message.errorMessages,
                         steps: message.steps,
                         editAgentRounds: message.editAgentRounds,
+                        parentTurnId: message.parentTurnId,
                         panelMessages: message.panelMessages,
                         codeReviewRound: message.codeReviewRound,
                         fileEdits: message.fileEdits,
                         turnStatus: message.turnStatus,
-                        requestType: message.requestType
+                        requestType: message.requestType,
+                        modelName: message.modelName,
+                        billingMultiplier: message.billingMultiplier
                     ))
 
                     return all
@@ -958,9 +1085,14 @@ struct Chat {
 
             case .isReceivingMessageChanged:
                 state.isReceivingMessage = service.isReceivingMessage
+                state.isSummarizingConversation = service.isSummarizingConversation
                 state.requestType = service.requestType
                 return .none
-                
+
+            case .contextSizeInfoChanged:
+                state.conversation.contextSizeInfo = service.contextSizeInfo
+                return .none
+
             case .fileEditChanged:
                 state.fileEditMap = service.fileEditMap
                 let fileEditMap = state.fileEditMap
@@ -1091,7 +1223,12 @@ struct Chat {
             case let .agentModeChanged(isAgentMode):
                 state.isAgentMode = isAgentMode
                 return .none
-            
+
+            case let .selectedAgentChanged(mode):
+                state.selectedAgent = mode
+                state.handOffClicked = false
+                return .none
+
             // MARK: - Code Review
             case let .codeReview(.request(group)):
                 return .run { send in
@@ -1184,6 +1321,8 @@ struct Chat {
                     scope: AppState.shared.modelScope()
                 )?.modelFamily
                 let agentMode = AppState.shared.isAgentModeEnabled()
+                // TODO: if we need to switch to agent mode or keep the current mode
+                let selectedAgentSubMode = AppState.shared.getSelectedAgentSubMode()
                 
                 return .run { _ in 
                     try await service.send(
@@ -1194,6 +1333,7 @@ struct Chat {
                         model: selectedModelFamily,
                         modelProviderName: selectedModel?.providerName,
                         agentMode: agentMode,
+                        customChatModeId: selectedAgentSubMode,
                         userLanguage: chatResponseLocale
                     )
                 }.cancellable(id: CancelID.sendMessage(self.id))
@@ -1334,6 +1474,11 @@ struct Chat {
                     for fileEdit in message.fileEdits {
                         service.updateFileEdits(by: fileEdit)
                     }
+                }
+
+            case .openAutoApproveSettings:
+                return .run { _ in
+                    try launchHostAppToolsSettingsAutoApprove()
                 }
             }
         }

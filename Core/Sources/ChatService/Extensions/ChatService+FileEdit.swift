@@ -25,7 +25,7 @@ extension ChatService {
         
         switch fileEdit.toolName {
         case .insertEditIntoFile:
-            InsertEditIntoFileTool.applyEdit(for: fileURL, content: fileEdit.originalContent, contextProvider: self)
+            InsertEditIntoFileTool.applyEdit(for: fileURL, content: fileEdit.originalContent)
         case .createFile:
             try CreateFileTool.undo(for: fileURL)
         default:

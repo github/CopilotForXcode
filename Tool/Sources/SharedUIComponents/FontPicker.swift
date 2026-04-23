@@ -14,17 +14,10 @@ public struct FontPicker<Label: View>: View {
     }
 
     public var body: some View {
-        if #available(macOS 13.0, *) {
-            LabeledContent {
-                button
-            } label: {
-                label
-            }
-        } else {
-            HStack {
-                label
-                button
-            }
+        LabeledContent {
+            button
+        } label: {
+            label
         }
     }
     

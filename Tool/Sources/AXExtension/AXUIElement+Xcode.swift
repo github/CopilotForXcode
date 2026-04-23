@@ -28,4 +28,16 @@ public extension AXUIElement {
     var isXcodeMenuBar: Bool {
         ["menu bar", "menu bar item"].contains(self.description)
     }
+    
+    var isNavigator: Bool {
+        description == "navigator"
+    }
+    
+    var isDescendantOfNavigator: Bool {
+        self.firstParent(where: \.isNavigator) != nil
+    }
+    
+    var isNonNavigatorSourceEditor: Bool {
+        isSourceEditor && !isDescendantOfNavigator
+    }
 }

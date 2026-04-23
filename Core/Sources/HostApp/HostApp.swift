@@ -39,18 +39,25 @@ public enum TabIndex: Int, CaseIterable {
     }
 }
 
+public enum ToolsSubTab: String, CaseIterable, Identifiable {
+    case MCP, BuiltIn, AutoApprove
+    public var id: Self { self }
+}
+
 @Reducer
 public struct HostApp {
     @ObservableState
     public struct State: Equatable {
         var general = General.State()
         public var activeTabIndex: TabIndex = .general
+        public var activeToolsSubTab: ToolsSubTab = .MCP
     }
 
     public enum Action: Equatable {
         case appear
         case general(General.Action)
         case setActiveTab(TabIndex)
+        case setActiveToolsSubTab(ToolsSubTab)
     }
 
     @Dependency(\.toast) var toast
@@ -74,6 +81,10 @@ public struct HostApp {
 
             case .setActiveTab(let index):
                 state.activeTabIndex = index
+                return .none
+
+            case .setActiveToolsSubTab(let tab):
+                state.activeToolsSubTab = tab
                 return .none
             }
         }

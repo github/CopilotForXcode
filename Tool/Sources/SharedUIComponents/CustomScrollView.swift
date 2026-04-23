@@ -44,11 +44,7 @@ public struct CustomScrollView<Content: View>: View {
             }
             .listStyle(.plain)
             .modify { view in
-                if #available(macOS 13.0, *) {
-                    view.listRowSeparator(.hidden).listSectionSeparator(.hidden)
-                } else {
-                    view
-                }
+                view.listRowSeparator(.hidden).listSectionSeparator(.hidden)
             }
             .frame(idealHeight: max(10, height))
             .onPreferenceChange(CustomScrollViewHeightPreferenceKey.self) { newHeight in

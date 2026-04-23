@@ -292,13 +292,13 @@ public final class XcodeInspector: ObservableObject {
 
             focusedElement = xcode.getFocusedElement(shouldRecordStatus: true)
             
-            if let editorElement = focusedElement, editorElement.isSourceEditor {
+            if let editorElement = focusedElement, editorElement.isNonNavigatorSourceEditor {
                 focusedEditor = .init(
                     runningApplication: xcode.runningApplication,
                     element: editorElement
                 )
             } else if let element = focusedElement,
-                      let editorElement = element.firstParent(where: \.isSourceEditor)
+                      let editorElement = element.firstParent(where: \.isNonNavigatorSourceEditor)
             {
                 focusedEditor = .init(
                     runningApplication: xcode.runningApplication,
@@ -326,15 +326,13 @@ public final class XcodeInspector: ObservableObject {
             .value(for: \.restartXcodeInspectorIfAccessibilityAPIIsMalfunctioning)
         {
             let malfunctionCheck = Task { @XcodeInspectorActor [weak self] in
-                if #available(macOS 13.0, *) {
-                    let notifications = await xcode.axNotifications.notifications().filter {
-                        $0.kind == .uiElementDestroyed
-                    }.debounce(for: .milliseconds(1000))
-                    for await _ in notifications {
-                        guard let self else { return }
-                        try Task.checkCancellation()
-                        self.checkForAccessibilityMalfunction("Element Destroyed")
-                    }
+                let notifications = await xcode.axNotifications.notifications().filter {
+                    $0.kind == .uiElementDestroyed
+                }.debounce(for: .milliseconds(1000))
+                for await _ in notifications {
+                    guard let self else { return }
+                    try Task.checkCancellation()
+                    self.checkForAccessibilityMalfunction("Element Destroyed")
                 }
             }
 
@@ -374,7 +372,7 @@ public final class XcodeInspector: ObservableObject {
         guard Date().timeIntervalSince(lastRecoveryFromAccessibilityMalfunctioningTimeStamp) > 5
         else { return }
 
-        if let editor = focusedEditor, !editor.element.isSourceEditor {
+        if let editor = focusedEditor, !editor.element.isNonNavigatorSourceEditor {
             NotificationCenter.default.post(
                 name: .accessibilityAPIMalfunctioning,
                 object: "Source Editor Element Corrupted: \(source)"

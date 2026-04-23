@@ -2,23 +2,35 @@ import Combine
 import GitHubCopilotService
 import Persist
 import SwiftUI
+import SharedUIComponents
+import ConversationServiceProvider
 
 struct MCPToolsListView: View {
     @ObservedObject private var mcpToolManager = CopilotMCPToolManagerObservable.shared
     @State private var serverToggleStates: [String: Bool] = [:]
     @State private var isSearchBarVisible: Bool = false
     @State private var searchText: String = ""
+    @State private var modes: [ConversationMode] = []
+    @Binding var selectedMode: ConversationMode
+    let isCustomAgentEnabled: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             GroupBox(
                 label:
-                HStack(alignment: .center) {
-                    Text("Available MCP Tools").fontWeight(.bold)
-                    Spacer()
-                    SearchBar(isVisible: $isSearchBarVisible, text: $searchText)
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(alignment: .center) {
+                        Text("Available MCP Tools").fontWeight(.bold)
+                        if isCustomAgentEnabled {
+                            AgentModeDropdown(modes: $modes, selectedMode: $selectedMode)
+                        }
+                        Spacer()
+                        CollapsibleSearchField(searchText: $searchText, isExpanded: $isSearchBarVisible)
+                    }
+                    .clipped()
+                    
+                    AgentModeDescriptionView(selectedMode: selectedMode, isLoadingMode: false)
                 }
-                .clipped()
             ) {
                 let filteredServerTools = filteredMCPServerTools()
                 if filteredServerTools.isEmpty {
@@ -28,7 +40,10 @@ struct MCPToolsListView: View {
                         mcpServerTools: filteredServerTools,
                         serverToggleStates: $serverToggleStates,
                         searchKey: searchText,
-                        expandedServerNames: expandedServerNames(filteredServerTools: filteredServerTools)
+                        expandedServerNames: expandedServerNames(filteredServerTools: filteredServerTools),
+                        isInteractionAllowed: isInteractionAllowed(),
+                        modes: $modes,
+                        selectedMode: $selectedMode
                     )
                 }
             }
@@ -36,6 +51,9 @@ struct MCPToolsListView: View {
         }
         .onAppear(perform: updateServerToggleStates)
         .onChange(of: mcpToolManager.availableMCPServerTools) { _ in
+            updateServerToggleStates()
+        }
+        .onChange(of: selectedMode) { _ in
             updateServerToggleStates()
         }
     }
@@ -72,6 +90,10 @@ struct MCPToolsListView: View {
     private func expandedServerNames(filteredServerTools: [MCPServerToolsCollection]) -> Set<String> {
         // Expand all groups that have at least one tool in the filtered list
         Set(filteredServerTools.map { $0.name })
+    }
+    
+    private func isInteractionAllowed() -> Bool {
+        return AgentModeToolHelpers.isInteractionAllowed(selectedMode: selectedMode)
     }
 }
 

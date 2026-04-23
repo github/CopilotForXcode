@@ -53,7 +53,7 @@ public extension Workspace {
         throw EditorCursorOutOfScopeError()
     }
     
-    let filespace = try createFilespaceIfNeeded(fileURL: fileURL)
+    let filespace = try await createFilespaceIfNeeded(fileURL: fileURL)
     
     if !editor.uti.isEmpty {
         filespace.updateCodeMetadata(
@@ -67,7 +67,6 @@ public extension Workspace {
     filespace.codeMetadata.guessLineEnding(from: editor.lines.first)
     
     let snapshot = FilespaceSuggestionSnapshot(content: editor)
-    
     filespace.suggestionSourceSnapshot = snapshot
     
     guard let suggestionService else { throw SuggestionFeatureDisabledError() }
@@ -100,7 +99,7 @@ public extension Workspace {
             throw EditorCursorOutOfScopeError()
         }
 
-        let filespace = try createFilespaceIfNeeded(fileURL: fileURL)
+        let filespace = try await createFilespaceIfNeeded(fileURL: fileURL)
 
         if !editor.uti.isEmpty {
             filespace.updateCodeMetadata(
@@ -115,7 +114,7 @@ public extension Workspace {
 
         let snapshot = FilespaceSuggestionSnapshot(content: editor)
 
-        filespace.suggestionSourceSnapshot = snapshot
+        filespace.nesSuggestionSourceSnapshot = snapshot
 
         guard let suggestionService else { throw SuggestionFeatureDisabledError() }
         let content = editor.lines.joined(separator: "")
@@ -153,6 +152,15 @@ public extension Workspace {
         if let suggestion = filespaces[fileURL]?.presentingSuggestion {
             Task {
                 await gitHubCopilotService?.notifyShown(suggestion)
+            }
+        }
+    }
+    
+    @WorkspaceActor
+    func notifyNESSuggestionShown(forFileAt fileURL: URL) {
+        if let suggestion = filespaces[fileURL]?.presentingNESSuggestion {
+            Task {
+                await gitHubCopilotService?.notifyCopilotInlineEditShown(suggestion)
             }
         }
     }
@@ -263,11 +271,11 @@ public extension Workspace {
         }
         
         Task {
-             await gitHubCopilotService?.notifyAccepted(suggestion, acceptedLength: nil)
+             await gitHubCopilotService?.notifyCopilotInlineEditAccepted(suggestion)
         }
         
         filespace.resetNESSuggestion()
-        filespace.resetSnapshot()
+        filespace.resetNESSnapshot()
         
         return suggestion
     }

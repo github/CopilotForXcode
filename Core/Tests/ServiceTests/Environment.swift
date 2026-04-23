@@ -71,8 +71,16 @@ class MockSuggestionService: GitHubCopilotSuggestionServiceType {
     func notifyShown(_ completion: SuggestionBasic.CodeSuggestion) async {
         shown = completion.id
     }
+    
+    func notifyCopilotInlineEditShown(_ completion: SuggestionBasic.CodeSuggestion) async {
+        shown = completion.id
+    }
 
     func notifyAccepted(_ completion: CodeSuggestion, acceptedLength: Int? = nil) async {
+        accepted = completion.id
+    }
+    
+    func notifyCopilotInlineEditAccepted(_ completion: CodeSuggestion) async {
         accepted = completion.id
     }
 

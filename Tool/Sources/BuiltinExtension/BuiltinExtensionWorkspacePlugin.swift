@@ -10,8 +10,8 @@ public final class BuiltinExtensionWorkspacePlugin: WorkspacePlugin {
         super.init(workspace: workspace)
     }
 
-    override public func didOpenFilespace(_ filespace: Filespace) {
-        notifyOpenFile(filespace: filespace)
+    override public func didOpenFilespace(_ filespace: Filespace) async {
+        await notifyOpenFile(filespace: filespace)
     }
 
     override public func didSaveFilespace(_ filespace: Filespace) {
@@ -22,8 +22,8 @@ public final class BuiltinExtensionWorkspacePlugin: WorkspacePlugin {
         _ filespace: Filespace,
         content: String,
         contentChanges: [TextDocumentContentChangeEvent]? = nil
-    ) {
-        notifyUpdateFile(filespace: filespace, content: content, contentChanges: contentChanges)
+    ) async {
+        await notifyUpdateFile(filespace: filespace, content: content, contentChanges: contentChanges)
     }
 
     override public func didCloseFilespace(_ fileURL: URL) {
@@ -37,15 +37,13 @@ public final class BuiltinExtensionWorkspacePlugin: WorkspacePlugin {
         }
     }
 
-    public func notifyOpenFile(filespace: Filespace) {
-        Task {
-            guard filespace.isTextReadable else { return }
-            for ext in extensionManager.extensions {
-                ext.workspace(
-                    .init(workspaceURL: workspaceURL, projectURL: projectRootURL),
-                    didOpenDocumentAt: filespace.fileURL
-                )
-            }
+    public func notifyOpenFile(filespace: Filespace) async {
+        guard filespace.isTextReadable else { return }
+        for ext in extensionManager.extensions {
+            await ext.workspace(
+                .init(workspaceURL: workspaceURL, projectURL: projectRootURL),
+                didOpenDocumentAt: filespace.fileURL
+            )
         }
     }
 
@@ -53,17 +51,15 @@ public final class BuiltinExtensionWorkspacePlugin: WorkspacePlugin {
         filespace: Filespace,
         content: String,
         contentChanges: [TextDocumentContentChangeEvent]? = nil
-    ) {
-        Task {
-            guard filespace.isTextReadable else { return }
-            for ext in extensionManager.extensions {
-                ext.workspace(
-                    .init(workspaceURL: workspaceURL, projectURL: projectRootURL),
-                    didUpdateDocumentAt: filespace.fileURL, 
-                    content: content,
-                    contentChanges: contentChanges
-                ) 
-            }
+    ) async {
+        guard filespace.isTextReadable else { return }
+        for ext in extensionManager.extensions {
+            await ext.workspace(
+                .init(workspaceURL: workspaceURL, projectURL: projectRootURL),
+                didUpdateDocumentAt: filespace.fileURL,
+                content: content,
+                contentChanges: contentChanges
+            )
         }
     }
 

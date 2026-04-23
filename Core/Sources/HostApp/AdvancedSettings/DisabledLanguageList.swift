@@ -5,13 +5,8 @@ import SharedUIComponents
 extension List {
     @ViewBuilder
     func removeBackground() -> some View {
-        if #available(macOS 13.0, *) {
-            scrollContentBackground(.hidden)
-                .listRowBackground(EmptyView())
-        } else {
-            background(Color.clear)
-                .listRowBackground(EmptyView())
-        }
+        scrollContentBackground(.hidden)
+            .listRowBackground(EmptyView())
     }
 }
 
@@ -80,11 +75,7 @@ struct DisabledLanguageList: View {
                     }
                 }
                 .modify { view in
-                    if #available(macOS 13.0, *) {
-                        view.listRowSeparator(.hidden).listSectionSeparator(.hidden)
-                    } else {
-                        view
-                    }
+                    view.listRowSeparator(.hidden).listSectionSeparator(.hidden)
                 }
             }
             .removeBackground()

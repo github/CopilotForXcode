@@ -80,7 +80,6 @@ extension XPCCommunicationBridge {
     }
 }
 
-@available(macOS 13.0, *)
 public func showBackgroundPermissionAlert() {
     let alert = NSAlert()
     alert.messageText = "Background Permission Required"

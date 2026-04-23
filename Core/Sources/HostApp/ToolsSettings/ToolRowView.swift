@@ -8,13 +8,17 @@ struct ToolRow: View {
     let toolStatus: ToolStatus
     let isServerEnabled: Bool
     @Binding var isToolEnabled: Bool
+    var isInteractionAllowed: Bool = true
     let onToolToggleChanged: (Bool) -> Void
 
     var body: some View {
         HStack(alignment: .center) {
             Toggle(isOn: Binding(
                 get: { isToolEnabled },
-                set: { onToolToggleChanged($0) }
+                set: { newValue in
+                    isToolEnabled = newValue
+                    onToolToggleChanged(newValue)
+                }
             )) {
                 VStack(alignment: .leading, spacing: 0) {
                     HStack(alignment: .center, spacing: 8) {
@@ -32,9 +36,8 @@ struct ToolRow: View {
                     Divider().padding(.vertical, 4)
                 }
             }
+            .disabled(!isInteractionAllowed)
         }
         .padding(.vertical, 0)
-        .onChange(of: toolStatus) { isToolEnabled = $0 == .enabled }
-        .onChange(of: isServerEnabled) { if !$0 { isToolEnabled = false } }
     }
 }

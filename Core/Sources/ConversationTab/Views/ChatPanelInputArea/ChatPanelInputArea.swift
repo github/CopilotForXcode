@@ -19,22 +19,15 @@ struct ChatPanelInputArea: View {
         Button(action: {
             chat.send(.clearButtonTap)
         }) {
-            Group {
-                if #available(macOS 13.0, *) {
-                    Image(systemName: "eraser.line.dashed.fill")
-                        .scaledFont(.body)
-                } else {
-                    Image(systemName: "trash.fill")
-                        .scaledFont(.body)
+            Image(systemName: "eraser.line.dashed.fill")
+                .scaledFont(.body)
+                .padding(6)
+                .background {
+                    Circle().fill(Color(nsColor: .controlBackgroundColor))
                 }
-            }
-            .padding(6)
-            .background {
-                Circle().fill(Color(nsColor: .controlBackgroundColor))
-            }
-            .overlay {
-                Circle().stroke(Color(nsColor: .controlColor), lineWidth: 1)
-            }
+                .overlay {
+                    Circle().stroke(Color(nsColor: .controlColor), lineWidth: 1)
+                }
         }
         .buttonStyle(.plain)
     }

@@ -59,7 +59,7 @@ final class XPCController: XPCServiceDelegate {
                     // No log, but you should run CommunicationBridge, too.
                     #else
                     if consecutiveFailures == 5 {
-                        if #available(macOS 13.0, *) {
+                        await MainActor.run {
                             showBackgroundPermissionAlert()
                         }
                     }

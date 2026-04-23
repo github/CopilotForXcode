@@ -13,6 +13,8 @@ class ServerNotificationHandlerImpl: ServerNotificationHandler {
     var protocolProgressSubject: PassthroughSubject<LanguageServerProtocol.ProgressParams, Never>
     var conversationProgressHandler: ConversationProgressHandler = ConversationProgressHandlerImpl.shared
     var featureFlagNotifier: FeatureFlagNotifier = FeatureFlagNotifierImpl.shared
+    var copilotPolicyNotifier: CopilotPolicyNotifier = CopilotPolicyNotifierImpl.shared
+    var compressionHandler: CompressionHandler = CompressionHandlerImpl.shared
 
     init() {
         self.protocolProgressSubject = PassthroughSubject<ProgressParams, Never>()
@@ -42,6 +44,27 @@ class ServerNotificationHandlerImpl: ServerNotificationHandler {
                     from: data
                    ) {
                     featureFlagNotifier.handleFeatureFlagNotification(didChangeFeatureFlagsParams)
+                }
+                break
+            case "policy/didChange":
+                if let data = try? JSONEncoder().encode(notification.params),
+                   let policy = try? JSONDecoder().decode(
+                    CopilotPolicy.self,
+                    from: data
+                   ) {
+                    copilotPolicyNotifier.handleCopilotPolicyNotification(policy)
+                }
+                break
+            case "$/copilot/compressionStarted":
+                if let payload = GitHubCopilotNotification.CompressionStartedNotification
+                    .decode(fromParams: notification.params) {
+                    compressionHandler.onCompressionStarted.send(payload.conversationId)
+                }
+                break
+            case "$/copilot/compressionCompleted":
+                if let payload = GitHubCopilotNotification.CompressionCompletedNotification
+                    .decode(fromParams: notification.params) {
+                    compressionHandler.onCompressionCompleted.send(payload)
                 }
                 break
             default:

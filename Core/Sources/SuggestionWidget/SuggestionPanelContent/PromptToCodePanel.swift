@@ -332,13 +332,7 @@ extension PromptToCodePanel {
                                     codeForegroundColor: codeForegroundColor
                                 )
                             }
-                            .modify {
-                                if #available(macOS 13.0, *) {
-                                    $0.scrollIndicators(.hidden)
-                                } else {
-                                    $0
-                                }
-                            }
+                            .scrollIndicators(.hidden)
                         }
                     }
                 }

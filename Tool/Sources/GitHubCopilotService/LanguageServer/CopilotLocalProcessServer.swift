@@ -1,4 +1,5 @@
 import Combine
+import ConversationServiceProvider
 import Foundation
 import JSONRPC
 import LanguageClient
@@ -221,6 +222,15 @@ class CopilotLocalProcessServer {
             case "copilot/mcpRuntimeLogs":
                 notificationPublisher.send(anyNotification)
                 return true
+            case "policy/didChange":
+                notificationPublisher.send(anyNotification)
+                return true
+            case "$/copilot/compressionStarted":
+                notificationPublisher.send(anyNotification)
+                return true
+            case "$/copilot/compressionCompleted":
+                notificationPublisher.send(anyNotification)
+                return true
             case "conversation/preconditionsNotification", "statusNotification":
                 // Ignore
                 return true
@@ -262,19 +272,17 @@ extension CopilotLocalProcessServer: ServerConnection {
         
         let method = notif.method.rawValue
         
-        switch notif {
-        case .copilotDidChangeWatchedFiles(let params):
-            do {
+        do {
+            switch notif {
+            case .copilotDidChangeWatchedFiles(let params):
                 try await server.sendNotification(params, method: method)
-            } catch {
-                throw ServerError.unableToSendNotification(error)
-            }
-        case .clientProtocolProgress(let params):
-            do {
+            case .clientProtocolProgress(let params):
                 try await server.sendNotification(params, method: method)
-            } catch {
-                throw ServerError.unableToSendNotification(error)
+            case .textDocumentDidShowInlineEdit(let params):
+                try await server.sendNotification(params, method: method)
             }
+        } catch {
+            throw ServerError.unableToSendNotification(error)
         }
     }
 
@@ -353,10 +361,12 @@ public enum CopilotClientNotification {
     public enum Method: String {
         case workspaceDidChangeWatchedFiles = "workspace/didChangeWatchedFiles"
         case protocolProgress = "$/progress"
+        case textDocumentDidShowInlineEdit = "textDocument/didShowInlineEdit"
     }
     
     case copilotDidChangeWatchedFiles(CopilotDidChangeWatchedFilesParams)
     case clientProtocolProgress(ProgressParams)
+    case textDocumentDidShowInlineEdit(TextDocumentDidShowInlineEditParams)
     
     public var method: Method {
         switch self {
@@ -364,6 +374,8 @@ public enum CopilotClientNotification {
             return .workspaceDidChangeWatchedFiles
         case .clientProtocolProgress:
             return .protocolProgress
+        case .textDocumentDidShowInlineEdit:
+            return .textDocumentDidShowInlineEdit
         }
     }
 }

@@ -5,6 +5,70 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.48.0 - April 23, 2026
+### Added
+- Context window usage details in chat, including a token breakdown for system instructions, messages, attached files, and tool results.
+- Auto Compress setting to compact conversation history and save context tokens.
+- Install flow for Xcode's built-in MCP server from settings.
+
+### Changed
+- Custom agents and the Auto model are now generally available.
+- Removed support for macOS 12.
+- Improved UI for model picker tooltips.
+
+### Fixed
+- Fixed an issue where GPT-5.4 requests could return a 400 error.
+- Fixed an issue where the MCP allowlist did not work correctly.
+
+## 0.47.0 - February 4, 2026
+### Added
+- Auto approval for MCP tools, sensitive files, and terminal commands.
+- MCP registry and allowlist are now available (requires editor preview feature flag).
+
+### Changed
+- Improved UI for MCP tool call details.
+- Improved UI for working set header.
+
+### Fixed
+- Fixed toolcall layout issue.
+- Fixed NES display issue.
+- Fixed error message for SSL certificate errors.
+- Fixed several performance issues.
+
+## 0.46.0 - December 11, 2025
+### Added
+- MCP: Support delete MCP server from list.
+
+### Changed
+- Refine built-in tools layout and displaying error and output details.
+- Better support toolCallingLoop continue operation for subagent turn.
+- Update feedback forum link.
+- Update client-side MCP restore and persist.
+- Adopt NES notification.
+
+### Fixed
+- Disable auto focus for fix error window.
+- Fixed an issue where no file change was made when insert_edit_into_file tool succeeds.
+- Fixed an issue where insert edit was applied to the incorrect file.
+- Fixed model picker to use model id instead of model family.
+- Fixed read_file, read_directory tool randomly failing.
+
+## 0.45.0 - November 14, 2025
+### Added
+- New models: GPT-5.1, GPT-5.1-Codex, GPT-5.1-Codex-Mini, Claude Haiku 4.5, and Auto (preview).
+- Added support for custom agents (preview).
+- Introduced the built-in Plan agent (preview).
+- Added support for subagent execution (preview).
+- Added support for Next Edit Suggestions (preview).
+
+### Changed
+- MCP servers now support dynamic OAuth setup for third-party authentication providers.
+- Added a setting to configure the maximum number of tool requests allowed.
+
+### Fixed
+- Fixed an issue that the terminal view in Agent conversation was clipped
+- Fixed an issue that the Chat panel failed to recognize newly created workspaces.
+
 ## 0.44.0 - October 15, 2025
 ### Added
 - Added support for new models in Chat: Grok Code Fast 1, Claude Sonnet 4.5, Claude Opus 4, Claude Opus 4.1 and GPT-5 mini.

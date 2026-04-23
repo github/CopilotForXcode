@@ -10,6 +10,7 @@ import WorkspaceSuggestionService
 import XcodeInspector
 import XPCShared
 import AXHelper
+import GitHubCopilotService
 
 /// It's used to run some commands without really triggering the menu bar item.
 ///
@@ -59,10 +60,10 @@ struct PseudoCommandHandler {
         if Task.isCancelled { return }
         
         let codeCompletionEnabled = UserDefaults.shared.value(for: \.realtimeSuggestionToggle)
-        let nesEnabled = UserDefaults.shared.value(for: \.realtimeNESToggle)
+        // Enabled both by Feature Flag and User.
+        let nesEnabled = FeatureFlagNotifierImpl.shared.featureFlags.editorPreviewFeatures && UserDefaults.shared.value(for: \.realtimeNESToggle)
         guard codeCompletionEnabled || nesEnabled else {
-            filespace.reset()
-            filespace.resetNESSuggestion()
+            cleanupAllSuggestions(filespace: filespace, presenter: nil)
             return
         }
 
@@ -85,7 +86,7 @@ struct PseudoCommandHandler {
                     presenter: presenter
                 )
             } else {
-                filespace.reset()
+                cleanupCodeCompletionSuggestion(filespace: filespace, presenter: presenter)
             }
             
             if nesEnabled,
@@ -98,11 +99,41 @@ struct PseudoCommandHandler {
                     presenter: presenter
                 )
             } else {
-                filespace.resetNESSuggestion()
+                cleanupNESSuggestion(filespace: filespace, presenter: presenter)
             }
+            
         } catch {
-            return
+            cleanupAllSuggestions(filespace: filespace, presenter: presenter)
         }
+    }
+    
+    @WorkspaceActor
+    private func cleanupCodeCompletionSuggestion(
+        filespace: Filespace,
+        presenter: PresentInWindowSuggestionPresenter?
+    ) {
+        filespace.reset()
+        presenter?.discardSuggestion(fileURL: filespace.fileURL)
+    }
+    
+    @WorkspaceActor
+    private func cleanupNESSuggestion(
+        filespace: Filespace,
+        presenter: PresentInWindowSuggestionPresenter?
+    ) {
+        filespace.resetNESSuggestion()
+        presenter?.discardNESSuggestion(fileURL: filespace.fileURL)
+    }
+    
+    @WorkspaceActor
+    private func cleanupAllSuggestions(
+        filespace: Filespace,
+        presenter: PresentInWindowSuggestionPresenter?
+    ) {
+        cleanupCodeCompletionSuggestion(filespace: filespace, presenter: presenter)
+        cleanupNESSuggestion(filespace: filespace, presenter: presenter)
+        filespace.resetSnapshot()
+        filespace.resetNESSnapshot()
     }
     
     @WorkspaceActor
@@ -121,6 +152,7 @@ struct PseudoCommandHandler {
             ) {
                 return
             } else {
+                filespace.reset()
                 presenter.discardSuggestion(fileURL: filespace.fileURL)
             }
         }
@@ -170,6 +202,7 @@ struct PseudoCommandHandler {
             ) {
                 return
             } else {
+                filespace.resetNESSuggestion()
                 presenter.discardNESSuggestion(fileURL: filespace.fileURL)
             }
         }
@@ -188,7 +221,7 @@ struct PseudoCommandHandler {
         // TODO: handle errorMessage if any
         if filespace.presentingNESSuggestion != nil {
             presenter.presentNESSuggestion(fileURL: fileURL)
-            workspace.notifySuggestionShown(fileFileAt: fileURL)
+            workspace.notifyNESSuggestionShown(forFileAt: fileURL)
         } else {
             presenter.discardNESSuggestion(fileURL: fileURL)
         }
@@ -209,6 +242,24 @@ struct PseudoCommandHandler {
             cursorPosition: content.cursorPosition
         ) {
             PresentInWindowSuggestionPresenter().discardSuggestion(fileURL: fileURL)
+        }
+    }
+    
+    @WorkspaceActor
+    func invalidateRealtimeNESSuggestionsIfNeeded(fileURL: URL, sourceEditor: SourceEditor) async {
+        guard let (_, filespace) = try? await Service.shared.workspacePool
+            .fetchOrCreateWorkspaceAndFilespace(fileURL: fileURL) else { return }
+        
+        if filespace.presentingNESSuggestion == nil {
+            return // skip if there's no NES suggestion presented.
+        }
+        
+        let content = sourceEditor.getContent()
+        if !filespace.validateNESSuggestions(
+            lines: content.lines,
+            cursorPosition: content.cursorPosition
+        ) {
+            PresentInWindowSuggestionPresenter().discardNESSuggestion(fileURL: fileURL)
         }
     }
 

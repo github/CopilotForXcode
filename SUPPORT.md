@@ -4,7 +4,7 @@
 
 We’d love to get your help in making GitHub Copilot better!  If you have
 feedback or encounter any problems, please reach out on our [Feedback
-forum](https://github.com/orgs/community/discussions/categories/copilot).
+forum](https://github.com/github/CopilotForXcode/discussions).
 
 GitHub Copilot for Xcode is under active development and maintained by GitHub
 staff. We will do our best to respond to support, feature requests, and

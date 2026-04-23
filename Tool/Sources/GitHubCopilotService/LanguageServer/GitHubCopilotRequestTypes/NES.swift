@@ -38,3 +38,22 @@ public struct CopilotInlineEdit: Codable {
 public struct CopilotInlineEditsResponse: Codable {
     public let edits: [CopilotInlineEdit]
 }
+
+// MARK: - Notification
+
+public struct TextDocumentDidShowInlineEditParams: Codable, Hashable {
+    public struct Command: Codable, Hashable {
+        public var arguments: [String]
+    }
+    
+    public struct NotificationCommandSchema: Codable, Hashable {
+        public var command: Command
+    }
+    
+    public var item: NotificationCommandSchema
+    
+    public static func from(id: String) -> Self {
+        .init(item: .init(command: .init(arguments: [id])))
+    }
+}
+

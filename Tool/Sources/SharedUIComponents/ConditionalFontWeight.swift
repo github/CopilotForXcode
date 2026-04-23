@@ -8,11 +8,7 @@ public struct ConditionalFontWeight: ViewModifier {
     }
 
     public func body(content: Content) -> some View {
-        if #available(macOS 13.0, *), weight != nil {
-            content.fontWeight(weight)
-        } else {
-            content
-        }
+        content.fontWeight(weight)
     }
 }
 

@@ -11,12 +11,14 @@ struct BadgeItem {
     let level: Level
     let icon: String?
     let isSelected: Bool
+    let tooltip: String?
 
-    init(text: String, level: Level, icon: String? = nil, isSelected: Bool = false) {
+    init(text: String, level: Level, icon: String? = nil, isSelected: Bool = false, tooltip: String? = nil) {
         self.text = text
         self.level = level
         self.icon = icon
         self.isSelected = isSelected
+        self.tooltip = tooltip
     }
 }
 
@@ -26,6 +28,7 @@ struct Badge: View {
     let level: BadgeItem.Level
     let icon: String?
     let isSelected: Bool
+    let tooltip: String?
 
     init(badgeItem: BadgeItem) {
         text = badgeItem.text
@@ -33,22 +36,25 @@ struct Badge: View {
         level = badgeItem.level
         icon = badgeItem.icon
         isSelected = badgeItem.isSelected
+        tooltip = badgeItem.tooltip
     }
 
-    init(text: String, level: BadgeItem.Level, icon: String? = nil, isSelected: Bool = false) {
+    init(text: String, level: BadgeItem.Level, icon: String? = nil, isSelected: Bool = false, tooltip: String? = nil) {
         self.text = text
         self.attributedText = nil
         self.level = level
         self.icon = icon
         self.isSelected = isSelected
+        self.tooltip = tooltip
     }
     
-    init(attributedText: AttributedString, level: BadgeItem.Level, icon: String? = nil, isSelected: Bool = false) {
+    init(attributedText: AttributedString, level: BadgeItem.Level, icon: String? = nil, isSelected: Bool = false, tooltip: String? = nil) {
         self.text = String(attributedText.characters)
         self.attributedText = attributedText
         self.level = level
         self.icon = icon
         self.isSelected = isSelected
+        self.tooltip = tooltip
     }
 
     var body: some View {
@@ -58,13 +64,13 @@ struct Badge: View {
                     .font(.caption2)
                     .padding(.vertical, 1)
             }
-            if let attributedText = attributedText {
+            if let attributedText = attributedText, attributedText.characters.count > 0 {
                 Text(attributedText)
                     .fontWeight(.semibold)
                     .font(.caption2)
                     .lineLimit(1)
                     .truncationMode(.middle)
-            } else {
+            } else if !text.isEmpty {
                 Text(text)
                     .fontWeight(.semibold)
                     .font(.caption2)
@@ -96,6 +102,20 @@ struct Badge: View {
                 lineWidth: 1
             )
         )
-        .help(text)
+        .help(tooltip ?? text)
     }
 }
+
+extension BadgeItem {
+    static func disabledByPolicy(feature: String, isPlural: Bool = false) -> BadgeItem {
+        let verb = isPlural ? "are" : "is"
+        let pronoun = isPlural ? "them" : "it"
+        return .init(
+            text: "Disabled by organization policy",
+            level: .warning,
+            icon: "exclamationmark.triangle.fill",
+            tooltip: "\(feature) \(verb) disabled by your organization's policy. Please contact your administrator to enable \(pronoun)."
+        )
+    }
+}
+

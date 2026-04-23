@@ -1,4 +1,5 @@
 import AppKit
+import GitHubCopilotService
 
 extension WidgetWindowsController {
     func setupNESSuggestionPanelObservers() {
@@ -14,6 +15,40 @@ extension WidgetWindowsController {
             
             await self.storeCancellables([nesContentPublisher])
         }
+    }
+    
+    @MainActor
+    func applyOpacityForNESWindows(by noFocus: Bool) {
+        guard !noFocus, isNESFeatureFlagEnabled
+        else {
+            hideAllNESWindows()
+            return
+        }
+        
+        displayAllNESWindows()
+    }
+    
+    @MainActor
+    func hideAllNESWindows() {
+        windows.nesMenuWindow.alphaValue = 0
+        windows.nesDiffWindow.setIsVisible(false)
+        
+        hideNESDiffWindow()
+        
+        windows.nesNotificationWindow.alphaValue = 0
+        windows.nesNotificationWindow.setIsVisible(false)
+    }
+    
+    @MainActor
+    func displayAllNESWindows() {
+        windows.nesMenuWindow.alphaValue = 1
+        windows.nesDiffWindow.setIsVisible(true)
+        
+        windows.nesDiffWindow.alphaValue = 1
+        windows.nesDiffWindow.setIsVisible(true)
+        
+        windows.nesNotificationWindow.alphaValue = 1
+        windows.nesNotificationWindow.setIsVisible(true)
     }
     
     @MainActor

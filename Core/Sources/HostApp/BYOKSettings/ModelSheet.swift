@@ -1,5 +1,6 @@
 import GitHubCopilotService
 import SwiftUI
+import SharedUIComponents
 
 struct ModelSheet: View {
     @ObservedObject var dataManager: BYOKModelManagerObservable

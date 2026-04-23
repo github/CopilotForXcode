@@ -856,6 +856,57 @@ final class AcceptSuggestionTests: XCTestCase {
 
         """)
     }
+    
+    func test_accept_multi_lines_suggestion_with_overlay() async throws {
+        let content = """
+        struct Cat {
+            var name: String
+            var age: String
+        }
+        """
+        let text = """
+        newName: String
+            var newAge
+        """
+        let suggestion = CodeSuggestion(
+            id: "",
+            text: text,
+            position: .init(line: 1, character: 12),
+            range: .init(
+                start: .init(line: 1, character: 8),
+                end: .init(line: 2, character: 11)
+            )
+        )
+        
+        var extraInfo = SuggestionInjector.ExtraInfo()
+        var lines = content.breakIntoEditorStyleLines()
+        var cursor = CursorPosition(line: 1, character: 12)
+        SuggestionInjector().acceptSuggestion(
+            intoContentWithoutSuggestion: &lines,
+            cursorPosition: &cursor,
+            completion: suggestion,
+            extraInfo: &extraInfo,
+            isNES: true
+        )
+        XCTAssertTrue(extraInfo.didChangeContent)
+        XCTAssertTrue(extraInfo.didChangeCursorPosition)
+        XCTAssertNil(extraInfo.suggestionRange)
+        XCTAssertEqual(
+            lines,
+            content.breakIntoEditorStyleLines().applying(extraInfo.modifications)
+        )
+        XCTAssertEqual(cursor, .init(line: 2, character: 22))
+        XCTAssertEqual(
+            lines.joined(separator: ""),
+            """
+            struct Cat {
+                var newName: String
+                var newAge: String
+            }
+            
+            """
+        )
+    }
 }
 
 extension String {

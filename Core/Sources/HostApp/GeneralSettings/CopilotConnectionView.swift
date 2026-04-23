@@ -57,7 +57,10 @@ struct CopilotConnectionView: View {
                     isPresented: $viewModel.isSignInAlertPresented,
                     presenting: viewModel.signInResponse) { _ in
                         Button("Cancel", role: .cancel, action: {})
-                        Button("Copy Code and Open", action: viewModel.copyAndOpen)
+                        Button(
+                            "Copy Code and Open",
+                            action: { viewModel.copyAndOpen(fromHostApp: true) }
+                        )
                     } message: { response in
                         Text("""
                                Please enter the above code in the \
@@ -117,7 +120,7 @@ struct CopilotConnectionView: View {
             )
             Divider()
             SettingsLink(
-                url: "https://github.com/orgs/community/discussions/categories/copilot",
+                url: "https://github.com/github/CopilotForXcode/discussions",
                 title: "View Copilot Feedback Forum"
             )
         }

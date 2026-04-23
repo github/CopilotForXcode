@@ -4,11 +4,11 @@ import SharedUIComponents
 
 struct MCPRegistryURLInputField: View {
     @Binding var urlText: String
-    @AppStorage(\.mcpRegistryURLHistory) private var urlHistory
+    @AppStorage(\.mcpRegistryBaseURLHistory) private var urlHistory
     @State private var showHistory: Bool = false
     @FocusState private var isFocused: Bool
     
-    let defaultMCPRegistryURL = "https://api.mcp.github.com/2025-09-15/v0/servers"
+    let defaultMCPRegistryBaseURL = "https://api.mcp.github.com"
     let maxURLLength: Int
     let isSheet: Bool
     let mcpRegistryEntry: MCPRegistryEntry?
@@ -40,7 +40,7 @@ struct MCPRegistryURLInputField: View {
             HStack(spacing: 8) {
                 if isSheet {
                     TextFieldsContainer {
-                        TextField("MCP Registry URL", text: $urlText)
+                        TextField("MCP Registry Base URL", text: $urlText)
                             .focused($isFocused)
                             .disabled(isRegistryOnly)
                             .onChange(of: urlText) { newValue in
@@ -51,7 +51,7 @@ struct MCPRegistryURLInputField: View {
                             }
                     }
                 } else {
-                    TextField("MCP Registry URL:", text: $urlText)
+                    TextField("MCP Registry Base URL:", text: $urlText)
                         .textFieldStyle(.roundedBorder)
                         .focused($isFocused)
                         .disabled(isRegistryOnly)
@@ -75,7 +75,7 @@ struct MCPRegistryURLInputField: View {
                     Divider()
                     
                     Button("Reset to Default") {
-                        urlText = defaultMCPRegistryURL
+                        urlText = defaultMCPRegistryBaseURL
                         onCommit?()
                     }
                     

@@ -31,6 +31,7 @@ public protocol ChatServiceType {
         model: String?,
         modelProviderName: String?,
         agentMode: Bool,
+        customChatModeId: String?,
         userLanguage: String?,
         turnId: String?
     ) async throws
@@ -48,16 +49,29 @@ struct ToolCallRequest {
     let completion: (AnyJSONRPCResponse) -> Void
 }
 
+struct ConversationTurnTrackingState {
+    var turnParentMap: [String: String] = [:] // Maps subturn ID to parent turn ID
+    var validConversationIds: Set<String> = [] // Tracks all valid conversation IDs including subagents
+    
+    mutating func reset() {
+        turnParentMap.removeAll()
+        validConversationIds.removeAll()
+    }
+}
+
 public final class ChatService: ChatServiceType, ObservableObject {
     
     public var memory: ContextAwareAutoManagedChatMemory
     @Published public internal(set) var chatHistory: [ChatMessage] = []
     @Published public internal(set) var isReceivingMessage = false
+    @Published public internal(set) var isSummarizingConversation = false
     @Published public internal(set) var fileEditMap: OrderedDictionary<URL, FileEdit> = [:]
+    @Published public internal(set) var contextSizeInfo: ContextSizeInfo? = nil
     public internal(set) var requestType: RequestType? = nil
     public private(set) var chatTabInfo: ChatTabInfo
     private let conversationProvider: ConversationServiceProvider?
     private let conversationProgressHandler: ConversationProgressHandler
+    private let compressionHandler: CompressionHandler
     private let conversationContextHandler: ConversationContextHandler = ConversationContextHandlerImpl.shared
     // sync all the files in the workspace to watch for changes.
     private let watchedFilesHandler: WatchedFilesHandler = WatchedFilesHandlerImpl.shared
@@ -68,13 +82,18 @@ public final class ChatService: ChatServiceType, ObservableObject {
     private var lastUserRequest: ConversationRequest?
     private var isRestored: Bool = false
     private var pendingToolCallRequests: [String: ToolCallRequest] = [:]
+    // Workaround: toolConfirmation request does not have parent turnId
+    private var conversationTurnTracking = ConversationTurnTrackingState()
+    
     init(provider: any ConversationServiceProvider,
          memory: ContextAwareAutoManagedChatMemory = ContextAwareAutoManagedChatMemory(),
          conversationProgressHandler: ConversationProgressHandler = ConversationProgressHandlerImpl.shared,
+         compressionHandler: CompressionHandler = CompressionHandlerImpl.shared,
          chatTabInfo: ChatTabInfo) {
         self.memory = memory
         self.conversationProvider = provider
         self.conversationProgressHandler = conversationProgressHandler
+        self.compressionHandler = compressionHandler
         self.chatTabInfo = chatTabInfo
         memory.chatService = self
         
@@ -120,6 +139,19 @@ public final class ChatService: ChatServiceType, ObservableObject {
         conversationProgressHandler.onEnd.sink { [weak self] (token, progress) in
             self?.handleProgressEnd(token: token, progress: progress)
         }.store(in: &cancellables)
+
+        compressionHandler.onCompressionStarted.sink { [weak self] compressionConversationId in
+            guard let self, self.conversationId == compressionConversationId else { return }
+            self.isSummarizingConversation = true
+        }.store(in: &cancellables)
+
+        compressionHandler.onCompressionCompleted.sink { [weak self] completedNotification in
+            guard let self, self.conversationId == completedNotification.conversationId else { return }
+            self.isSummarizingConversation = false
+            if let contextInfo = completedNotification.contextInfo {
+                self.contextSizeInfo = contextInfo
+            }
+        }.store(in: &cancellables)
     }
     
     private func subscribeToConversationContextRequest() {
@@ -135,28 +167,19 @@ public final class ChatService: ChatServiceType, ObservableObject {
 
     private func subscribeToClientToolConfirmationEvent() {
         ClientToolHandlerImpl.shared.onClientToolConfirmationEvent.sink(receiveValue: { [weak self] (request, completion) in
-            guard let params = request.params, params.conversationId == self?.conversationId else { return }
-            let editAgentRounds: [AgentRound] = [
-                AgentRound(roundId: params.roundId,
-                           reply: "",
-                           toolCalls: [
-                            AgentToolCall(id: params.toolCallId, name: params.name, status: .waitForConfirmation, invokeParams: params)
-                           ]
-                          )
-            ]
-            self?.appendToolCallHistory(turnId: params.turnId, editAgentRounds: editAgentRounds)
-            self?.pendingToolCallRequests[params.toolCallId] = ToolCallRequest(
-                requestId: request.id,
-                turnId: params.turnId,
-                roundId: params.roundId,
-                toolCallId: params.toolCallId,
-                completion: completion)
+            self?.handleClientToolConfirmationEvent(request: request, completion: completion)
         }).store(in: &cancellables)
     }
 
     private func subscribeToClientToolInvokeEvent() {
         ClientToolHandlerImpl.shared.onClientToolInvokeEvent.sink(receiveValue: { [weak self] (request, completion) in
-            guard let params = request.params, params.conversationId == self?.conversationId else { return }
+            guard let params = request.params else { return }
+            
+            // Check if this conversationId is valid (main conversation or subagent conversation)
+            guard let validIds = self?.conversationTurnTracking.validConversationIds, validIds.contains(params.conversationId) else {
+                return
+            }
+            
             guard let copilotTool = CopilotToolRegistry.shared.getTool(name: params.name) else {
                 completion(AnyJSONRPCResponse(id: request.id,
                                               result: JSONValue.array([
@@ -172,11 +195,11 @@ public final class ChatService: ChatServiceType, ObservableObject {
                 return
             }
 
-            copilotTool.invokeTool(request, completion: completion, contextProvider: self)
+            _ = copilotTool.invokeTool(request, completion: completion, contextProvider: self)
         }).store(in: &cancellables)
     }
 
-    func appendToolCallHistory(turnId: String, editAgentRounds: [AgentRound], fileEdits: [FileEdit] = []) {
+    func appendToolCallHistory(turnId: String, editAgentRounds: [AgentRound], fileEdits: [FileEdit] = [], parentTurnId: String? = nil) {
         let chatTabId = self.chatTabInfo.id
         Task {
             let turnStatus: ChatMessage.TurnStatus? = {
@@ -195,6 +218,7 @@ public final class ChatService: ChatServiceType, ObservableObject {
                 assistantMessageWithId: turnId,
                 chatTabID: chatTabId,
                 editAgentRounds: editAgentRounds,
+                parentTurnId: parentTurnId,
                 fileEdits: fileEdits,
                 turnStatus: turnStatus
             )
@@ -228,73 +252,76 @@ public final class ChatService: ChatServiceType, ObservableObject {
         self.isRestored = true
     }
 
+    /// Updates the status of a tool call (accepted, cancelled, etc.) and notifies the server
+    /// 
+    /// This method handles two key responsibilities:
+    /// 1. Sends confirmation response back to the server when user accepts/cancels
+    /// 2. Updates the tool call status in chat history UI (including subagent tool calls)
     public func updateToolCallStatus(toolCallId: String, status: AgentToolCall.ToolCallStatus, payload: Any? = nil) {
-        // Send the tool call result back to the server
-        if let toolCallRequest = self.pendingToolCallRequests[toolCallId], status == .accepted || status == .cancelled {
+        // Capture the pending request info before removing it from the dictionary
+        let toolCallRequest = self.pendingToolCallRequests[toolCallId]
+        
+        // Step 1: Send confirmation response to server (for accept/cancel actions only)
+        if let toolCallRequest = toolCallRequest, status == .accepted || status == .cancelled {
             self.pendingToolCallRequests.removeValue(forKey: toolCallId)
-            let toolResult = LanguageModelToolConfirmationResult(
-                result: status == .accepted ? .Accept : .Dismiss
-            )
-            let jsonResult = try? JSONEncoder().encode(toolResult)
-            let jsonValue = (try? JSONDecoder().decode(JSONValue.self, from: jsonResult ?? Data())) ?? JSONValue.null
-            toolCallRequest.completion(
-                AnyJSONRPCResponse(
-                    id: toolCallRequest.requestId,
-                    result: JSONValue.array([
-                        jsonValue,
-                        JSONValue.null
-                    ])
-                )
-            )
+            sendToolConfirmationResponse(toolCallRequest, accepted: status == .accepted)
         }
 
-        // Update the tool call status in the chat history
+        // Step 2: Update the tool call status in chat history UI
         Task {
-            guard let lastMessage = await memory.history.last, lastMessage.role == .assistant else {
+            guard let targetMessage = await ToolCallStatusUpdater.findMessageContainingToolCall(
+                toolCallRequest,
+                conversationTurnTracking: conversationTurnTracking,
+                history: await memory.history
+            ) else {
                 return
             }
-
-            var updatedAgentRounds: [AgentRound] = []
-            for i in 0..<lastMessage.editAgentRounds.count {
-                if lastMessage.editAgentRounds[i].toolCalls == nil {
-                    continue
-                }
-                for j in 0..<lastMessage.editAgentRounds[i].toolCalls!.count {
-                    if lastMessage.editAgentRounds[i].toolCalls![j].id == toolCallId {
-                        updatedAgentRounds.append(
-                            AgentRound(roundId: lastMessage.editAgentRounds[i].roundId,
-                                       reply: "",
-                                       toolCalls: [
-                                        AgentToolCall(id: toolCallId,
-                                                      name: lastMessage.editAgentRounds[i].toolCalls![j].name,
-                                                      status: status)
-                                       ]
-                                      )
-                        )
-                        break
-                    }
-                }
-                if !updatedAgentRounds.isEmpty {
-                    break
-                }
-            }
-
-            if !updatedAgentRounds.isEmpty {
-                let message = ChatMessage(
-                    id: lastMessage.id,
-                    chatTabID: lastMessage.chatTabID,
-                    clsTurnID: lastMessage.clsTurnID,
-                    role: .assistant,
-                    content: "",
-                    references: [],
-                    steps: [],
-                    editAgentRounds: updatedAgentRounds,
-                    turnStatus: .inProgress
+            
+            // Search for the tool call in main rounds or subagent rounds
+            if let updatedRound = ToolCallStatusUpdater.findAndUpdateToolCall(
+                toolCallId: toolCallId,
+                newStatus: status,
+                in: targetMessage.editAgentRounds
+            ) {
+                let message = ToolCallStatusUpdater.createMessageUpdate(
+                    targetMessage: targetMessage,
+                    updatedRound: updatedRound
                 )
-
-                await self.memory.appendMessage(message)
+                await memory.appendMessage(message)
             }
         }
+    }
+    
+    // MARK: - Helper Methods for Tool Call Status Updates
+
+    /// Returns true if the `conversationId` belongs to the active conversation or any subagent conversations.
+    func isConversationIdValid(_ conversationId: String) -> Bool {
+        conversationTurnTracking.validConversationIds.contains(conversationId)
+    }
+
+    /// Workaround: toolConfirmation request does not have parent turnId.
+    func parentTurnIdForTurnId(_ turnId: String) -> String? {
+        conversationTurnTracking.turnParentMap[turnId]
+    }
+
+    func storePendingToolCallRequest(toolCallId: String, request: ToolCallRequest) {
+        pendingToolCallRequests[toolCallId] = request
+    }
+    
+    /// Sends the confirmation response (accept/dismiss) back to the server
+    func sendToolConfirmationResponse(_ request: ToolCallRequest, accepted: Bool) {
+        let toolResult = LanguageModelToolConfirmationResult(
+            result: accepted ? .Accept : .Dismiss
+        )
+        let jsonResult = try? JSONEncoder().encode(toolResult)
+        let jsonValue = (try? JSONDecoder().decode(JSONValue.self, from: jsonResult ?? Data())) ?? JSONValue.null
+        
+        request.completion(
+            AnyJSONRPCResponse(
+                id: request.requestId,
+                result: JSONValue.array([jsonValue, JSONValue.null])
+            )
+        )
     }
     
     public enum ChatServiceError: Error, LocalizedError {
@@ -318,6 +345,7 @@ public final class ChatService: ChatServiceType, ObservableObject {
         model: String? = nil,
         modelProviderName: String? = nil,
         agentMode: Bool = false,
+        customChatModeId: String? = nil,
         userLanguage: String? = nil,
         turnId: String? = nil
     ) async throws {
@@ -423,6 +451,7 @@ public final class ChatService: ChatServiceType, ObservableObject {
             model: model,
             modelProviderName: modelProviderName,
             agentMode: agentMode,
+            customChatModeId: customChatModeId,
             userLanguage: userLanguage,
             turnId: currentTurnId,
             skillSet: validSkillSet
@@ -430,7 +459,18 @@ public final class ChatService: ChatServiceType, ObservableObject {
         
         self.lastUserRequest = request
         self.skillSet = validSkillSet
-        try await sendConversationRequest(request)
+        
+        do {
+            if let response = try await sendConversationRequest(request) {
+                await handleConversationCreateResponse(response)
+            }
+        } catch {
+            // Check if this is a certificate error and show helpful message
+            if isCertificateError(error) {
+                await showCertificateErrorMessage(turnId: currentTurnId)
+            }
+            throw error
+        }
     }
     
     private func createConversationRequest(
@@ -442,6 +482,7 @@ public final class ChatService: ChatServiceType, ObservableObject {
         model: String? = nil,
         modelProviderName: String? = nil,
         agentMode: Bool = false,
+        customChatModeId: String? = nil,
         userLanguage: String? = nil,
         turnId: String? = nil,
         skillSet: [ConversationSkill]
@@ -467,9 +508,21 @@ public final class ChatService: ChatServiceType, ObservableObject {
             model: model,
             modelProviderName: modelProviderName,
             agentMode: agentMode,
+            customChatModeId: customChatModeId,
             userLanguage: userLanguage,
             turnId: turnId
         )
+    }
+    
+    private func handleConversationCreateResponse(_ response: ConversationCreateResponse) async {
+        await memory.mutateHistory { history in
+            if let index = history.firstIndex(where: { $0.id == response.turnId && $0.role.isAssistant }) {
+                history[index].modelName = response.modelName
+                history[index].billingMultiplier = response.billingMultiplier
+                
+                self.saveChatMessageToStorage(history[index])
+            }
+        }
     }
 
     public func sendAndWait(_ id: String, content: String) async throws -> String {
@@ -535,6 +588,7 @@ public final class ChatService: ChatServiceType, ObservableObject {
                 model: model != nil ? model : lastUserRequest.model,
                 modelProviderName: modelProviderName,
                 agentMode: lastUserRequest.agentMode,
+                customChatModeId: lastUserRequest.customChatModeId,
                 userLanguage: lastUserRequest.userLanguage,
                 turnId: id
             )
@@ -652,8 +706,22 @@ public final class ChatService: ChatServiceType, ObservableObject {
     
     private func handleProgressBegin(token: String, progress: ConversationProgressBegin) {
         guard let workDoneToken = activeRequestId, workDoneToken == token else { return }
-        conversationId = progress.conversationId
+        // Only update conversationId for main turns, not subagent turns
+        // Subagent turns have their own conversation ID which should not replace the parent
+        if progress.parentTurnId == nil {
+            conversationId = progress.conversationId
+        }
+        
+        // Track all valid conversation IDs for the current turn (main conversation + its subturns)
+        conversationTurnTracking.validConversationIds.insert(progress.conversationId)
+        
         let turnId = progress.turnId
+        let parentTurnId = progress.parentTurnId
+        
+        // Track parent-subturn relationship
+        if let parentTurnId = parentTurnId {
+            conversationTurnTracking.turnParentMap[turnId] = parentTurnId
+        }
         
         Task {
             if var lastUserMessage = await memory.history.last(where: { $0.role == .user }) {
@@ -677,10 +745,17 @@ public final class ChatService: ChatServiceType, ObservableObject {
             /// Display an initial assistant message immediately after the user sends a message.
             /// This improves perceived responsiveness, especially in Agent Mode where the first
             /// ProgressReport may take long time.
-            let message = ChatMessage(assistantMessageWithId: turnId, chatTabID: chatTabInfo.id, turnStatus: .inProgress)
+            /// Skip creating a new message for subturns - they will be merged into the parent turn
+            if parentTurnId == nil {
+                let message = ChatMessage(
+                    assistantMessageWithId: turnId, 
+                    chatTabID: chatTabInfo.id, 
+                    turnStatus: .inProgress
+                )
 
-            // will persist in resetOngoingRequest()
-            await memory.appendMessage(message)
+                // will persist in resetOngoingRequest()
+                await memory.appendMessage(message)
+            }
         }
     }
 
@@ -688,12 +763,17 @@ public final class ChatService: ChatServiceType, ObservableObject {
         guard let workDownToken = activeRequestId, workDownToken == token else {
             return
         }
-        
+
+        if let contextSize = progress.contextSize {
+            self.contextSizeInfo = contextSize
+        }
+
         let id = progress.turnId
         var content = ""
         var references: [ConversationReference] = []
         var steps: [ConversationProgressStep] = []
         var editAgentRounds: [AgentRound] = []
+        let parentTurnId = progress.parentTurnId
 
         if let reply = progress.reply {
             content = reply
@@ -711,15 +791,15 @@ public final class ChatService: ChatServiceType, ObservableObject {
             editAgentRounds = progressAgentRounds
         }
         
-        if content.isEmpty && references.isEmpty && steps.isEmpty && editAgentRounds.isEmpty {
+        if content.isEmpty && references.isEmpty && steps.isEmpty && editAgentRounds.isEmpty && parentTurnId == nil {
             return
         }
         
-        // create immutable copies
         let messageContent = content
         let messageReferences = references
         let messageSteps = steps
         let messageAgentRounds = editAgentRounds
+        let messageParentTurnId = parentTurnId
 
         Task {
             let message = ChatMessage(
@@ -729,10 +809,10 @@ public final class ChatService: ChatServiceType, ObservableObject {
                 references: messageReferences,
                 steps: messageSteps,
                 editAgentRounds: messageAgentRounds,
+                parentTurnId: messageParentTurnId,
                 turnStatus: .inProgress
             )
 
-            // will persist in resetOngoingRequest()
             await memory.appendMessage(message)
         }
     }
@@ -801,10 +881,16 @@ public final class ChatService: ChatServiceType, ObservableObject {
                 }
             } else {
                 Task {
+                    var clsErrorMessage = CLSError.message
+                    if CLSError.code == ConversationErrorCode.toolRoundExceedError.rawValue {
+                        // TODO: Remove this after `Continue` is supported.
+                        clsErrorMessage = HardCodedToolRoundExceedErrorMessage
+                    }
+                    
                     let errorMessage = ChatMessage(
                         errorMessageWithId: progress.turnId,
                         chatTabID: chatTabInfo.id,
-                        errorMessages: [CLSError.message]
+                        errorMessages: [clsErrorMessage]
                     )
                     // will persist in resetOngoingRequest()
                     await memory.appendMessage(errorMessage)
@@ -831,7 +917,11 @@ public final class ChatService: ChatServiceType, ObservableObject {
     private func resetOngoingRequest(with turnStatus: ChatMessage.TurnStatus = .success) {
         activeRequestId = nil
         isReceivingMessage = false
+        isSummarizingConversation = false
         requestType = nil
+        
+        // Clear turn tracking data
+        conversationTurnTracking.reset()
 
         // cancel all pending tool call requests
         for (_, request) in pendingToolCallRequests {
@@ -874,6 +964,20 @@ public final class ChatService: ChatServiceType, ObservableObject {
                             history[lastIndex].editAgentRounds[i].toolCalls![j].status = .cancelled
                         }
                     }
+                    
+                    // Cancel tool calls in subagent rounds
+                    if let subAgentRounds = history[lastIndex].editAgentRounds[i].subAgentRounds {
+                        for k in 0..<subAgentRounds.count {
+                            if let toolCalls = subAgentRounds[k].toolCalls {
+                                for l in 0..<toolCalls.count {
+                                    if toolCalls[l].status == .running
+                                        || toolCalls[l].status == .waitForConfirmation {
+                                        history[lastIndex].editAgentRounds[i].subAgentRounds![k].toolCalls![l].status = .cancelled
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
                 
                 if history[lastIndex].codeReviewRound != nil,
@@ -897,14 +1001,14 @@ public final class ChatService: ChatServiceType, ObservableObject {
         }
     }
     
-    private func sendConversationRequest(_ request: ConversationRequest) async throws {
+    private func sendConversationRequest(_ request: ConversationRequest) async throws -> ConversationCreateResponse? {
         guard !isReceivingMessage else { throw CancellationError() }
         isReceivingMessage = true
         requestType = .conversation
         
         do {
             if let conversationId = conversationId {
-                try await conversationProvider?
+                return try await conversationProvider?
                     .createTurn(
                         with: conversationId,
                         request: request,
@@ -922,7 +1026,7 @@ public final class ChatService: ChatServiceType, ObservableObject {
                     requestWithTurns.turns = turns
                 }
                 
-                try await conversationProvider?.createConversation(requestWithTurns, workspaceURL: getWorkspaceURL())
+                return try await conversationProvider?.createConversation(requestWithTurns, workspaceURL: getWorkspaceURL())
             }
         } catch {
             resetOngoingRequest(with: .error)
@@ -946,12 +1050,51 @@ public final class ChatService: ChatServiceType, ObservableObject {
             }
         }
     }
+    
+    // MARK: - Certificate Error Detection
+    
+    /// Checks if an error is related to SSL certificate issues
+    private func isCertificateError(_ error: Error) -> Bool {
+        let errorDescription = error.localizedDescription.lowercased()
+        
+        // Check for certificate error messages
+        if errorDescription.contains("unable to get local issuer certificate") ||
+           errorDescription.contains("self-signed certificate in certificate chain") ||
+           errorDescription.contains("unable_to_get_issuer_cert_locally") {
+            return true
+        }
+        
+        // Check GitHubCopilotError with ServerError
+        if let serverError = error as? ServerError,
+            case .serverError(_, let message, _) = serverError {
+                let serverMessage = message.lowercased()
+                if serverMessage.contains("unable to get local issuer certificate") ||
+                   serverMessage.contains("self-signed certificate in certificate chain") {
+                    return true
+            }
+        }
+        
+        return false
+    }
+    
+    private func showCertificateErrorMessage(turnId: String?) async {
+        let messageId = turnId ?? UUID().uuidString
+        let errorMessage = ChatMessage(
+            errorMessageWithId: messageId,
+            chatTabID: chatTabInfo.id,
+            errorMessages: [
+                SSLCertificateErrorMessage
+            ]
+        )
+        await memory.appendMessage(errorMessage)
+    }
 }
 
 
 public final class SharedChatService {
     public var chatTemplates: [ChatTemplate]? = nil
     public var chatAgents: [ChatAgent]? = nil
+    public var conversationModes: [ConversationMode]? = nil
     private let conversationProvider: ConversationServiceProvider?
     
     public static let shared = SharedChatService.service()
@@ -972,6 +1115,19 @@ public final class SharedChatService {
             if let templates = (try await conversationProvider?.templates()) {
                 self.chatTemplates = templates
                 return templates
+            }
+        } catch {
+            // handle error if desired
+        }
+
+        return nil
+    }
+    
+    public func loadConversationModes() async -> [ConversationMode]? {
+        do {
+            if let modes = (try await conversationProvider?.modes()) {
+                self.conversationModes = modes
+                return modes
             }
         } catch {
             // handle error if desired

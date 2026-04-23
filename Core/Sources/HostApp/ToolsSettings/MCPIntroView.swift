@@ -5,10 +5,10 @@ import SharedUIComponents
 import SwiftUI
 
 struct MCPIntroView: View {
-    @Binding private var isMCPFFEnabled: Bool
+    let isMCPFFEnabled: Bool
 
-    public init(isMCPFFEnabled: Binding<Bool>) {
-        _isMCPFFEnabled = isMCPFFEnabled
+    public init(isMCPFFEnabled: Bool) {
+        self.isMCPFFEnabled = isMCPFFEnabled
     }
 
     var body: some View {
@@ -35,11 +35,11 @@ struct MCPIntroView: View {
 }
 
 #Preview {
-    MCPIntroView(isMCPFFEnabled: .constant(true))
+    MCPIntroView(isMCPFFEnabled: true)
         .frame(width: 800)
 }
 
 #Preview {
-    MCPIntroView(isMCPFFEnabled: .constant(false))
+    MCPIntroView(isMCPFFEnabled: false)
         .frame(width: 800)
 }
